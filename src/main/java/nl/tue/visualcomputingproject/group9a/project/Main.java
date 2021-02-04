@@ -7,5 +7,6 @@ public class Main {
 	
 	public void run(String[] args) {
 		System.out.println("Hello World");
+		System.out.println("Line ending test");
 	}
 }
