@@ -5,8 +5,13 @@ import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ChartingModule implements Module {
-	final Logger logger = LoggerFactory.getLogger(ChartingModule.class);
+/**
+ * Class for the charting module.
+ */
+public class ChartingModule
+		implements Module {
+	/** The logger of this class. */
+	static final Logger logger = LoggerFactory.getLogger(ChartingModule.class);
 	
 	@Override
 	public void startup(EventBus eventBus) {

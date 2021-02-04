@@ -5,8 +5,13 @@ import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PreProcessingModule implements Module {
-	final Logger logger = LoggerFactory.getLogger(PreProcessingModule.class);
+/**
+ * Class for the pre-processing module.
+ */
+public class PreProcessingModule
+		implements Module {
+	/** The logger of this class. */
+	static final Logger logger = LoggerFactory.getLogger(PreProcessingModule.class);
 	
 	@Override
 	public void startup(EventBus eventBus) {
