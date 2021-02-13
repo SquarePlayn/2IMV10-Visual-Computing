@@ -2,7 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.event;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 
 import java.util.Collection;
 
@@ -12,5 +12,5 @@ import java.util.Collection;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class ProcessorChunkRequestedEvent extends AbstractEvent {
-	Collection<ChunkPosition> newChunksRequested;
+	Collection<ChunkId> newChunksRequested;
 }

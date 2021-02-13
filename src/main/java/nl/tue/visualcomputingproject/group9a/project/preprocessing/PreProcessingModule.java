@@ -11,6 +11,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkData;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkRequestedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import org.slf4j.Logger;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Class for the pre-processing module.
@@ -48,27 +51,77 @@ public class PreProcessingModule
 	}
 	
 	@Subscribe
-	public void rendererStatus(RendererChunkStatusEvent e) {
+	public void rendererStatus(final RendererChunkStatusEvent e) {
 		pendingChunks = e.getPendingChunks();
 		loadedChunks = e.getLoadedChunks();
+		
+		if (!e.getNewChunks().isEmpty()) {
+			Settings.executorService.submit(() -> {
+				List<ChunkId> diskCached = new ArrayList<>();
+				List<ChunkId> request = new ArrayList<>();
+				
+				// First return the chunks which are already in memory.
+				for (ChunkId id : e.getNewChunks()) {
+					MeshChunkData data;
+					if ((data = cache.getFromMemory(id)) != null) {
+						eventBus.post(new ProcessorChunkLoadedEvent(
+								new Chunk<>(id, data)));
+						
+					} else if (cache.isDiskCached(id)) {
+						diskCached.add(id);
+					} else {
+						request.add(id);
+					}
+				}
+				
+				// Then request the missing chunks from the chart module.
+				if (!request.isEmpty()) {
+					eventBus.post(new ProcessorChunkRequestedEvent(request));
+					request = new ArrayList<>();
+				}
+				
+				// Then load the chunks from disk.
+				for (ChunkId id : diskCached) {
+					MeshChunkData data = cache.get(id);
+					if (data == null) {
+						request.add(id);
+					} else {
+						eventBus.post(new ProcessorChunkLoadedEvent(
+								new Chunk<>(id, data)));
+					}
+				}
+				
+				// Finally request any unexpected cache-misses from the chart module.
+				if (!request.isEmpty()) {
+					eventBus.post(new ProcessorChunkRequestedEvent(request));
+				}
+			});
+		}
+		
+		if (!e.getUnloadedChunks().isEmpty()) {
+			for (ChunkId id : e.getUnloadedChunks()) {
+				cache.removeMemoryCache(id);
+			}
+		}
 	}
 	
 	@Subscribe
 	public void chunkLoaded(ChartChunkLoadedEvent e) {
-		final ChunkId key = e.getChunk().getChunkId();
-		if (!pendingChunks.contains(key) &&
-				!loadedChunks.contains(key)) {
+		final ChunkId id = e.getChunk().getChunkId();
+		if (!pendingChunks.contains(id) &&
+				!loadedChunks.contains(id)) {
 			// Ignore event since the chunk is not needed anymore.
+			// TODO: maybe store raw data?
 			return;
 		}
 		
-		if (cache.isCached(key)) {
-			MeshChunkData data = cache.get(key);
+		if (cache.isCached(id)) {
+			MeshChunkData data = cache.get(id);
 			if (data != null) {
 				eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
 						e.getChunk().getPosition(),
 						e.getChunk().getQualityLevel(),
-						cache.get(key))));
+						cache.get(id))));
 				return;
 			}
 		}
@@ -78,10 +131,9 @@ public class PreProcessingModule
 					.createGeneratorFor(e.getChunk().getQualityLevel());
 			MeshChunkData data = gen.generateChunkData(e.getChunk());
 			eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
-					e.getChunk().getPosition(),
-					e.getChunk().getQualityLevel(),
+					e.getChunk().getChunkId(),
 					data)));
-			cache.put(key, data);
+			cache.put(id, data);
 		});
 	}
 	

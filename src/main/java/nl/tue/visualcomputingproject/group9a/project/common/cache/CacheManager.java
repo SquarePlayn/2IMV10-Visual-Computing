@@ -136,12 +136,14 @@ public class CacheManager<K, V> {
 		return isMemoryCached(key) || isDiskCached(key);
 	}
 	
-	public V get(K key) {
-		V val = memoryCache.get(key);
-		if (val != null) return val;
+	public V getFromMemory(K key) {
+		return memoryCache.get(key);
+	}
+	
+	public V getFromDisk(K key) {
 		if (!diskCache.contains(key)) return null;
 		try {
-			val = fileToValue(keyToFileName(key));
+			V val = fileToValue(keyToFileName(key));
 			if (val != null) {
 				memoryCache.put(key, val);
 				return val;
@@ -152,6 +154,12 @@ public class CacheManager<K, V> {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public V get(K key) {
+		V val = getFromMemory(key);
+		if (val != null) return val;
+		return getFromDisk(key);
 	}
 	
 	public boolean putMemoryCache(K key, V value) {
