@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import nl.tue.visualcomputingproject.group9a.project.common.Point;
 
 /**
  * A single chunk from the map.
