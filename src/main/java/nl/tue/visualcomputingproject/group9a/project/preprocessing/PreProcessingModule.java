@@ -4,8 +4,9 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkData;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
@@ -15,6 +16,7 @@ import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Gen
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 
@@ -28,15 +30,21 @@ public class PreProcessingModule
 	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private EventBus eventBus;
+
+	CacheManager<ChunkId, MeshChunkData> cache;
 	
-	private Collection<ChunkPosition> pendingChunks;
-	private Collection<ChunkPosition> loadedChunks;
+	private Collection<ChunkId> pendingChunks;
+	private Collection<ChunkId> loadedChunks;
 	
 	@Override
 	public void startup(EventBus eventBus) {
 		logger.info("Preprocessing starting up!");
 		this.eventBus = eventBus;
 		eventBus.register(this);
+		cache = new CacheManager<>(
+				Settings.CACHE_DIR,
+				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
+				MeshChunkData.createCacheFactory());
 	}
 	
 	@Subscribe
@@ -47,10 +55,22 @@ public class PreProcessingModule
 	
 	@Subscribe
 	public void chunkLoaded(ChartChunkLoadedEvent e) {
-		if (!pendingChunks.contains(e.getChunk().getPosition()) &&
-				!loadedChunks.contains(e.getChunk().getPosition())) {
+		final ChunkId key = e.getChunk().getChunkId();
+		if (!pendingChunks.contains(key) &&
+				!loadedChunks.contains(key)) {
 			// Ignore event since the chunk is not needed anymore.
 			return;
+		}
+		
+		if (cache.isCached(key)) {
+			MeshChunkData data = cache.get(key);
+			if (data != null) {
+				eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
+						e.getChunk().getPosition(),
+						e.getChunk().getQualityLevel(),
+						cache.get(key))));
+				return;
+			}
 		}
 		
 		Settings.executorService.submit(() -> {
@@ -61,7 +81,7 @@ public class PreProcessingModule
 					e.getChunk().getPosition(),
 					e.getChunk().getQualityLevel(),
 					data)));
-			// TODO: cache
+			cache.put(key, data);
 		});
 	}
 	

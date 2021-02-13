@@ -3,7 +3,6 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManage
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshBufferType;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 
-import java.nio.Buffer;
 import java.nio.IntBuffer;
 
 public interface MeshBufferManager
@@ -11,11 +10,8 @@ public interface MeshBufferManager
 	
 	int add(int... indices);
 	
-	IntBuffer finalizeIntBuffer();
-
-	@Override
-	default Buffer finalizeBuffer() {
-		return finalizeIntBuffer();
+	default IntBuffer finalizeIntBuffer() {
+		return finalizeBuffer().asIntBuffer();
 	}
 
 	static MeshBufferManager createManagerFor(
@@ -24,20 +20,20 @@ public interface MeshBufferManager
 			int width, int height,
 			int numVertices) {
 		switch (quality) {
-			case FIVEBYFIVE:
+			case FIVE_BY_FIVE:
 			case HALFBYHALF:
 				switch (type) {
 					case TRIANGLES_CLOCKWISE_3_INT:
 					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
 						return new MeshIntBufferManager(
-								width * height * 2,
 								3,
+								width * height * 2,
 								type.isClockwise());
 					case QUADS_CLOCKWISE_4_INT:
 					case QUADS_COUNTER_CLOCKWISE_4_INT:
 						return new MeshIntBufferManager(
-								width * height,
 								4,
+								width * height,
 								type.isClockwise());
 					default:
 						throw new IllegalArgumentException("Invalid vertex buffer type: " + type);
@@ -47,14 +43,14 @@ public interface MeshBufferManager
 					case TRIANGLES_CLOCKWISE_3_INT:
 					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
 						return new MeshIntBufferManager(
-								numVertices * 2 - 5,
 								3,
+								numVertices * 2 - 5,
 								type.isClockwise());
 					case QUADS_CLOCKWISE_4_INT:
 					case QUADS_COUNTER_CLOCKWISE_4_INT:
 						return new MeshIntBufferManager(
-								numVertices - 3,
 								4,
+								numVertices - 3,
 								type.isClockwise());
 					default:
 						throw new IllegalArgumentException("Invalid vertex buffer type: " + type);
@@ -69,14 +65,14 @@ public interface MeshBufferManager
 			case TRIANGLES_CLOCKWISE_3_INT:
 			case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
 				return new MeshIntBufferManager(
-						numFaces,
 						3,
+						numFaces,
 						type.isClockwise());
 			case QUADS_CLOCKWISE_4_INT:
 			case QUADS_COUNTER_CLOCKWISE_4_INT:
 				return new MeshIntBufferManager(
-						numFaces,
 						4,
+						numFaces,
 						type.isClockwise());
 			default:
 				throw new IllegalArgumentException("Invalid vertex buffer type: " + type);

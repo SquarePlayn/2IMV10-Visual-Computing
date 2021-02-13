@@ -1,10 +1,11 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManager;
 
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
 public interface BufferManager {
 	
-	Buffer finalizeBuffer();
+	ByteBuffer finalizeBuffer();
 	
 	int size();
 	

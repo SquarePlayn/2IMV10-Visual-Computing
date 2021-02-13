@@ -5,20 +5,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
 
 public class MeshIntBufferManager
 		implements MeshBufferManager {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-	private final IntBuffer buffer;
+	
+	private final ByteBuffer byteBuffer;
+	private final IntBuffer intBuffer;
 	private final int vertexCount;
 	private final boolean reversed;
 
 	private int size;
 	
-	public MeshIntBufferManager(int numFaces, int vertexCount, boolean reversed) {
-		buffer = BufferUtils.createIntBuffer(numFaces * vertexCount);
+	public MeshIntBufferManager(int vertexCount, int numFaces, boolean reversed) {
+		byteBuffer = BufferUtils.createByteBuffer(Integer.BYTES * vertexCount * numFaces);
+		intBuffer = byteBuffer.asIntBuffer();
 		this.vertexCount = vertexCount;
 		this.reversed = reversed;
 	}
@@ -38,16 +42,23 @@ public class MeshIntBufferManager
 				indices[j] = tmp;
 			}
 		}
-		buffer.put(indices);
+		intBuffer.put(indices);
 		return size++;
 	}
 
 	@Override
 	public IntBuffer finalizeIntBuffer() {
-		buffer.flip();
-		return buffer;
+		intBuffer.flip();
+		return intBuffer;
 	}
-	
+
+	@Override
+	public ByteBuffer finalizeBuffer() {
+		byteBuffer.limit(Integer.BYTES * vertexCount * size);
+		return byteBuffer;
+	}
+
+
 	@Override
 	public int size() {
 		return size;

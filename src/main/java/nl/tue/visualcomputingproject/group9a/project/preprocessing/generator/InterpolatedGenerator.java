@@ -34,7 +34,7 @@ public class InterpolatedGenerator<T extends PointData>
 	
 	private static int getPos(QualityLevel quality, double val) {
 		switch (quality) {
-			case FIVEBYFIVE:
+			case FIVE_BY_FIVE:
 				return ((int) val) / 5;
 			case HALFBYHALF:
 				return (int) (val * 2);
@@ -145,9 +145,11 @@ public class InterpolatedGenerator<T extends PointData>
 		}
 		
 		return new MeshChunkData(
-				VERTEX_TYPE, vertexManager.finalizeFloatBuffer(),
-				MESH_TYPE, meshManager.finalizeIntBuffer(),
-				chunk.getData().size());
+				VERTEX_TYPE,
+				MESH_TYPE,
+				chunk.getData().size(),
+				vertexManager.finalizeBuffer(),
+				meshManager.finalizeBuffer());
 	}
 	
 	public static void main(String[] args) {
@@ -159,7 +161,7 @@ public class InterpolatedGenerator<T extends PointData>
 		}
 		Chunk<PointCloudChunkData> chunk = new Chunk<>(
 				new ChunkPosition(-5, -5, 15, 15),
-				QualityLevel.FIVEBYFIVE,
+				QualityLevel.FIVE_BY_FIVE,
 				new PointCloudChunkData(data)
 		);
 		Generator

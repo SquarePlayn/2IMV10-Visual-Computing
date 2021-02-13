@@ -1,5 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.common;
 
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,5 +28,6 @@ public final class Settings {
 	public static final ExecutorService executorService = Executors.newFixedThreadPool(
 			Math.max(1, Runtime.getRuntime().availableProcessors() - Settings.NUM_DEDICATED_THREADS));
 	
+	public static File CACHE_DIR = new File("cache");
 	
 }

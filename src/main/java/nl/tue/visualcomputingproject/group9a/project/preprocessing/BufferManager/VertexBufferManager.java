@@ -4,7 +4,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.VertexBufferTy
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 
-import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 public interface VertexBufferManager
@@ -25,11 +25,8 @@ public interface VertexBufferManager
 				   float nx, float ny, float nz);
 
 
-	FloatBuffer finalizeFloatBuffer();
-	
-	@Override
-	default Buffer finalizeBuffer() {
-		return finalizeFloatBuffer();
+	default FloatBuffer finalizeFloatBuffer() {
+		return finalizeBuffer().asFloatBuffer();
 	}
 
 	static VertexBufferManager createManagerFor(VertexBufferType type, int numVertices) {

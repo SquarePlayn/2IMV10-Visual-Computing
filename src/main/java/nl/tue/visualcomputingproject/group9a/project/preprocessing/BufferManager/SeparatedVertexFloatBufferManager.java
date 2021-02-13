@@ -2,11 +2,13 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManage
 
 import org.lwjgl.BufferUtils;
 
-import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
 public class SeparatedVertexFloatBufferManager
 		implements VertexBufferManager {
+	
+	private final ByteBuffer byteBuffer;
 	private final FloatBuffer vertexBuffer;
 	private final FloatBuffer normalBuffer;
 	private final float[] cache = new float[3];
@@ -14,7 +16,8 @@ public class SeparatedVertexFloatBufferManager
 	private int size = 0;
 	
 	public SeparatedVertexFloatBufferManager(int numVertices) {
-		vertexBuffer = (BufferUtils.createFloatBuffer(6 * numVertices));
+		byteBuffer = BufferUtils.createByteBuffer(Float.BYTES * 6 * numVertices);
+		vertexBuffer = byteBuffer.asFloatBuffer();
 		normalBuffer = vertexBuffer.slice();
 		normalBuffer.position(3 * numVertices);
 	}
@@ -43,8 +46,15 @@ public class SeparatedVertexFloatBufferManager
 
 	@Override
 	public FloatBuffer finalizeFloatBuffer() {
-		normalBuffer.flip();
-		return normalBuffer;
+		vertexBuffer.limit(6 * size);
+		vertexBuffer.flip();
+		return vertexBuffer;
+	}
+
+	@Override
+	public ByteBuffer finalizeBuffer() {
+		byteBuffer.limit(Float.BYTES * 6 * size);
+		return byteBuffer;
 	}
 
 	@Override
