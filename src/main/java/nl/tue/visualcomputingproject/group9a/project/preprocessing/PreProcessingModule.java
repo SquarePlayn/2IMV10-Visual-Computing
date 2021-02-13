@@ -32,11 +32,15 @@ public class PreProcessingModule
 	/** The logger of this class. */
 	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
-	private EventBus eventBus;
+	/** The event bus used in the application. */
+	private EventBus eventBus; // TODO maybe store this in {@link Settings}?
 
+	/** The cache manager used to store the mesh chunk data. */
 	CacheManager<ChunkId, MeshChunkData> cache;
 	
+	/** The current pending chunks in the renderer. */
 	private Collection<ChunkId> pendingChunks;
+	/** The current loaded chunks in the renderer. */
 	private Collection<ChunkId> loadedChunks;
 	
 	@Override
@@ -48,8 +52,14 @@ public class PreProcessingModule
 				Settings.CACHE_DIR,
 				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
 				MeshChunkData.createCacheFactory());
+		cache.indexDiskCache();
 	}
-	
+
+	/**
+	 * Method handling the renderer status events.
+	 * 
+	 * @param e The renderer status event.
+	 */
 	@Subscribe
 	public void rendererStatus(final RendererChunkStatusEvent e) {
 		pendingChunks = e.getPendingChunks();
@@ -104,17 +114,23 @@ public class PreProcessingModule
 			}
 		}
 	}
-	
+
+	/**
+	 * Method handling the chunk loaded event.
+	 * 
+	 * @param e The chunk loaded event.
+	 */
 	@Subscribe
 	public void chunkLoaded(ChartChunkLoadedEvent e) {
 		final ChunkId id = e.getChunk().getChunkId();
+		// Ignore event since the chunk is not needed anymore.
 		if (!pendingChunks.contains(id) &&
 				!loadedChunks.contains(id)) {
-			// Ignore event since the chunk is not needed anymore.
 			// TODO: maybe store raw data?
 			return;
 		}
 		
+		// Check if the chunk is already cached.
 		if (cache.isCached(id)) {
 			MeshChunkData data = cache.get(id);
 			if (data != null) {
@@ -126,6 +142,7 @@ public class PreProcessingModule
 			}
 		}
 		
+		// Pre-process the chunk.
 		Settings.executorService.submit(() -> {
 			Generator<PointCloudChunkData> gen = Generator
 					.createGeneratorFor(e.getChunk().getQualityLevel());

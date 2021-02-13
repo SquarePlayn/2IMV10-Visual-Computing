@@ -6,23 +6,25 @@ import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Class for the rendering module.
  */
+@SuppressWarnings("UnstableApiUsage")
 public class RendererModule
 		extends Thread
 		implements Module {
-	/** The logger of this class. */
-	static final Logger logger = LoggerFactory.getLogger(RendererModule.class);
+	/** The logger object of this class. */
+	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** Message queue from the event queue. */ 
 	final ConcurrentLinkedQueue<String> messages = new ConcurrentLinkedQueue<>();
 	
 	
 	@Override
 	public void startup(EventBus eventBus) {
-		logger.info("Rendering starting up!");
+		LOGGER.info("Rendering starting up!");
 		this.start();
 		eventBus.register(this);
 	}

@@ -11,15 +11,30 @@ import java.util.Arrays;
 
 public class MeshIntBufferManager
 		implements MeshBufferManager {
+	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
+	/** The byte buffer backing {@link #intBuffer}. */
 	private final ByteBuffer byteBuffer;
+	/** The buffer used to add the data to. */
 	private final IntBuffer intBuffer;
+	/** The number of vertices in a face. */
 	private final int vertexCount;
+	/** Whether to reverse the vertices in the faces. */
 	private final boolean reversed;
 
+	/** The current amount of faces in the buffer. */
 	private int size;
-	
+
+	/**
+	 * Creates a new mesh buffer.
+	 * Notice that adding more than {@code numFaces} faces will cause
+	 * a {@link java.nio.BufferOverflowException}.
+	 * 
+	 * @param vertexCount The number of vertices in a face.
+	 * @param numFaces    The number of faces to allocate data for.
+	 * @param reversed    Whether to reverse the vertices in the faces.
+	 */
 	public MeshIntBufferManager(int vertexCount, int numFaces, boolean reversed) {
 		byteBuffer = BufferUtils.createByteBuffer(Integer.BYTES * vertexCount * numFaces);
 		intBuffer = byteBuffer.asIntBuffer();
@@ -28,7 +43,7 @@ public class MeshIntBufferManager
 	}
 
 	@Override
-	public int add(int... indices) {
+	public void add(int... indices) {
 		if (indices == null ||
 				indices.length != vertexCount ) {
 			throw new IllegalArgumentException("Invalid number of indices!");
@@ -43,18 +58,19 @@ public class MeshIntBufferManager
 			}
 		}
 		intBuffer.put(indices);
-		return size++;
+		size++;
 	}
 
 	@Override
 	public IntBuffer finalizeIntBuffer() {
-		intBuffer.flip();
+		intBuffer.position(0);
 		return intBuffer;
 	}
 
 	@Override
 	public ByteBuffer finalizeBuffer() {
 		byteBuffer.limit(Integer.BYTES * vertexCount * size);
+		byteBuffer.position(0);
 		return byteBuffer;
 	}
 

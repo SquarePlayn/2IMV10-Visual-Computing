@@ -10,7 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum QualityLevel {
 	FIVE_BY_FIVE(true),
-	HALFBYHALF(true),
+	HALF_BY_HALF(true),
 	LAS(false);
 	
 	final private boolean interpolated;

@@ -12,13 +12,23 @@ import org.joml.Vector3d;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A trivial {@link Generator} implementation suitable for data interpolated on a grid.
+ * 
+ * @param <T> The type of point data container.
+ */
 public class InterpolatedGenerator<T extends PointData>
 		extends Generator<T> {
-	
+	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
+	/** The type of vertex buffer to generate. */
 	private static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+	/** The type of mesh buffer to generate. */
 	private static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
 
+	/**
+	 * Data class storing a point with it's index in the vertex buffer.
+	 */
 	@Getter
 	@RequiredArgsConstructor
 	private static class PointIndex {
@@ -31,18 +41,37 @@ public class InterpolatedGenerator<T extends PointData>
 		}
 		
 	}
-	
+
+	/**
+	 * Computes the relative position of a value in the grid.
+	 * 
+	 * @param quality The quality level.
+	 * @param val     The value.
+	 * 
+	 * @return The relative position of the value in the grid.
+	 */
 	private static int getPos(QualityLevel quality, double val) {
 		switch (quality) {
 			case FIVE_BY_FIVE:
 				return ((int) val) / 5;
-			case HALFBYHALF:
+			case HALF_BY_HALF:
 				return (int) (val * 2);
 			default:
 				throw new IllegalArgumentException("Invalid quality level: " + quality);
 		}
 	}
-	
+
+	/**
+	 * Computes the normal of the line {@code target -> source} which
+	 * lies as close as possible to the vector {@code (0,1,0)}<sup>T</sup>
+	 * (i.e. pointing upwards).
+	 * 
+	 * @param source The source vertex.
+	 * @param target The target vertex.
+	 *    
+	 * @return The normal to the line {@code target -> source}
+	 *     closest to {@code (0,1,0)}<sup>T</sup>.
+	 */
 	private static Vector3d upProjection(final Vector3d source, final Vector3d target) {
 		// v := (0, 1, 0)^T
 		// n := source - target

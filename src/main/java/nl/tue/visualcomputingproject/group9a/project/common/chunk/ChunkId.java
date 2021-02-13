@@ -3,14 +3,24 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 import lombok.Value;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheNameFactory;
 
+/**
+ * This class uniquely identifies a {@link Chunk}.
+ */
 @Value
 public class ChunkId {
+	/** The position of the chunk. */
 	ChunkPosition position;
+	/** The quality of the chunk. */
 	QualityLevel quality;
-	
+
+	/**
+	 * Factory class for serializing and deserializing this ID
+	 * to a string used for storing cache files.
+	 */
 	@Value
 	private static class ChunkIdCacheNameFactory
 			implements CacheNameFactory<ChunkId> {
+		/** The text to prepend each file with. */
 		String prepend;
 
 		@Override
@@ -39,11 +49,28 @@ public class ChunkId {
 			);
 		}
 	}
-	
+
+	/**
+	 * Creates a {@link CacheNameFactory} for the {@link ChunkId} class where
+	 * each cache file contains the additional {@code prepend}ed string.
+	 * <br>
+	 * The prepended string can contain file separators, except for the first character.
+	 * 
+	 * @param prepend The string to prepend to the serialized data.
+	 * 
+	 * @return A {@link CacheNameFactory} used to generate the names of the cache files.
+	 */
 	public static CacheNameFactory<ChunkId> createCacheNameFactory(String prepend) {
 		return new ChunkIdCacheNameFactory(prepend);
 	}
 
+	/**
+	 * Creates a {@link CacheNameFactory} for the {@link ChunkId} class.
+	 *
+	 * @return A {@link CacheNameFactory} used to generate the names of the cache files.
+	 * 
+	 * @see #createCacheNameFactory(String) 
+	 */
 	public static CacheNameFactory<ChunkId> createCacheNameFactory() {
 		return createCacheNameFactory("");
 	}

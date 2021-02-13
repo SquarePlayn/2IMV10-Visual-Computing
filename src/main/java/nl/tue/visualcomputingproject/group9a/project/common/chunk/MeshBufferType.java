@@ -3,6 +3,9 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * Enum for storing the type of a mesh buffer.
+ */
 @Getter
 @AllArgsConstructor
 public enum MeshBufferType {
