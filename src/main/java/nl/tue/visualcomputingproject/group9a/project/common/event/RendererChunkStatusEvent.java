@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.event;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 
 import java.util.Collection;
 
@@ -12,5 +13,8 @@ import java.util.Collection;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class RendererChunkStatusEvent extends AbstractEvent {
-	Collection<ChunkId> loadedChunks, pendingChunks, newChunks, unloadedChunks;
+	Collection<ChunkId> loadedChunks;
+	Collection<ChunkPosition> pendingChunks;
+	Collection<ChunkPosition> newChunks;
+	Collection<ChunkPosition> unloadedChunks;
 }

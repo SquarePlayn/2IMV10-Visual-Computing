@@ -5,6 +5,7 @@ import org.lwjgl.BufferUtils;
 import java.io.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Factory class for serialization and deserialization of a target class {@code T}. <br>
@@ -122,25 +123,31 @@ public interface CacheFactory<T> {
 	 */
 	static void writeByteBuffer(OutputStream os, ByteBuffer buffer)
 			throws IOException {
-		writeInt(os, buffer.limit() - buffer.position());
+		int size = buffer.remaining();
+		if (size <= 0) {
+			writeInt(os, 0);
+			return;
+		}
+		writeInt(os, size);
 		if (buffer.hasArray()) {
-			os.write(buffer.array());
+			os.write(buffer.array(), buffer.position(), size);
 			
 		} else {
-			if (buffer.limit() < BUFFER_SIZE) {
-				byte[] buf = new byte[buffer.limit()];
+			if (size <= BUFFER_SIZE) {
+				byte[] buf = new byte[size];
 				buffer.get(buf);
 				os.write(buf);
 				
 			} else {
 				byte[] buf = new byte[BUFFER_SIZE];
-				while (buffer.hasRemaining()) {
+				do {
 					int read = Math.min(buf.length, buffer.remaining());
-					buffer.get(buf);
+					buffer.get(buf, 0, read);
 					os.write(buf, 0, read);
-				}
+				} while (buffer.hasRemaining());
 			}
 		}
+		buffer.flip();
 	}
 
 	/**
@@ -161,6 +168,20 @@ public interface CacheFactory<T> {
 			throw new UnsupportedOperationException();
 		}
 	}
+	
+	static byte[] read(InputStream is, int amt)
+			throws IOException {
+		byte[] buf = new byte[amt];
+		int read = 0;
+		do {
+			int newRead = is.read(buf, read, amt - read);
+			if (newRead == -1) {
+				throw new EOFException(amt, read);
+			}
+			read += newRead;
+		} while (read < amt);
+		return buf;
+	}
 
 	/**
 	 * Deserializes a {@code long} from the input stream.
@@ -173,19 +194,15 @@ public interface CacheFactory<T> {
 	 */
 	static long readLong(InputStream is)
 			throws IOException {
-		byte[] data = new byte[8];
-		int read = is.read(data);
-		if (read != 4) {
-			throw new EOFException(4, read);
-		}
-		return ((long) data[0] << 56) |
-				((long) data[1] << 48) |
-				((long) data[2] << 40) |
-				((long) data[3] << 32) |
-				(data[4] << 24) |
-				(data[5] << 16) |
-				(data[6] << 8) |
-				data[7];
+		byte[] data = read(is, 8);
+		return ((data[0] & 0xFFL) << 56) |
+				((data[1] & 0xFFL) << 48) |
+				((data[2] & 0xFFL) << 40) |
+				((data[3] & 0xFFL) << 32) |
+				((data[4] & 0xFFL) << 24) |
+				((data[5] & 0xFFL) << 16) |
+				((data[6] & 0xFFL) << 8) |
+				(data[7] & 0xFFL);
 	}
 
 	/**
@@ -213,15 +230,11 @@ public interface CacheFactory<T> {
 	 */
 	static int readInt(InputStream is)
 			throws IOException {
-		byte[] data = new byte[4];
-		int read = is.read(data);
-		if (read != 4) {
-			throw new EOFException(4, read);
-		}
-		return (data[0] << 24) |
-				(data[1] << 16) |
-				(data[2] << 8) |
-				data[3];
+		byte[] data = read(is, 4);
+		return ((data[0] & 0xFF) << 24) |
+				((data[1] & 0xFF) << 16) |
+				((data[2] & 0xFF) << 8) |
+				(data[3] & 0xFF);
 	}
 
 	/**
@@ -264,28 +277,16 @@ public interface CacheFactory<T> {
 		} else {
 			// If the buffer is not backed by an array, we have to
 			// use an intermediate buffer.
-			if (size < BUFFER_SIZE) {
-				// If the buffer size if very small, then allocate a
-				// custom sized array and do everything in one go.
-				byte[] buf = new byte[size];
-				int read = is.read(buf);
-				if (read != size) {
+			byte[] buf = new byte[Math.min(size, BUFFER_SIZE)];
+			int read = 0;
+			do {
+				int newRead = is.read(buf, 0, Math.min(size - read, buf.length));
+				if (newRead == -1) {
 					throw new EOFException(size, read);
 				}
-				buffer.put(buf);
-				
-			} else {
-				// If the buffer size is large, copy the data in parts.
-				byte[] buf = new byte[BUFFER_SIZE];
-				int read = 0;
-				do {
-					int newRead = is.read(buf);
-					if (newRead == -1 || (read += newRead) > size) {
-						throw new EOFException(size, read);
-					}
-					buffer.put(buf, 0, newRead);
-				} while (read < size);
-			}
+				read += newRead;
+				buffer.put(buf, 0, newRead);
+			} while (read < size);
 		}
 		
 		// Set the buffer to reading mode.

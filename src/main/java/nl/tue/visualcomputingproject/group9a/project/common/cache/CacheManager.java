@@ -10,6 +10,8 @@ import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.*;
 
 /**
  * A cache manager which caches data both memory and on disk.
@@ -22,48 +24,109 @@ public class CacheManager<K, V> {
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The file extension of the cache files. */
-	static private final String EXT = "cache";
+	static protected final String CACHE_EXT = ".cache";
+	static protected final String TMP_EXT = ".tmp";
 	/** Whether to overwrite old data if there are clashing keys. */
-	static private final boolean DEFAULT_OVERWRITE = true; // TODO: move to {@link Settings}?
+	static protected final boolean DEFAULT_OVERWRITE = true; // TODO: move to {@link Settings}?
 	
 	/** The root directory to store the cache files in. */
-	private final File cacheDir;
+	protected final File cacheDir;
 	/** The factory class used generate the names of the cache files. */
-	private final CacheNameFactory<K> keyFactory;
+	protected final CacheNameFactory<K> keyFactory;
 	/** The factory class used to serialized and deserialize the data. */
-	private final CacheFactory<V> valueFactory;
+	protected final CacheFactory<V> valueFactory;
 	/** The in memory cache. */
-	private final Map<K, V> memoryCache;
+	protected final Map<K, V> memoryCache;
 	/** Set containing the data cached on disk. */
-	private final Set<K> diskCache;
+	protected final Set<K> diskCache;
+	/** The factory used to initialize file streams */
+	protected final FileStreamFactory streamFactory;
+
+	/**
+	 * Simple buffered file stream factory.
+	 */
+	public static class BufferedFileStreamFactory
+			implements FileStreamFactory {
+		@Override
+		public OutputStream write(File file)
+				throws IOException {
+			return new BufferedOutputStream(new FileOutputStream(file, false));
+		}
+
+		@Override
+		public InputStream read(File file)
+				throws IOException {
+			return new BufferedInputStream(new FileInputStream(file));
+		}
+	}
+	
+	public static class ZipBufferedFileStreamFactory
+			implements FileStreamFactory {
+		@Override
+		public OutputStream write(File file)
+				throws IOException {
+			return new DeflaterOutputStream(new FileOutputStream(file, false));
+		}
+
+		@Override
+		public InputStream read(File file)
+				throws IOException {
+			return new InflaterInputStream(new FileInputStream(file));
+		}
+	}
 
 	/**
 	 * Creates a new cache manager.
-	 * 
-	 * @param cacheDir     The root directory to store the cache files in.
-	 * @param keyFactory   The factory class used generate the names of the cache files.
-	 * @param valueFactory The factory class used to serialized and deserialize the data.
+	 *
+	 * @param cacheDir      The root directory to store the cache files in.
+	 * @param keyFactory    The factory class used generate the names of the cache files.
+	 * @param valueFactory  The factory class used to serialized and deserialize the data.
 	 */
 	public CacheManager(
 			File cacheDir,
 			CacheNameFactory<K> keyFactory,
 			CacheFactory<V> valueFactory) {
+		this(cacheDir, keyFactory, valueFactory, new BufferedFileStreamFactory());
+	}
+
+	/**
+	 * Creates a new cache manager.
+	 * 
+	 * @param cacheDir      The root directory to store the cache files in.
+	 * @param keyFactory    The factory class used generate the names of the cache files.
+	 * @param valueFactory  The factory class used to serialized and deserialize the data.
+	 * @param streamFactory The factory class used to initialize a stream to and from a file.
+	 *                      Default is a buffered file stream.
+	 */
+	public CacheManager(
+			File cacheDir,
+			CacheNameFactory<K> keyFactory,
+			CacheFactory<V> valueFactory,
+			FileStreamFactory streamFactory) {
 		this.cacheDir = cacheDir;
 		this.keyFactory = keyFactory;
 		this.valueFactory = valueFactory;
-		memoryCache = new HashMap<>();
-		diskCache = new HashSet<>();
+		this.streamFactory = streamFactory;
+		memoryCache = new ConcurrentHashMap<>();
+		diskCache = ConcurrentHashMap.newKeySet();
 	}
 
 	/**
 	 * Creates a file which is unique for the given key.
 	 * 
-	 * @param key The key to generate the file for.
+	 * @param keyName The name of the key to generate the file for.
 	 * 
 	 * @return A file unique to the given key.
 	 */
-	private File keyToFileName(K key) {
-		return new File(cacheDir.toString() + File.separator + keyFactory.getString(key) + "." + EXT);
+	private File keyToFileName(String keyName) {
+		return new File(cacheDir.toString() + File.separator +
+				keyName + CACHE_EXT);
+	}
+	
+	private File keyToTmpFileName(String keyName) {
+		return new File(cacheDir.toString() + File.separator +
+				"tmp" + File.separator +
+				keyName.replaceAll(File.separator, "____") + TMP_EXT + ".tmp");
 	}
 
 	/**
@@ -78,7 +141,7 @@ public class CacheManager<K, V> {
 	private V fileToValue(File file)
 			throws IOException {
 		if (!file.exists()) return null;
-		try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
+		try (InputStream is = streamFactory.read(file)) {
 			V val = valueFactory.deserialize(is);
 			if (is.read() != -1) {
 				throw new EOFException("Expected EOF, but there is still data remaining!");
@@ -103,21 +166,45 @@ public class CacheManager<K, V> {
 	@SuppressWarnings("SameParameterValue")
 	private boolean valueToFile(K key, V value, boolean overwrite)
 			throws IOException {
-		File file = keyToFileName(key);
-		
-		if (file.exists() && overwrite && !file.delete()) {
-			return false;
+		String keyName = keyFactory.getString(key);
+		File tmpFile = keyToTmpFileName(keyName);
+		File file = keyToFileName(keyName);
+		try {
+			if (file.exists() && overwrite && !file.delete()) {
+				return false;
+			}
+
+			if (!file.getParentFile().exists()) {
+				if (!file.getParentFile().mkdirs()) return false;
+			}
+
+			//noinspection ResultOfMethodCallIgnored
+			tmpFile.getParentFile().mkdirs();
+			//noinspection ResultOfMethodCallIgnored
+			tmpFile.delete();
+			
+			try (OutputStream os = streamFactory.write(tmpFile)) {
+				valueFactory.serialize(os, value);
+			}
+			Files.move(tmpFile.toPath(), file.toPath());
+			
+			return true;
+			
+		} finally {
+			//noinspection ResultOfMethodCallIgnored
+			tmpFile.delete();
 		}
-		
-		if (!file.getParentFile().exists()) {
-			if (!file.getParentFile().mkdirs()) return false;
-		}
-		
-		try (OutputStream os = new BufferedOutputStream(new FileOutputStream(file, false))) {
-			valueFactory.serialize(os, value);
-		}
-		
-		return true;
+	}
+
+	/**
+	 * Method used to add a key to the disk cache during indexing.
+	 * 
+	 * @param key The key to add to the disk cache.
+	 * 
+	 * @see #indexDiskCache() 
+	 */
+	protected void addIndexDiskCache(K key) {
+		diskCache.add(key);
 	}
 
 	/**
@@ -151,15 +238,15 @@ public class CacheManager<K, V> {
 						files.addAll(Arrays.asList(fileArr));
 					}
 
-				} else if (file.getName().endsWith("." + EXT)) {
+				} else if (file.getName().endsWith(CACHE_EXT)) {
 					String path = file.getAbsolutePath();
 					String name = path.substring(
 							rootDirLength,
-							path.length() - EXT.length() - 1);
+							path.length() - CACHE_EXT.length());
 					System.out.println(path);
 					System.out.println(name);
 					try {
-						diskCache.add(keyFactory.fromString(name));
+						addIndexDiskCache(keyFactory.fromString(name));
 						LOGGER.info("Added " + name + " to disk cache!");
 						
 					} catch (IllegalArgumentException e) {
@@ -180,7 +267,8 @@ public class CacheManager<K, V> {
 	/**
 	 * @param key The key to check for.
 	 *    
-	 * @return {@code true} if the data is cached in memory. {@code false} otherwise.
+	 * @return {@code true} if the data is cached in memory.
+	 *     {@code false} otherwise.
 	 */
 	public boolean isMemoryCached(K key) {
 		return memoryCache.containsKey(key);
@@ -189,7 +277,8 @@ public class CacheManager<K, V> {
 	/**
 	 * @param key The key to check for.
 	 *
-	 * @return {@code true} if the data is cached on disk. {@code false} otherwise.
+	 * @return {@code true} if the data is cached on disk.
+	 *     {@code false} otherwise.
 	 */
 	public boolean isDiskCached(K key) {
 		return diskCache.contains(key);
@@ -198,7 +287,8 @@ public class CacheManager<K, V> {
 	/**
 	 * @param key The key to check for.
 	 *
-	 * @return {@code true} if the data is cached in memory or on disk. {@code false} otherwise.
+	 * @return {@code true} if the data is cached in memory or on disk.
+	 *     {@code false} otherwise.
 	 */
 	public boolean isCached(K key) {
 		return isMemoryCached(key) || isDiskCached(key);
@@ -225,7 +315,7 @@ public class CacheManager<K, V> {
 	public V getFromDisk(K key) {
 		if (!diskCache.contains(key)) return null;
 		try {
-			V val = fileToValue(keyToFileName(key));
+			V val = fileToValue(keyToFileName(keyFactory.getString(key)));
 			if (val != null) {
 				memoryCache.put(key, val);
 				return val;
@@ -329,9 +419,9 @@ public class CacheManager<K, V> {
 	 */
 	public void removeDiskCache(K key) {
 		try {
-			//noinspection ResultOfMethodCallIgnored
-			keyToFileName(key).delete();
 			diskCache.remove(key);
+			//noinspection ResultOfMethodCallIgnored
+			keyToFileName(keyFactory.getString(key)).delete();
 			
 		} catch (Exception e) {
 			LOGGER.error("Exception occurred while removing " + key +
@@ -357,23 +447,34 @@ public class CacheManager<K, V> {
 		File cacheDir = new File("cache");
 		System.out.println(cacheDir.getAbsoluteFile());
 		
-		ByteBuffer big = BufferUtils.createByteBuffer(24);
-		ByteBuffer small = BufferUtils.createByteBuffer(24);
-		byte[] bigArr = new byte[24];
-		byte[] smallArr = new byte[24];
-		for (int i = 0; i < 24; i++) {
-			bigArr[i] = (byte) (65 + i);
-			smallArr[i] = (byte) (97 + i);
-		}
+		int amt = 3*4*1024;
+		ByteBuffer big = BufferUtils.createByteBuffer(amt);
+		ByteBuffer small = BufferUtils.createByteBuffer(amt);
+		byte[] bigArr = new byte[amt];
+		byte[] smallArr = new byte[amt];
+
+		Random ran = new Random();
+		ran.nextBytes(bigArr);
 		big.put(bigArr);
+		ran.nextBytes(smallArr);
 		small.put(smallArr);
+		
+//		for (int i = 0; i < amt; i++) {
+//			bigArr[i] = (byte) i;
+//			smallArr[i] = (byte) i;
+////			bigArr[i] = (byte) ('A' + (i % 26));
+////			smallArr[i] = (byte) ('a' + (i % 26));
+//		}
+//		big.put(bigArr);
+//		small.put(smallArr);
+		
 		big.flip();
 		small.flip();
 		
 		MeshChunkData data = new MeshChunkData(
 				VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT,
 				MeshBufferType.TRIANGLES_CLOCKWISE_3_INT,
-				1,
+				amt,
 				small,
 				big
 		);
@@ -381,7 +482,8 @@ public class CacheManager<K, V> {
 		CacheManager<ChunkId, MeshChunkData> manager = new CacheManager<>(
 				cacheDir,
 				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
-				MeshChunkData.createCacheFactory());
+				MeshChunkData.createCacheFactory(),
+				new ZipBufferedFileStreamFactory());
 		
 		ChunkId key = new ChunkId(
 				new ChunkPosition(0, 0, 100, 100),
@@ -394,7 +496,10 @@ public class CacheManager<K, V> {
 
 		manager.removeMemoryCache(key);
 		MeshChunkData data2 = manager.get(key);
+		System.out.println(data);
 		System.out.println(data2);
+		System.out.println(data.getMeshBufferType() == data2.getMeshBufferType());
+		System.out.println(data.getVertexBufferType() == data2.getVertexBufferType());
 	}
 	
 }

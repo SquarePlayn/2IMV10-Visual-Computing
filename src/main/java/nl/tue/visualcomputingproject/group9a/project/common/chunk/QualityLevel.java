@@ -9,10 +9,38 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum QualityLevel {
-	FIVE_BY_FIVE(true),
-	HALF_BY_HALF(true),
-	LAS(false);
+	FIVE_BY_FIVE(0, true),
+	HALF_BY_HALF(1, true),
+	LAS(2, false);
 	
+	final private int order;
 	final private boolean interpolated;
+	
+	public static QualityLevel fromOrder(int order) {
+		for (QualityLevel type : values()) {
+			if (type.order == order) return type;
+		}
+		if (order < 0) {
+			return getWorst();
+		} else {
+			return getBest();
+		}
+	}
+	
+	public static QualityLevel getBest() {
+		return LAS;
+	}
+	
+	public static QualityLevel getWorst() {
+		return FIVE_BY_FIVE;
+	}
+	
+	public QualityLevel next() {
+		return fromOrder(order + 1);
+	}
+	
+	public QualityLevel prev() {
+		return fromOrder(order - 1);
+	}
 	
 }

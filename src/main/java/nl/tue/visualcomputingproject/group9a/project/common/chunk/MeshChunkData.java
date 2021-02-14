@@ -93,8 +93,8 @@ public class MeshChunkData {
 		@Override
 		public void serialize(OutputStream os, MeshChunkData mcd)
 				throws IOException {
-			CacheFactory.writeInt(os, mcd.vertexBufferType.ordinal());
-			CacheFactory.writeInt(os, mcd.meshBufferType.ordinal());
+			CacheFactory.writeInt(os, mcd.vertexBufferType.getId());
+			CacheFactory.writeInt(os, mcd.meshBufferType.getId());
 			CacheFactory.writeInt(os, mcd.size);
 			CacheFactory.writeByteBuffer(os, mcd.vertexBuffer);
 			CacheFactory.writeByteBuffer(os, mcd.meshBuffer);
@@ -103,8 +103,8 @@ public class MeshChunkData {
 		@Override
 		public MeshChunkData deserialize(InputStream is)
 				throws IOException {
-			VertexBufferType vertexBufferType = VertexBufferType.values()[CacheFactory.readInt(is)];
-			MeshBufferType meshBufferType = MeshBufferType.values()[CacheFactory.readInt(is)];
+			VertexBufferType vertexBufferType = VertexBufferType.fromId(CacheFactory.readInt(is));
+			MeshBufferType meshBufferType = MeshBufferType.fromId(CacheFactory.readInt(is));
 			int size = CacheFactory.readInt(is);
 			ByteBuffer vertexBuffer = CacheFactory.readBuffer(is);
 			ByteBuffer meshBuffer = CacheFactory.readBuffer(is);
@@ -115,7 +115,7 @@ public class MeshChunkData {
 					vertexBuffer,
 					meshBuffer);
 		}
-
+		
 	}
 
 	/**

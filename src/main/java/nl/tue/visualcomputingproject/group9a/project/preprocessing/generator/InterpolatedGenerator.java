@@ -180,7 +180,11 @@ public class InterpolatedGenerator<T extends PointData>
 				vertexManager.finalizeBuffer(),
 				meshManager.finalizeBuffer());
 	}
-	
+
+	/**
+	 * TODO: to be removed.
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		List<Point> data = new ArrayList<>(9);
 		for (int i = -1; i < 2; i++) {
