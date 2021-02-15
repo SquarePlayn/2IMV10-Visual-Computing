@@ -27,7 +27,11 @@ group = "nl.tue.visualcomputingproject.group9a"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    mavenCentral()
+    mavenCentral() {
+        content {
+            excludeGroup("javax.media") //Exclude this group since it needs to be looked up in the OSgeo repository.
+        }
+    }
     maven(url = "https://repo.osgeo.org/repository/release/")
     maven(url = "https://raw.github.com/SpinyOwl/repo/releases/")
 }
@@ -41,7 +45,9 @@ dependencies {
 
     implementation("org.liquidengine:legui:3.2.3")
 
-    implementation("org.geotools:gt-wfs:2.5.8")
+    implementation("org.geotools:geotools:24.2")
+    implementation("org.geotools:gt-wfs-ng:24.2")
+    implementation("org.geotools:gt-epsg-hsql:24.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 
