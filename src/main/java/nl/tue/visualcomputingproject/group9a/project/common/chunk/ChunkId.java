@@ -25,8 +25,8 @@ public class ChunkId {
 
 		@Override
 		public String getString(ChunkId val) {
-			return prepend + val.position.getLat() + "_" +
-					val.position.getLon() + "_" +
+			return prepend + val.position.getY() + "_" +
+					val.position.getX() + "_" +
 					val.position.getWidth() + "_" +
 					val.position.getHeight() + "_" +
 					val.quality.ordinal();

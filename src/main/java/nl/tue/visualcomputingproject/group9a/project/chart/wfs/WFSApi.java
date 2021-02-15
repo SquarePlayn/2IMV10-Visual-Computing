@@ -68,10 +68,10 @@ public class WFSApi {
 		
 		double x1 = Double.MAX_VALUE, x2 = -Double.MAX_VALUE, y1 = Double.MAX_VALUE, y2 = -Double.MAX_VALUE;
 		for (ChunkPosition p : positions) {
-			x1 = Math.min(p.getLon(), x1);
-			x2 = Math.max(p.getLon(), x2);
-			y1 = Math.min(p.getLat(), y1);
-			y2 = Math.max(p.getLat(), y2);
+			x1 = Math.min(p.getX(), x1);
+			x2 = Math.max(p.getX(), x2);
+			y1 = Math.min(p.getY(), y1);
+			y2 = Math.max(p.getY(), y2);
 		}
 		
 		ReferencedEnvelope bbox = new ReferencedEnvelope(x1, x2, y1, y2, crs);

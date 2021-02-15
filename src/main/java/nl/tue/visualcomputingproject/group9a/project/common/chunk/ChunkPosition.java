@@ -14,15 +14,15 @@ import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory;
  */
 @Value
 public class ChunkPosition {
-	double lon, lat, width, height;
+	double x, y, width, height;
 	
 	public Geometry getJtsGeometry(GeometryFactory factory) {
 		Coordinate[] coords = {
-			new Coordinate(lon, lat),
-			new Coordinate(lon+width, lat),
-			new Coordinate(lon+width, lat+height),
-			new Coordinate(lon, lat+height),
-			new Coordinate(lon, lat)
+			new Coordinate(x, y),
+			new Coordinate(x +width, y),
+			new Coordinate(x +width, y +height),
+			new Coordinate(x, y +height),
+			new Coordinate(x, y)
 		};
 		
 		return new LinearRing(CoordinateArraySequenceFactory.instance().create(coords), factory);
