@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.chart.assembly.ChunkAssemblyManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.download.DownloadManager;
-import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.WFSApi;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
@@ -20,7 +19,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class LookupManager {
-	/** The logger of this class. */
+	/**
+	 * The logger of this class.
+	 */
 	static final Logger logger = LoggerFactory.getLogger(LookupManager.class);
 	
 	private final EventBus eventBus;
@@ -64,7 +65,7 @@ public class LookupManager {
 						List<MapSheet> c = chunkSheets.getOrDefault(newChunkId, new ArrayList<>());
 						c.add(sheet);
 						chunkSheets.put(newChunkId, c);
-
+						
 						//Register the chunk with the requests.
 						if (requests.containsKey(q)) {
 							requests.get(q).add(requestedChunk.getPosition());
@@ -96,11 +97,9 @@ public class LookupManager {
 				List<ChunkPosition> positions = e.getValue();
 				
 				if (!positions.isEmpty()) {
-					if (cacheManager.isSheetAvailable(sheet, qualityLevel)) {
-						eventBus.post(new ExtractionRequestEvent(sheet, qualityLevel, positions));
-					} else {
-						downloadManager.requestDownload(sheet, positions, qualityLevel);
-					}
+					//See the commends in requestDownload as to why we always request a dl
+					// and never send events directly to the extractor.
+					downloadManager.requestDownload(sheet, positions, qualityLevel);
 				}
 			}
 		}

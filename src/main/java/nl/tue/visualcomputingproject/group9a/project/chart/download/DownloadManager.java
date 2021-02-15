@@ -1,6 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.chart.download;
 
 import com.google.common.eventbus.EventBus;
+import nl.tue.visualcomputingproject.group9a.project.chart.MapSheetCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
@@ -20,28 +21,35 @@ public class DownloadManager {
 		put(QualityLevel.LAS, new ArrayDeque<>());
 	}};
 	private final EventBus eventbus;
+	private final MapSheetCacheManager cacheManager;
 	
-	public DownloadManager(EventBus eventbus) {
+	public DownloadManager(EventBus eventbus, MapSheetCacheManager cacheManager) {
 		this.eventbus = eventbus;
+		this.cacheManager = cacheManager;
 		logger.info("Download manager ready!");
 	}
 	
 	public void requestDownload(MapSheet sheet, Collection<ChunkPosition> positions, QualityLevel level) {
-		//TODO: Potential race condition:
-		// If a download finishes after this function gets called but before we enter the sync block,
-		//  then we can download the same mapsheet twice. Maybe implement a check here?
 		synchronized (queues) {
-			Queue<DownloadJob> existingJobs = queues.get(level);
-			for (DownloadJob job : existingJobs) {
-				if (job.getSheet().equals(sheet)) {
-					job.getChunksRequested().addAll(positions);
-					return;
+			//This check makes more logical sense in LookupManager, but is here to avoid a race condition.
+			//Namely:
+			// If a download finishes after the check but before we enter the sync block,
+			//  then we can download the same mapsheet twice. A classic TOCTOU problem..
+			if (cacheManager.isSheetAvailable(sheet, level)) {
+				eventbus.post(new ExtractionRequestEvent(sheet, level, positions));
+			} else {
+				Queue<DownloadJob> existingJobs = queues.get(level);
+				for (DownloadJob job : existingJobs) {
+					if (job.getSheet().equals(sheet)) {
+						job.getChunksRequested().addAll(positions);
+						return;
+					}
 				}
+				
+				DownloadJob newJob = new DownloadJob(sheet, level, new HashSet<>(positions));
+				existingJobs.add(newJob);
+				logger.info("New download job! {}", newJob);
 			}
-			
-			DownloadJob newJob = new DownloadJob(sheet, level, new HashSet<>(positions));
-			existingJobs.add(newJob);
-			logger.info("New download job! {}", newJob);
 		}
 	}
 	

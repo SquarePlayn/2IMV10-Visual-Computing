@@ -26,7 +26,7 @@ public class ChartingModule
 		logger.info("Charting starting up!");
 		cacheManager = new MapSheetCacheManager();
 		assemblyManager = new ChunkAssemblyManager(eventBus);
-		downloadManager = new DownloadManager(eventBus);
+		downloadManager = new DownloadManager(eventBus, cacheManager);
 		lookupManager = new LookupManager(eventBus, cacheManager, downloadManager, assemblyManager);
 		logger.info("Charting is ready!");
 	}
