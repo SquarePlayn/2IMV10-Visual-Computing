@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,32 @@ public class RendererModule
 	@Override
 	public void run() {
 		// Here is your thread
+
+		// TODO This is WIP and should probably move elsewhere
+		System.out.println("Render thread started");
+		Window window = new Window(800, 600, "2IMV10 Visual Computing");
+		window.create();
+
+		while (!window.closed()) {
+			// Pre-loop
+			window.update();
+
+			// Main loop
+			if (Input.isKeyDown(GLFW.GLFW_KEY_ESCAPE)) {
+				break;
+			}
+
+			if (Input.isButtonDown(GLFW.GLFW_MOUSE_BUTTON_LEFT)) {
+				System.out.println("Mouse pressed, current pos: (" + Input.getMouseX() + ", " + Input.getMouseY() + ")." );
+			}
+
+			// Post-loop
+			window.swapBuffers();
+		}
+
+		window.destroy();
+
+		System.out.println("Closing renderer");
 	}
 	
 	@Subscribe
