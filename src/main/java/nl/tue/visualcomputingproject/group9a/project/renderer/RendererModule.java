@@ -32,6 +32,24 @@ public class RendererModule
 	@Override
 	public void run() {
 		// Here is your thread
+
+		// TODO This is WIP and should probably move elsewhere
+		System.out.println("Render thread started");
+		Window window = new Window(800, 600, "2IMV10 Visual Computing");
+		window.create();
+
+		while (!window.closed()) {
+			// Pre-loop
+			window.update();
+
+			// Main loop
+			System.out.println("Window rendering step");
+
+			// Post-loop
+			window.swapBuffers();
+		}
+
+		System.out.println("Closing renderer");
 	}
 	
 	@Subscribe
