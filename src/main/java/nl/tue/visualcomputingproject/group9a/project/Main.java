@@ -1,5 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import nl.tue.visualcomputingproject.group9a.project.chart.ChartingModule;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
@@ -8,9 +9,6 @@ import nl.tue.visualcomputingproject.group9a.project.preprocessing.PreProcessing
 import nl.tue.visualcomputingproject.group9a.project.renderer.RendererModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * The main class and start point of the application.
@@ -42,7 +40,7 @@ public class Main {
 	 */
 	public void run(String[] args) {
 		logger.info("Starting up modules...");
-		EventBus bus = new EventBus();
+		EventBus bus = new AsyncEventBus(Settings.executorService);
 		for(Module mod : modules) {
 			mod.startup(bus);
 		}
