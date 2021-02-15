@@ -7,6 +7,7 @@ public class Window {
 	private int width, height;
 	private String title;
 	private long window;
+	private Input input = new Input();
 
 	public Window(int width, int height, String title) {
 		this.width = width;
@@ -34,7 +35,16 @@ public class Window {
 		// Set FPS
 		GLFW.glfwSwapInterval(1);
 
+		// Set input callbacks
+		GLFW.glfwSetKeyCallback(window, input.getKeyboardCallback());
+		GLFW.glfwSetMouseButtonCallback(window, input.getMouseButtonCallback());
+		GLFW.glfwSetCursorPosCallback(window, input.getCursorPosCallback());
+
 		GLFW.glfwShowWindow(window);
+	}
+
+	public void destroy() {
+		input.destroy();
 	}
 
 	public boolean closed() {
