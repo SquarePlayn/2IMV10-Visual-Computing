@@ -9,7 +9,10 @@ import org.geotools.data.Query;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.util.factory.Hints;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -63,6 +66,13 @@ public class WFSApi {
 		logger.info("Metadata Bounds: {}", source.getBounds());
 	}
 	
+	public GeometryFactory getGeometryFactory() {
+		return JTSFactoryFinder.getGeometryFactory(new Hints(
+			Hints.CRS,
+			crs
+		));
+	}
+	
 	public Collection<MapSheet> query(Collection<ChunkPosition> positions) throws FactoryException, IOException {
 		logger.info("Querying for {} chunk positions...", positions.size());
 		
@@ -75,7 +85,21 @@ public class WFSApi {
 		}
 		
 		ReferencedEnvelope bbox = new ReferencedEnvelope(x1, x2, y1, y2, crs);
-		return query(bbox);
+		Collection<MapSheet> sheets = query(bbox);
+		
+		//Filter results to only include ones that overlap with the chunks.
+		List<MapSheet> results = new ArrayList<>();
+		GeometryFactory factory = getGeometryFactory();
+		for (MapSheet sheet : sheets) {
+			for (ChunkPosition position : positions) {
+				if (position.getJtsGeometry(factory).overlaps(sheet.getGeom())) {
+					results.add(sheet);
+					break;
+				}
+			}
+		}
+		
+		return results;
 	}
 	
 	public Collection<MapSheet> query(BoundingBox bbox) throws FactoryException, IOException {
