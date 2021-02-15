@@ -12,12 +12,17 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkRequestedEvent;
 import org.opengis.referencing.FactoryException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class LookupManager {
+	/** The logger of this class. */
+	static final Logger logger = LoggerFactory.getLogger(LookupManager.class);
+	
 	private final EventBus eventBus;
 	private final MapSheetCacheManager cacheManager;
 	private final DownloadManager downloadManager;
@@ -30,6 +35,7 @@ public class LookupManager {
 		this.downloadManager = downloadManager;
 		this.assemblyManager = assemblyManager;
 		eventBus.register(this);
+		logger.info("Lookup manager is ready!");
 	}
 	
 	@Subscribe

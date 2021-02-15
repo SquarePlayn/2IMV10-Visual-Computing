@@ -23,6 +23,7 @@ public class DownloadManager {
 	
 	public DownloadManager(EventBus eventbus) {
 		this.eventbus = eventbus;
+		logger.info("Download manager ready!");
 	}
 	
 	public void requestDownload(MapSheet sheet, Collection<ChunkPosition> positions, QualityLevel level) {

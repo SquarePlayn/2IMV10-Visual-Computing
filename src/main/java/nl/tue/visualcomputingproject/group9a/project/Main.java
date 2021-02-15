@@ -39,11 +39,15 @@ public class Main {
 	 * @param args The commandline arguments.
 	 */
 	public void run(String[] args) {
-		logger.info("Starting up modules...");
-		EventBus bus = new AsyncEventBus(Settings.executorService);
-		for(Module mod : modules) {
-			mod.startup(bus);
+		try {
+			logger.info("Starting up modules...");
+			EventBus bus = new AsyncEventBus(Settings.executorService);
+			for (Module mod : modules) {
+				mod.startup(bus);
+			}
+			logger.info("Finished starting up modules!");
+		} catch (Exception e) {
+			logger.error("An exception happened!", e);
 		}
-		logger.info("Finished starting up modules!");
 	}
 }
