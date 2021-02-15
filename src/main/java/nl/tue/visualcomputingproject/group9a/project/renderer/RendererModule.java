@@ -37,6 +37,7 @@ public class RendererModule
 		// TODO This is WIP and should probably move elsewhere
 		System.out.println("Render thread started");
 		Window window = new Window(800, 600, "2IMV10 Visual Computing");
+		window.setBackgroundColor(1.0f, 0, 0);
 		window.create();
 
 		while (!window.closed()) {
@@ -50,6 +51,13 @@ public class RendererModule
 
 			if (Input.isButtonDown(GLFW.GLFW_MOUSE_BUTTON_LEFT)) {
 				System.out.println("Mouse pressed, current pos: (" + Input.getMouseX() + ", " + Input.getMouseY() + ")." );
+			}
+
+			if (Input.isKeyDown(GLFW.GLFW_KEY_F)) {
+				window.setFullscreen(true);
+			}
+			if (Input.isKeyDown(GLFW.GLFW_KEY_G)) {
+				window.setFullscreen(false);
 			}
 
 			// Post-loop
