@@ -25,14 +25,12 @@ public class LookupManager {
 	static final Logger logger = LoggerFactory.getLogger(LookupManager.class);
 	
 	private final EventBus eventBus;
-	private final MapSheetCacheManager cacheManager;
 	private final DownloadManager downloadManager;
 	private final ChunkAssemblyManager assemblyManager;
 	private final WFSApi api = new WFSApi();
 	
-	public LookupManager(EventBus eventBus, MapSheetCacheManager cacheManager, DownloadManager downloadManager, ChunkAssemblyManager assemblyManager) throws IOException {
+	public LookupManager(EventBus eventBus, DownloadManager downloadManager, ChunkAssemblyManager assemblyManager) throws IOException {
 		this.eventBus = eventBus;
-		this.cacheManager = cacheManager;
 		this.downloadManager = downloadManager;
 		this.assemblyManager = assemblyManager;
 		eventBus.register(this);
