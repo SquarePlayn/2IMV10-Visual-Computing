@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.cache.stream;
 
 
 import java.io.*;

@@ -1,7 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
 import lombok.Value;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheNameFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.old_cache.CacheNameFactory;
 
 /**
  * This class uniquely identifies a {@link Chunk}.

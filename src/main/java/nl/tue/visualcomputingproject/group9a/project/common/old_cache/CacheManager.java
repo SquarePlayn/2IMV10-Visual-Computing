@@ -1,5 +1,8 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.ZipBufferedFileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
@@ -11,7 +14,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.*;
 
 /**
  * A cache manager which caches data both memory and on disk.
@@ -42,38 +44,7 @@ public class CacheManager<K, V> {
 	/** The factory used to initialize file streams */
 	protected final FileStreamFactory streamFactory;
 
-	/**
-	 * Simple buffered file stream factory.
-	 */
-	public static class BufferedFileStreamFactory
-			implements FileStreamFactory {
-		@Override
-		public OutputStream write(File file)
-				throws IOException {
-			return new BufferedOutputStream(new FileOutputStream(file, false));
-		}
-
-		@Override
-		public InputStream read(File file)
-				throws IOException {
-			return new BufferedInputStream(new FileInputStream(file));
-		}
-	}
 	
-	public static class ZipBufferedFileStreamFactory
-			implements FileStreamFactory {
-		@Override
-		public OutputStream write(File file)
-				throws IOException {
-			return new DeflaterOutputStream(new FileOutputStream(file, false));
-		}
-
-		@Override
-		public InputStream read(File file)
-				throws IOException {
-			return new InflaterInputStream(new FileInputStream(file));
-		}
-	}
 
 	/**
 	 * Creates a new cache manager.
@@ -501,5 +472,5 @@ public class CacheManager<K, V> {
 		System.out.println(data.getMeshBufferType() == data2.getMeshBufferType());
 		System.out.println(data.getVertexBufferType() == data2.getVertexBufferType());
 	}
-	
+
 }

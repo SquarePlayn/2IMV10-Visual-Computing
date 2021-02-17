@@ -1,5 +1,7 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;

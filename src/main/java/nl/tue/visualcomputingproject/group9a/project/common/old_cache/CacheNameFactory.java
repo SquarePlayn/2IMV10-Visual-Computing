@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
 /**
  * Factory class for serializing and deserializing a target class to a string
