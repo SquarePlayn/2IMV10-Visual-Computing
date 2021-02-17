@@ -13,9 +13,7 @@ import java.nio.file.Files;
 @Getter
 @AllArgsConstructor
 public class CacheFileStreamRequester<T extends FileId> {
-	private final Owner owner;
-	private final CacheFileManager fileManager;
-	private final FileIdFactory<T> idFactory;
+	private final CacheFileManager<File> fileManager;
 	private final FileStreamFactory streamFactory;
 	
 	@FunctionalInterface
@@ -116,34 +114,23 @@ public class CacheFileStreamRequester<T extends FileId> {
 		}
 	}
 	
-	
-	public void open()
-			throws IllegalOwnerException {
-		fileManager.registerOwnerResolveUncached(owner, idFactory);
-	}
-	
-	public void close()
-			throws IllegalOwnerException {
-		fileManager.deregisterOwner(owner);
-	}
-	
 	public InputStream getInputStream(FileId id)
 			throws IOException {
-		return streamFactory.read(fileManager.claimFile(owner, id));
+		return streamFactory.read(fileManager.claimFile(id));
 	}
 	
 	public InputStream getInputStreamReleaseOnClose(FileId id)
 			throws IOException {
 		return new PostProcessInputStream(
-				streamFactory.read(fileManager.claimFile(owner, id)),
+				streamFactory.read(fileManager.claimFile(id)),
 				() -> release(id)
 		);
 	}
 	
 	public OutputStream getOutputStream(FileId id)
 			throws IOException {
-		File dstFile = fileManager.claimFile(owner, id);
-		File tmpFile = fileManager.tmpFileOf(owner, id);
+		File dstFile = fileManager.claimFile(id);
+		File tmpFile = fileManager.tmpFileOf(id);
 		return new PostProcessOutputStream(
 				streamFactory.write(tmpFile),
 				() -> Files.move(tmpFile.toPath(), dstFile.toPath())
@@ -157,23 +144,23 @@ public class CacheFileStreamRequester<T extends FileId> {
 	}
 
 	public boolean isCached(FileId id) {
-		return fileManager.fileOf(owner, id).exists();
+		return fileManager.exists(id);
 	}
 	
 	public boolean isClaimed(FileId id) {
-		return fileManager.isClaimed(owner, id);
+		return fileManager.isClaimed(id);
 	}
 	
 	public File claim(FileId id) {
-		return fileManager.claimFile(owner, id);
+		return fileManager.claimFile(id);
 	}
 	
 	public void release(FileId id) {
-		return; // TODO
+		fileManager.releaseFile(id);
 	}
 	
 	public File fileOf(FileId id) {
-		return fileManager.fileOf(owner, id);
+		return fileManager.fileOf(id);
 	}
 	
 	

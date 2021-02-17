@@ -4,23 +4,26 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 @AllArgsConstructor
-public class LRUCachePolicy
-		implements CachePolicy {
-	private final PriorityBlockingQueue<QueueElem> queue;
-	private final Map<File, QueueElem> fileMap;
-	private final long maxSize;
+public class LRUCachePolicy<T>
+		implements CachePolicy<T> {
+	/** The logger object of this class. */
+	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private final PriorityQueue<QueueElem<T>> queue;
+	private final Map<T, QueueElem<T>> fileMap;
+	@Getter
+	private long maxSize;
 	private final AtomicLong curSize;
 	private final AtomicLong id;
 	private final Lock lock;
@@ -28,9 +31,9 @@ public class LRUCachePolicy
 	@Getter
 	@Setter
 	@AllArgsConstructor
-	private static class QueueElem
-			implements Comparable<QueueElem> {
-		private final File file;
+	private static class QueueElem<V>
+			implements Comparable<QueueElem<V>> {
+		private final V file;
 		private long size;
 		private long id;
 
@@ -41,7 +44,7 @@ public class LRUCachePolicy
 	}
 	
 	public LRUCachePolicy(long maxSize) {
-		queue = new PriorityBlockingQueue<>();
+		queue = new PriorityQueue<>();
 		fileMap = new ConcurrentHashMap<>();
 		this.maxSize = maxSize;
 		curSize = new AtomicLong(0);
@@ -50,25 +53,22 @@ public class LRUCachePolicy
 	}
 	
 	@Override
-	public boolean update(CacheFileManager fileManager, File file) {
+	public boolean update(CacheFileManager<T> fileManager, T file) {
 		long newId = id.incrementAndGet();
 		long size = 0;
-		if (file.exists()) {
-			try {
-				size = Files.size(file.toPath());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		if (fileManager.exists(file)) {
+			size = fileManager.sizeOf(file);
 		}
 		
 		long addSize = 0;
 		lock.lock();
 		try {
-			QueueElem elem = fileMap.get(file);
+			QueueElem<T> elem = fileMap.get(file);
 			if (elem == null) {
 				addSize = size;
-				elem = fileMap.put(file, new QueueElem(file, size, newId));
-				queue.put(elem);
+				elem = new QueueElem<>(file, size, newId);
+				fileMap.put(file, elem);
+				queue.add(elem);
 				return true;
 				
 			} else {
@@ -76,7 +76,7 @@ public class LRUCachePolicy
 				queue.remove(elem);
 				elem.size = size;
 				elem.id = newId;
-				queue.put(elem);
+				queue.add(elem);
 				return false;
 			}
 			
@@ -90,10 +90,10 @@ public class LRUCachePolicy
 	}
 
 	@Override
-	public boolean remove(File file) {
+	public boolean remove(T file) {
 		lock.lock();
 		try {
-			QueueElem elem = fileMap.get(file);
+			QueueElem<T> elem = fileMap.get(file);
 			if (elem == null) {
 				return false;
 			}
@@ -108,23 +108,38 @@ public class LRUCachePolicy
 	}
 
 	@Override
-	public boolean isRegistered(File file) {
+	public boolean isRegistered(T file) {
 		return fileMap.containsKey(file);
 	}
-
-	private void checkSize(CacheFileManager fileManager) {
-		while (curSize.get() <= maxSize) {
-			try {
-				QueueElem elem = queue.take();
-				if (curSize.get() > maxSize) return;
-				curSize.addAndGet(-elem.size);
-				fileManager.cacheDeleteFile(elem.file);
-				
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+	
+	@Override
+	public void setMaxSize(long size) {
+		maxSize = size;
 	}
 	
+	@Override
+	public long getCurSize() {
+		return curSize.get();
+	}
+
+	private void checkSize(CacheFileManager<T> fileManager) {
+		while (curSize.get() > maxSize) {
+			QueueElem<T> elem;
+			lock.lock();
+			try {
+				elem = queue.poll();
+				if (elem == null) return;
+				if (curSize.get() <= maxSize) {
+					queue.add(elem);
+					return;
+				}
+				curSize.addAndGet(-elem.size);
+			} finally {
+				lock.unlock();
+			}
+			LOGGER.info("Removed cache file " + elem.file);
+			fileManager.cacheDeleteFile(elem.file);
+		}
+	}
 	
 }

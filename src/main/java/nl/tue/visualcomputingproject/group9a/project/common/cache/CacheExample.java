@@ -23,6 +23,7 @@ public class CacheExample {
 		@Override
 		public String getPath() {
 			return genPath(
+					"test" + File.separator +
 					position.getX(),
 					position.getY(),
 					position.getWidth(),
@@ -31,31 +32,25 @@ public class CacheExample {
 	}
 
 	public static void main(String[] args) {
-		CacheFileManager cacheManager = new CacheFileManager(
-				new LRUCachePolicy(5 * CachePolicy.SIZE_GB),
+		CacheFileManager<File> cacheManager = new DiskCacheFileManager(
+				new LRUCachePolicy<>(5 * CachePolicy.SIZE_GB),
 				Settings.CACHE_DIR);
+		cacheManager.indexCache();
 		// ------------------------------------------------------
 		// Initialization
 		CacheFileStreamRequester<TestFileId> requester = new CacheFileStreamRequester<>(
-				new Owner("test"),
 				cacheManager,
-				(String path) -> {
-					String[] parts = path.split("_");
-					return new TestFileId(new ChunkPosition(
-							Double.parseDouble(parts[0]),
-							Double.parseDouble(parts[0]),
-							Double.parseDouble(parts[0]),
-							Double.parseDouble(parts[0])));
-				},
 				new BufferedFileStreamFactory()
 		);
-		requester.open();
+		
+		// Dynamically update cache memory consumption.
+		cacheManager.getPolicy().setMaxSize(5 * CachePolicy.SIZE_KB);
 		
 		// Writing
 		TestFileId id = new TestFileId(new ChunkPosition(0, 1, 2, 3));
 		File file = requester.claim(id); // Claimed files won't be removed by the cache manager unless released.
-		// Note: the data is first written to a temp file, and when the stream is
-		// closed it is moved to the returned file.
+		// Note: the data is first written to a temp file, and when the stream is closed,
+		// it is moved to the returned file.
 		if (!requester.isCached(id)) {
 			try (OutputStream os = requester.getOutputStream(id)) {
 				os.write("Hello there".getBytes(StandardCharsets.UTF_8));
@@ -82,8 +77,5 @@ public class CacheExample {
 //		finally {
 //			requester.release(id);
 //		}
-		
-		// Graceful termination (not required).
-		requester.close();
 	}
 }
