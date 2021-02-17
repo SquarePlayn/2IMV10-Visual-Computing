@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManager;
+package nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager;
 
 import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;

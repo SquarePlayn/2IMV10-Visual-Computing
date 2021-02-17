@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManager;
+package nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager;
 
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.VertexBufferType;
 import org.joml.Vector3d;
