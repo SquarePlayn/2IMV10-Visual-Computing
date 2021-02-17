@@ -1,11 +1,11 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
+import nl.tue.visualcomputingproject.group9a.project.common.old_cache.CacheManager;
 import org.lwjgl.BufferUtils;
 
 import java.io.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 /**
  * Factory class for serialization and deserialization of a target class {@code T}. <br>
