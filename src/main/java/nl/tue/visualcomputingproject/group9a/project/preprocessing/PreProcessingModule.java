@@ -4,8 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.KeepBestCacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.ZipBufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.old_cache.KeepBestCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
@@ -21,7 +21,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,7 +54,7 @@ public class PreProcessingModule
 				Settings.CACHE_DIR,
 				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
 				MeshChunkData.createCacheFactory(),
-				new CacheManager.ZipBufferedFileStreamFactory());
+				new ZipBufferedFileStreamFactory());
 		cache.indexDiskCache();
 
 	}

@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.common.Point;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManager.MeshBufferManager;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.BufferManager.VertexBufferManager;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.MeshBufferManager;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.VertexBufferManager;
 import org.joml.Vector3d;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
 import lombok.*;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.old_cache.CacheFactory;
 
 import java.io.*;
 import java.nio.ByteBuffer;
