@@ -6,6 +6,7 @@ import nl.tue.visualcomputingproject.group9a.project.chart.assembly.ChunkAssembl
 import nl.tue.visualcomputingproject.group9a.project.chart.download.DownloadManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.WFSApi;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
@@ -61,7 +62,7 @@ public class LookupManager {
 					
 					//Make sure we cover both the requested and higher qualities.
 					QualityLevel q = requestedChunk.getQuality();
-					while (q != QualityLevel.getBest()) { //TODO: Fix off-by-one error here preventing LAZ from being downloaded.
+					while (q.getOrder() <= Settings.MAX_DOWNLOAD_QUALITY.getOrder()) {
 						//Make sure the chunk will get registered with the assembly manager.
 						ChunkId newChunkId = new ChunkId(requestedChunk.getPosition(), q);
 						List<MapSheet> c = chunkSheets.getOrDefault(newChunkId, new ArrayList<>());
@@ -77,7 +78,11 @@ public class LookupManager {
 							requests.put(q, l);
 						}
 						
-						q = q.next();
+						if (q != QualityLevel.getBest()) {
+							q = q.next();
+						} else {
+							break;
+						}
 					}
 				}
 			}
