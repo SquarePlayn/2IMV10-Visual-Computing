@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.chart.assembly;
 
 import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
+import nl.tue.visualcomputingproject.group9a.project.common.Point;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
@@ -43,6 +44,12 @@ public class ChunkAssemblyJob {
 	}
 	
 	public Chunk<PointCloudChunkData> assembleChunk() {
-		throw new UnsupportedOperationException("Unimplemented");
+		List<Point> points = new ArrayList<>();
+		
+		for (Chunk<PointCloudChunkData> chunk : partialChunks) {
+			points.addAll(chunk.getData().getPoints());
+		}
+		
+		return new Chunk<>(chunkId, new PointCloudChunkData(points));
 	}
 }
