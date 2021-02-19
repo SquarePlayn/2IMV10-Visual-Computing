@@ -8,10 +8,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 public class MapSheetCacheManager {
 	private final CacheFileManager<File> cacheManager;
@@ -31,6 +28,10 @@ public class MapSheetCacheManager {
 	
 	public OutputStream getOutputStream(MapSheet sheet, QualityLevel level) throws IOException {
 		return requester.getOutputStream(new MapSheetFileId(sheet, level));
+	}
+	
+	public InputStream getInputStream(MapSheet sheet, QualityLevel level) throws IOException {
+		return requester.getInputStreamReleaseOnClose(new MapSheetFileId(sheet, level));
 	}
 	
 	@AllArgsConstructor

@@ -8,12 +8,17 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManag
 import nl.tue.visualcomputingproject.group9a.project.common.cache.DiskCacheFileManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.LRUCachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkRequestedEvent;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.PreProcessingModule;
 import nl.tue.visualcomputingproject.group9a.project.renderer.RendererModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * The main class and start point of the application.
@@ -54,6 +59,12 @@ public class TestMain {
 				mod.startup(bus, cacheManager);
 			}
 			logger.info("Finished starting up modules!");
+			
+			ArrayList<ChunkId> l = new ArrayList<>();
+			l.add(new ChunkId(new ChunkPosition(
+				154862.52,378917.306914, 100, 100
+			), QualityLevel.HALF_BY_HALF));
+			bus.post(new ProcessorChunkRequestedEvent(l));
 		} catch (Exception e) {
 			logger.error("An exception happened!", e);
 		}

@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.chart;
 import com.google.common.eventbus.EventBus;
 import nl.tue.visualcomputingproject.group9a.project.chart.assembly.ChunkAssemblyManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.download.DownloadManager;
+import nl.tue.visualcomputingproject.group9a.project.chart.extractor.Extractor;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
@@ -27,6 +28,7 @@ public class ChartingModule
 	private MapSheetCacheManager cacheManager;
 	private DownloadManager downloadManager;
 	private LookupManager lookupManager;
+	private Extractor extractor;
 	
 	@Override
 	public void startup(EventBus eventBus, CacheFileManager<File> cacheManager) throws IOException {
@@ -35,12 +37,7 @@ public class ChartingModule
 		assemblyManager = new ChunkAssemblyManager(eventBus);
 		downloadManager = new DownloadManager(eventBus, this.cacheManager);
 		lookupManager = new LookupManager(eventBus, downloadManager, assemblyManager);
+		extractor = new Extractor(eventBus, this.cacheManager);
 		logger.info("Charting is ready!");
-		
-		ArrayList<ChunkId> l = new ArrayList<>();
-		l.add(new ChunkId(new ChunkPosition(
-			154862.52,378917.306914, 100, 100
-		), QualityLevel.FIVE_BY_FIVE));
-		eventBus.post(new ProcessorChunkRequestedEvent(l));
 	}
 }
