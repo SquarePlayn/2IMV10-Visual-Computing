@@ -12,6 +12,7 @@ import org.geotools.feature.FeatureIterator;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.util.factory.Hints;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.opengis.feature.simple.SimpleFeature;
@@ -79,9 +80,9 @@ public class WFSApi {
 		double x1 = Double.MAX_VALUE, x2 = -Double.MAX_VALUE, y1 = Double.MAX_VALUE, y2 = -Double.MAX_VALUE;
 		for (ChunkPosition p : positions) {
 			x1 = Math.min(p.getX(), x1);
-			x2 = Math.max(p.getX(), x2);
+			x2 = Math.max(p.getX() + p.getWidth(), x2);
 			y1 = Math.min(p.getY(), y1);
-			y2 = Math.max(p.getY(), y2);
+			y2 = Math.max(p.getY() + p.getHeight(), y2);
 		}
 		
 		ReferencedEnvelope bbox = new ReferencedEnvelope(x1, x2, y1, y2, crs);
@@ -92,7 +93,8 @@ public class WFSApi {
 		GeometryFactory factory = getGeometryFactory();
 		for (MapSheet sheet : sheets) {
 			for (ChunkPosition position : positions) {
-				if (position.getJtsGeometry(factory).overlaps(sheet.getGeom())) {
+				Geometry chunkGeom = position.getJtsGeometry(factory);
+				if (chunkGeom.intersects(sheet.getGeom())) {
 					results.add(sheet);
 					break;
 				}

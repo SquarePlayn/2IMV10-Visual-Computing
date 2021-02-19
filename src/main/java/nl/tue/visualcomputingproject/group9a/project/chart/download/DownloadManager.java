@@ -22,11 +22,34 @@ public class DownloadManager {
 	}};
 	private final EventBus eventbus;
 	private final MapSheetCacheManager cacheManager;
+	private final DownloadThread downloadThread;
 	
 	public DownloadManager(EventBus eventbus, MapSheetCacheManager cacheManager) {
 		this.eventbus = eventbus;
 		this.cacheManager = cacheManager;
+		downloadThread = new DownloadThread(this, cacheManager);
+		downloadThread.start();
 		logger.info("Download manager ready!");
+	}
+	
+	public Optional<DownloadJob> getNextJob() {
+		synchronized (queues) {
+			QualityLevel q = QualityLevel.getWorst();
+			while (true) {
+				Queue<DownloadJob> queue = queues.get(q);
+				
+				DownloadJob job = queue.peek();
+				if (job != null) {
+					return Optional.of(job);
+				}
+				
+				if (q.equals(QualityLevel.getBest())) {
+					return Optional.empty();
+				} else {
+					q = q.next();
+				}
+			}
+		}
 	}
 	
 	public void requestDownload(MapSheet sheet, Collection<ChunkPosition> positions, QualityLevel level) {
@@ -36,6 +59,7 @@ public class DownloadManager {
 			// If a download finishes after the check but before we enter the sync block,
 			//  then we can download the same mapsheet twice. A classic TOCTOU problem..
 			if (cacheManager.isSheetAvailable(sheet, level)) {
+				logger.info("Skipping download of sheet {} at level {} since it's already available...", sheet.getBladnr(), level.toString());
 				eventbus.post(new ExtractionRequestEvent(sheet, level, positions));
 			} else {
 				Queue<DownloadJob> existingJobs = queues.get(level);

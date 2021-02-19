@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.ZipBufferedFileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.old_cache.KeepBestCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
@@ -44,7 +45,7 @@ public class PreProcessingModule
 	private Map<ChunkPosition, QualityLevel> requesting;
 	
 	@Override
-	public void startup(EventBus eventBus) {
+	public void startup(EventBus eventBus, CacheFileManager<File> cacheManager) {
 		logger.info("Preprocessing starting up!");
 		requesting = new ConcurrentHashMap<>();
 		

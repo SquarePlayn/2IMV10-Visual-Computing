@@ -1,8 +1,7 @@
-package nl.tue.visualcomputingproject.group9a.project;
+package nl.tue.visualcomputingproject.group9a.project.chart;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
-import nl.tue.visualcomputingproject.group9a.project.chart.ChartingModule;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
@@ -19,15 +18,13 @@ import java.io.File;
 /**
  * The main class and start point of the application.
  */
-public class Main {
+public class TestMain {
 	/** The logger of this class. */
-	static final Logger logger = LoggerFactory.getLogger(Main.class);
+	static final Logger logger = LoggerFactory.getLogger(TestMain.class);
 	
 	/** The modules of this application. */
 	static final Module[] modules = {
 		new ChartingModule(),
-		new PreProcessingModule(),
-		new RendererModule(),
 	};
 	
 	/**
@@ -36,7 +33,7 @@ public class Main {
 	 * @param args The commandline arguments.
 	 */
 	public static void main(String[] args) {
-		new Main().run(args);
+		new TestMain().run(args);
 	}
 
 	/**

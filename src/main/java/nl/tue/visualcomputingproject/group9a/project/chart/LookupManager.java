@@ -10,6 +10,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkRequestedEvent;
+import org.locationtech.jts.geom.Geometry;
 import org.opengis.referencing.FactoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,8 @@ public class LookupManager {
 			.map(ChunkId::getPosition)
 			.collect(Collectors.toSet()));
 		
+		logger.info("API returned {} sheets!", sheets.size());
+		
 		//Assemble the chunk sheets to prepare the chunk assembly manager.
 		Map<ChunkId, List<MapSheet>> chunkSheets = new HashMap<>();
 		
@@ -52,12 +55,13 @@ public class LookupManager {
 		for (MapSheet sheet : sheets) {
 			Map<QualityLevel, List<ChunkPosition>> requests = new HashMap<>();
 			for (ChunkId requestedChunk : event.getNewChunksRequested()) {
-				if (requestedChunk.getPosition().getJtsGeometry(api.getGeometryFactory()).overlaps(sheet.getGeom())) {
+				Geometry chunkGeom = requestedChunk.getPosition().getJtsGeometry(api.getGeometryFactory());
+				if (chunkGeom.intersects(sheet.getGeom())) {
 					//We now know that requestedChunk needs data from sheet.
 					
 					//Make sure we cover both the requested and higher qualities.
 					QualityLevel q = requestedChunk.getQuality();
-					while (q != QualityLevel.getBest()) {
+					while (q != QualityLevel.getBest()) { //TODO: Fix off-by-one error here preventing LAZ from being downloaded.
 						//Make sure the chunk will get registered with the assembly manager.
 						ChunkId newChunkId = new ChunkId(requestedChunk.getPosition(), q);
 						List<MapSheet> c = chunkSheets.getOrDefault(newChunkId, new ArrayList<>());
@@ -79,6 +83,8 @@ public class LookupManager {
 			}
 			sheetRequests.put(sheet, requests);
 		}
+		
+		logger.info("Going to request {} chunks!", chunkSheets.size());
 		
 		//Register these chunks with the assembly manager.
 		for (Map.Entry<ChunkId, List<MapSheet>> e : chunkSheets.entrySet()) {
