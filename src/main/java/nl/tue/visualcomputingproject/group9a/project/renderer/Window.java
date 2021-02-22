@@ -48,6 +48,9 @@ public class Window {
 		// Make OpenGL drawing functionality available on the window
 		GL.createCapabilities();
 
+		// Enable depth testing for 3D rendering
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+
 		// Set FPS
 		GLFW.glfwSwapInterval(1);
 
@@ -55,6 +58,7 @@ public class Window {
 		createCallbacks();
 
 		GLFW.glfwShowWindow(window);
+
 	}
 
 	private void createCallbacks() {
@@ -74,6 +78,7 @@ public class Window {
 	}
 
 	public void destroy() {
+		sizeCallback.free();
 		input.destroy();
 	}
 

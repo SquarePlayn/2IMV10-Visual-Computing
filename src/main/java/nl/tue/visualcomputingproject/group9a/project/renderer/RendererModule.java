@@ -3,6 +3,9 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.Mesh;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.Renderer;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +24,17 @@ public class RendererModule
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** Message queue from the event queue. */ 
 	final ConcurrentLinkedQueue<String> messages = new ConcurrentLinkedQueue<>();
-	
+
+	public Mesh mesh = new Mesh(new Vector3f[] {
+			new Vector3f(-0.5f, 0.5f, 0.0f),
+			new Vector3f(0.5f, 0.5f, 0.0f),
+			new Vector3f(0.5f, -0.5f, 0.0f),
+			new Vector3f(-0.5f, -0.5f, 0.0f),
+	}, new int[] {
+			0, 1, 2,
+			0, 3, 2
+	});
+	public Renderer renderer = new Renderer();
 	
 	@Override
 	public void startup(EventBus eventBus) {
@@ -59,6 +72,8 @@ public class RendererModule
 			if (Input.isKeyDown(GLFW.GLFW_KEY_G)) {
 				window.setFullscreen(false);
 			}
+
+			renderer.renderMesh(mesh);
 
 			// Post-loop
 			window.swapBuffers();
