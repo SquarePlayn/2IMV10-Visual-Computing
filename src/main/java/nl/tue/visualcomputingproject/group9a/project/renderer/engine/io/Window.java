@@ -19,7 +19,8 @@ public class Window {
 	private String title;
 	private double fps;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private Vector3f backgroundColor;
 
 	private double time;
@@ -93,6 +94,7 @@ public class Window {
 
 	/**
 	 * Whether enough time has passed that the frame should be updated again
+	 *
 	 * @return
 	 */
 	public boolean shouldUpdate() {
@@ -117,6 +119,7 @@ public class Window {
 	/**
 	 * Get the current nano time in seconds
 	 * TODO Move this somehwere more logical than in the Window class
+	 *
 	 * @return Current time in seconds
 	 */
 	private double getTime() {
@@ -125,6 +128,7 @@ public class Window {
 
 	/**
 	 * Check whether the window should be closed, such as when the close button is pressed
+	 *
 	 * @return True if the window should be closed
 	 */
 	public boolean closed() {

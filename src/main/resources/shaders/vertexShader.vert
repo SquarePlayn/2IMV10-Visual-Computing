@@ -40,10 +40,10 @@ void main(void) {
         // the reflected vector.
         vec3 unitNormal = normalize(surfaceNormal);
         vec3 viewVector = normalize(transPosition.xyz - cameraPosition);
-        reflectedVector = reflect(viewVector, unitNormal); // GLSL's built-in reflect() function
+        reflectedVector = reflect(viewVector, unitNormal);// GLSL's built-in reflect() function
         reflectedVector *= vec3(1.0, -1.0, 1.0);
     } else {
-        reflectedVector = vec3(0, 0, 0); // If not reflective, pass something arbitrary
+        reflectedVector = vec3(0, 0, 0);// If not reflective, pass something arbitrary
     }
 
     color = in_color;

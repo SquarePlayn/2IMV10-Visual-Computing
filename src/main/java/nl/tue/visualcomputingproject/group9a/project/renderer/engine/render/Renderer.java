@@ -40,7 +40,7 @@ public class Renderer {
 	/**
 	 * Render a model to the screen
 	 *
-	 * @param model Model to render
+	 * @param model  Model to render
 	 * @param shader Shader to render the model with
 	 * @param camera Camera of the screen currently active
 	 */

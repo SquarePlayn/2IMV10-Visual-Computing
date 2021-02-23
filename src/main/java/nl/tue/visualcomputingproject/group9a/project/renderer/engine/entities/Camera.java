@@ -5,8 +5,6 @@ import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
 
-import java.util.Vector;
-
 public class Camera {
 
 	/**
@@ -15,7 +13,8 @@ public class Camera {
 	 */
 	private final Window window;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	Vector3f position = new Vector3f(0, 0, 0);
 
 	// Rotational & zoom variables

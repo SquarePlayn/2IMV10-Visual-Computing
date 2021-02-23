@@ -11,12 +11,10 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawMo
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Renderer;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
 import org.joml.Vector3f;
-import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**

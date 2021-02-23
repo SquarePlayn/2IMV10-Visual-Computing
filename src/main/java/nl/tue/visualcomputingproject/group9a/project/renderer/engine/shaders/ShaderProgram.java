@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.FloatBuffer;
-import java.util.Vector;
 
 public abstract class ShaderProgram {
 
@@ -53,6 +52,7 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Get the location ID of a uniform variable to bind to the vertex shader
+	 *
 	 * @param uniformName The name of the variable in the shader
 	 * @return The location ID of the shader variable with the name {@code uniformName}.
 	 */
@@ -91,7 +91,8 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Bind an attribute to a variable name for the shader
-	 * @param attribute Attribute ID to bind
+	 *
+	 * @param attribute    Attribute ID to bind
 	 * @param variableName Name of the shader variable to bind the attibute to
 	 */
 	protected void bindAttribute(int attribute, String variableName) {
@@ -100,8 +101,9 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Load a float into a uniform variable in the shader
+	 *
 	 * @param location Location ID of the uniform variable to load into
-	 * @param value Value to load into the uniform variable
+	 * @param value    Value to load into the uniform variable
 	 */
 	protected void loadFloat(int location, float value) {
 		GL20.glUniform1f(location, value);
@@ -109,8 +111,9 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Load an integer into a uniform variable in the shader
+	 *
 	 * @param location Location ID of the uniform variable to load into
-	 * @param value Value to load into the uniform variable
+	 * @param value    Value to load into the uniform variable
 	 */
 	protected void loadInt(int location, int value) {
 		GL20.glUniform1i(location, value);
@@ -118,8 +121,9 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Load a boolean into a uniform variable in the shader
+	 *
 	 * @param location Location ID of the uniform variable to load into
-	 * @param value Value to load into the uniform variable
+	 * @param value    Value to load into the uniform variable
 	 */
 	protected void loadBoolean(int location, boolean value) {
 		GL20.glUniform1f(location, value ? 1 : 0);
@@ -127,8 +131,9 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Load a Vector3f into a uniform variable in the shader
+	 *
 	 * @param location Location ID of the uniform variable to load into
-	 * @param vector Vector to load into the uniform variable
+	 * @param vector   Vector to load into the uniform variable
 	 */
 	protected void loadVector3f(int location, Vector3f vector) {
 		GL20.glUniform3f(location, vector.x, vector.y, vector.z);
@@ -136,8 +141,9 @@ public abstract class ShaderProgram {
 
 	/**
 	 * Load a Matrix4f into a uniform variable in the shader
+	 *
 	 * @param location Location ID of the uniform variable to load into
-	 * @param matrix Matrix to load into the uniform variable
+	 * @param matrix   Matrix to load into the uniform variable
 	 */
 	protected void loadMatrix4f(int location, Matrix4f matrix) {
 		// Load the matrix data into the temporary matrixBuffer

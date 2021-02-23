@@ -1,7 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils;
 
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
-import org.ejml.data.Matrix;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -9,11 +8,12 @@ public class Maths {
 
 	/**
 	 * Create a transformation matrix, handling transformation, rotation and scale
+	 *
 	 * @param translation Positional translation
-	 * @param rx Rotation along X-axis in degrees
-	 * @param ry Rotation along Y-axis in degrees
-	 * @param rz Rotation along Z-axis in degrees
-	 * @param scale Scale / size
+	 * @param rx          Rotation along X-axis in degrees
+	 * @param ry          Rotation along Y-axis in degrees
+	 * @param rz          Rotation along Z-axis in degrees
+	 * @param scale       Scale / size
 	 * @return Transformation matrix
 	 */
 	public static Matrix4f createTransformationMatrix(Vector3f translation, float rx, float ry, float rz, float scale) {
