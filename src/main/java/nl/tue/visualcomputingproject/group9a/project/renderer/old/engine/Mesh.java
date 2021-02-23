@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.renderer.engine;
+package nl.tue.visualcomputingproject.group9a.project.renderer.old.engine;
 
 import lombok.Getter;
 import org.joml.Vector3f;

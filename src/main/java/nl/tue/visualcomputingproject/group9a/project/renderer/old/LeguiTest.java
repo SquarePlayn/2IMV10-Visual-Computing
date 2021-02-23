@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.renderer;
+package nl.tue.visualcomputingproject.group9a.project.renderer.old;
 
 import org.joml.Vector2i;
 import org.liquidengine.legui.DefaultInitializer;

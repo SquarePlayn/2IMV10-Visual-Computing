@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.renderer.engine;
+package nl.tue.visualcomputingproject.group9a.project.renderer.old.engine;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
