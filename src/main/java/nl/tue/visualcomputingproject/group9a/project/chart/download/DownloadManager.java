@@ -58,6 +58,7 @@ public class DownloadManager {
 			//Namely:
 			// If a download finishes after the check but before we enter the sync block,
 			//  then we can download the same mapsheet twice. A classic TOCTOU problem..
+			//TODO: What if sheet is being written currently so sheet exists in cache but isn't done yet?
 			if (cacheManager.isSheetAvailable(sheet, level)) {
 				logger.info("Skipping download of sheet {} at level {} since it's already available...", sheet.getBladnr(), level.toString());
 				eventbus.post(new ExtractionRequestEvent(sheet, level, positions));
