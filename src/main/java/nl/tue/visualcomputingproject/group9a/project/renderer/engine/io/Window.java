@@ -12,6 +12,7 @@ import org.lwjgl.opengl.GL42;
 
 public class Window {
 
+	@Getter
 	private long window;
 
 	@Getter

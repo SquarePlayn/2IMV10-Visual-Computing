@@ -80,14 +80,14 @@ public class RendererModule extends Thread implements Module {
 
 		light = new Light(new Vector3f(1, 1, 1), new Vector3f(1, 1, 1));
 
-		float height = -1f;
+		float height = 1f;
 		float size = 0.5f;
 		testModel = Loader.loadToVAO(
 				new float[]{
-						-size, height, size,
-						size, height, size,
-						size, height, -size,
-						-size, height, -size
+						-size * 2, height, size,
+						size * 2, height, size / 2.f,
+						size * 2, height, -size / 2.f,
+						-size * 2, height, -size
 				}, new int[]{
 						0, 1, 2,
 						0, 3, 2
@@ -111,7 +111,7 @@ public class RendererModule extends Thread implements Module {
 
 		// TODO Test territory
 		camera.getPosition().add(0.0f, 0.00f, 0.0f);
-		camera.setPitch(camera.getPitch() + 0.1f);
+//		camera.setPitch(camera.getPitch() + 0.1f);
 		// End of test territory
 
 		// Put the new frame on the screen
@@ -119,6 +119,7 @@ public class RendererModule extends Thread implements Module {
 	}
 
 	private void cleanup() {
+		camera.cleanup();
 		shader.cleanup();
 		window.stop();
 	}
