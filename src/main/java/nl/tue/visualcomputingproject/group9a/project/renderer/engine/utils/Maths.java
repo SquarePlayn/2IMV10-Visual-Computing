@@ -54,7 +54,7 @@ public class Maths {
 		matrix.rotateZ((float) Math.toRadians(camera.getRoll()), matrix);
 
 		// Translate the view matrix. NB: Backwards
-		matrix.translate(camera.getPosition().mul(-1));
+		matrix.translate(new Vector3f(camera.getPosition()).mul(-1));
 
 		return matrix;
 	}

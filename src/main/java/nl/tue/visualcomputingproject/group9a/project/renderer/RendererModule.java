@@ -110,7 +110,8 @@ public class RendererModule extends Thread implements Module {
 		shader.stop();
 
 		// TODO Test territory
-		camera.setPosition(camera.getPosition().add(0.01f, 0, 0));
+		camera.getPosition().add(0.0f, 0.00f, 0.0f);
+		camera.setPitch(camera.getPitch() + 0.1f);
 		// End of test territory
 
 		// Put the new frame on the screen

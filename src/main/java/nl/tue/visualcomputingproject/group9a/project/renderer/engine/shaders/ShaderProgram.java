@@ -14,9 +14,9 @@ import java.nio.FloatBuffer;
 
 public abstract class ShaderProgram {
 
-	private int programID;
-	private int vertexShaderID;
-	private int fragmentShaderID;
+	private final int programID;
+	private final int vertexShaderID;
+	private final int fragmentShaderID;
 
 	// Float buffer used for loading 4x4 matrices into the shader's uniform variables
 	private static FloatBuffer matrixBuffer = BufferUtils.createFloatBuffer(16);
@@ -165,6 +165,7 @@ public abstract class ShaderProgram {
 		StringBuilder shaderSource = new StringBuilder();
 
 		try {
+			// Load an entire file into a StringBuilder
 			InputStream inputStream = ShaderProgram.class.getResourceAsStream(file);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 			String line;
@@ -179,6 +180,7 @@ public abstract class ShaderProgram {
 			System.exit(-1);
 		}
 
+		// Compile the shader
 		int shaderID = GL20.glCreateShader(type);
 		GL20.glShaderSource(shaderID, shaderSource);
 		GL20.glCompileShader(shaderID);
@@ -187,6 +189,7 @@ public abstract class ShaderProgram {
 			System.err.println("Could not compile the shader.");
 			System.exit(-1);
 		}
+
 		return shaderID;
 	}
 }

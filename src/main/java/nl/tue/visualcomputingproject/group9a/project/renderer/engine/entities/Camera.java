@@ -19,8 +19,12 @@ public class Camera {
 
 	// Rotational & zoom variables
 	// TODO redo this
-	private float theta = 0;
-	private float phi = 0;
+	@Getter @Setter
+	private float pitch = 90;
+	@Getter @Setter
+	private float yaw = 0;
+	@Getter @Setter
+	private float roll = 0;
 
 	public Camera(Window window) {
 		this.window = window;
@@ -31,27 +35,5 @@ public class Camera {
 	 */
 	public void move() {
 		// TODO Listen to mouse events, move if moved
-	}
-
-	/**
-	 * @return Pitch of the camera in degrees
-	 */
-	public float getPitch() {
-		return (float) Math.toDegrees(phi) + 90;
-	}
-
-	/**
-	 * @return Yaw of the camera in degrees
-	 */
-	public float getYaw() {
-		return (float) Math.toDegrees(theta) + 90;
-	}
-
-	/**
-	 * @return Roll of the camera in degrees
-	 */
-	public float getRoll() {
-		// Currently, the camera is unable to roll
-		return 0.0f;
 	}
 }

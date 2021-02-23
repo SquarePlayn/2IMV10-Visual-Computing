@@ -130,7 +130,7 @@ public class Loader {
 		// Specify the location and organization in the VAO
 		GL20.glVertexAttribPointer(
 				attributeNumber, // Position in the VAO
-				dataSize, // Number of vectors
+				dataSize, // Number of data points per vertex
 				GL11.GL_FLOAT, // Type of vertices
 				false, // Not normalized
 				0, // Distance between vertices in the array
