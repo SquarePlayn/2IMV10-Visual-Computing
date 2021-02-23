@@ -49,44 +49,45 @@ public class Extractor {
 			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData(new ArrayList<>())));
 		}
 		
-		InputStream inputStream = cacheManager.getInputStream(event.getSheet(), event.getLevel());
-		ZipInputStream zipInputStream = new ZipInputStream(inputStream);
-		ZipEntry entry = zipInputStream.getNextEntry();
-		logger.info("Zip contents: {}", entry);
-		
-		GeoTiffReader reader = new GeoTiffReader(zipInputStream);
-		GridCoverage2D coverage = (GridCoverage2D) reader.read(null);
-		
-		//Assumption: CRS of the geotiff is EPSG:28992
-		//If not, useful link: https://gis.stackexchange.com/questions/278350/obtaining-longitude-and-latitude-from-geotiff-with-geotools
-		
-		long count = 0;
-		for (Chunk<PointCloudChunkData> chunk : chunks) {
-			DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
-			DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
-			GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
-			GridCoordinates2D trg = coverage.getGridGeometry().worldToGrid(tr);
-			logger.info("Chunk: {} {} {} {}", bl, tr, blg, trg);
+		try (InputStream inputStream = cacheManager.getInputStream(event.getSheet(), event.getLevel())) {
+			ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+			ZipEntry entry = zipInputStream.getNextEntry();
+			logger.info("Zip contents: {}", entry);
 			
-			for (int i = (int) blg.getX(); i < trg.getX(); i++) {
-				for (int j = (int) trg.getY(); j < blg.getY(); j++) {
-					GridCoordinates2D coord = new GridCoordinates2D(i, j);
-					DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
-					
-					double[] vals = new double[1];
-					coverage.evaluate(p, vals);
-					double x = p.getOrdinate(0);
-					double y = p.getOrdinate(1);
-					
-					chunk.getData().getPoints().add(new Point(x, y, vals[0]));
-					count++;
+			GeoTiffReader reader = new GeoTiffReader(zipInputStream);
+			GridCoverage2D coverage = (GridCoverage2D) reader.read(null);
+			
+			//Assumption: CRS of the geotiff is EPSG:28992
+			//If not, useful link: https://gis.stackexchange.com/questions/278350/obtaining-longitude-and-latitude-from-geotiff-with-geotools
+			
+			long count = 0;
+			for (Chunk<PointCloudChunkData> chunk : chunks) {
+				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
+				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
+				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
+				GridCoordinates2D trg = coverage.getGridGeometry().worldToGrid(tr);
+				logger.info("Chunk: {} {} {} {}", bl, tr, blg, trg);
+				
+				for (int i = (int) blg.getX(); i < trg.getX(); i++) {
+					for (int j = (int) trg.getY(); j < blg.getY(); j++) {
+						GridCoordinates2D coord = new GridCoordinates2D(i, j);
+						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
+						
+						double[] vals = new double[1];
+						coverage.evaluate(p, vals);
+						double x = p.getOrdinate(0);
+						double y = p.getOrdinate(1);
+						
+						chunk.getData().getPoints().add(new Point(x, y, vals[0]));
+						count++;
+					}
 				}
 			}
+			
+			logger.info("Extracted {} points into {} chunks.", count, chunks.size());
+			
+			return chunks;
 		}
-		
-		logger.info("Extracted {} points into {} chunks.", count, chunks.size());
-		
-		return chunks;
 	}
 	
 	@Subscribe
