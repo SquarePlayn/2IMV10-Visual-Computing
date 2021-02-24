@@ -1,8 +1,9 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.FileStreamFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +14,7 @@ import java.nio.file.Files;
 @Getter
 @AllArgsConstructor
 public class CacheFileStreamRequester<T extends FileId> {
-	private final CacheFileManager<File> fileManager;
+	private final DiskCacheFileManager fileManager;
 	private final FileStreamFactory streamFactory;
 	
 	@FunctionalInterface
@@ -34,22 +35,26 @@ public class CacheFileStreamRequester<T extends FileId> {
 		}
 
 		@Override
-		public void write(byte[] b) throws IOException {
+		public void write(byte[] b)
+				throws IOException {
 			os.write(b);
 		}
 
 		@Override
-		public void write(byte[] b, int off, int len) throws IOException {
+		public void write(byte[] b, int off, int len)
+				throws IOException {
 			os.write(b, off, len);
 		}
 
 		@Override
-		public void flush() throws IOException {
+		public void flush()
+				throws IOException {
 			os.flush();
 		}
 
 		@Override
-		public void close() throws IOException {
+		public void close()
+				throws IOException {
 			os.close();
 			run.run();
 		}
@@ -114,12 +119,12 @@ public class CacheFileStreamRequester<T extends FileId> {
 		}
 	}
 	
-	public InputStream getInputStream(FileId id)
+	public InputStream getInputStream(T id)
 			throws IOException {
 		return streamFactory.read(fileManager.claimFile(id));
 	}
 	
-	public InputStream getInputStreamReleaseOnClose(FileId id)
+	public InputStream getInputStreamReleaseOnClose(T id)
 			throws IOException {
 		return new PostProcessInputStream(
 				streamFactory.read(fileManager.claimFile(id)),
@@ -127,7 +132,7 @@ public class CacheFileStreamRequester<T extends FileId> {
 		);
 	}
 	
-	public OutputStream getOutputStream(FileId id)
+	public OutputStream getOutputStream(T id)
 			throws IOException {
 		File dstFile = fileManager.claimFile(id);
 		File tmpFile = fileManager.tmpFileOf(id);
@@ -137,29 +142,29 @@ public class CacheFileStreamRequester<T extends FileId> {
 		);
 	}
 	
-	public OutputStream claimAndGetOutputStream(FileId id)
+	public OutputStream claimAndGetOutputStream(T id)
 			throws IOException {
 		claim(id);
 		return getOutputStream(id);
 	}
 
-	public boolean isCached(FileId id) {
+	public boolean isCached(T id) {
 		return fileManager.exists(id);
 	}
 	
-	public boolean isClaimed(FileId id) {
+	public boolean isClaimed(T id) {
 		return fileManager.isClaimed(id);
 	}
 	
-	public File claim(FileId id) {
+	public File claim(T id) {
 		return fileManager.claimFile(id);
 	}
 	
-	public void release(FileId id) {
+	public void release(T id) {
 		fileManager.releaseFile(id);
 	}
 	
-	public File fileOf(FileId id) {
+	public File fileOf(T id) {
 		return fileManager.fileOf(id);
 	}
 	

@@ -1,16 +1,14 @@
 package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.ZipBufferedFileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
-import org.lwjgl.BufferUtils;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.EOFException;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectSerializer;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.FileStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.invoke.MethodHandles;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param <K> The (small) class used to uniquely identify each data class.
  * @param <V> The class of the data to store.
  */
+@Deprecated
 public class CacheManager<K, V> {
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -36,7 +35,7 @@ public class CacheManager<K, V> {
 	/** The factory class used generate the names of the cache files. */
 	protected final CacheNameFactory<K> keyFactory;
 	/** The factory class used to serialized and deserialize the data. */
-	protected final CacheFactory<V> valueFactory;
+	protected final ObjectSerializer<V> valueFactory;
 	/** The in memory cache. */
 	protected final Map<K, V> memoryCache;
 	/** Set containing the data cached on disk. */
@@ -56,7 +55,7 @@ public class CacheManager<K, V> {
 	public CacheManager(
 			File cacheDir,
 			CacheNameFactory<K> keyFactory,
-			CacheFactory<V> valueFactory) {
+			ObjectSerializer<V> valueFactory) {
 		this(cacheDir, keyFactory, valueFactory, new BufferedFileStreamFactory());
 	}
 
@@ -72,7 +71,7 @@ public class CacheManager<K, V> {
 	public CacheManager(
 			File cacheDir,
 			CacheNameFactory<K> keyFactory,
-			CacheFactory<V> valueFactory,
+			ObjectSerializer<V> valueFactory,
 			FileStreamFactory streamFactory) {
 		this.cacheDir = cacheDir;
 		this.keyFactory = keyFactory;
@@ -410,67 +409,67 @@ public class CacheManager<K, V> {
 		removeMemoryCache(key);
 	}
 
-	/**
-	 * TODO: to be removed.
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		File cacheDir = new File("cache");
-		System.out.println(cacheDir.getAbsoluteFile());
-		
-		int amt = 3*4*1024;
-		ByteBuffer big = BufferUtils.createByteBuffer(amt);
-		ByteBuffer small = BufferUtils.createByteBuffer(amt);
-		byte[] bigArr = new byte[amt];
-		byte[] smallArr = new byte[amt];
-
-		Random ran = new Random();
-		ran.nextBytes(bigArr);
-		big.put(bigArr);
-		ran.nextBytes(smallArr);
-		small.put(smallArr);
-		
-//		for (int i = 0; i < amt; i++) {
-//			bigArr[i] = (byte) i;
-//			smallArr[i] = (byte) i;
-////			bigArr[i] = (byte) ('A' + (i % 26));
-////			smallArr[i] = (byte) ('a' + (i % 26));
-//		}
+//	/**
+//	 * TODO: to be removed.
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+//		File cacheDir = new File("cache");
+//		System.out.println(cacheDir.getAbsoluteFile());
+//		
+//		int amt = 3*4*1024;
+//		ByteBuffer big = BufferUtils.createByteBuffer(amt);
+//		ByteBuffer small = BufferUtils.createByteBuffer(amt);
+//		byte[] bigArr = new byte[amt];
+//		byte[] smallArr = new byte[amt];
+//
+//		Random ran = new Random();
+//		ran.nextBytes(bigArr);
 //		big.put(bigArr);
+//		ran.nextBytes(smallArr);
 //		small.put(smallArr);
-		
-		big.flip();
-		small.flip();
-		
-		MeshChunkData data = new MeshChunkData(
-				VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT,
-				MeshBufferType.TRIANGLES_CLOCKWISE_3_INT,
-				amt,
-				small,
-				big
-		);
-		
-		CacheManager<ChunkId, MeshChunkData> manager = new CacheManager<>(
-				cacheDir,
-				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
-				MeshChunkData.createCacheFactory(),
-				new ZipBufferedFileStreamFactory());
-		
-		ChunkId key = new ChunkId(
-				new ChunkPosition(0, 0, 100, 100),
-				QualityLevel.FIVE_BY_FIVE);
-		manager.put(key, data);
-		
-		System.out.println(manager.isMemoryCached(key));
-		System.out.println(manager.isDiskCached(key));
-		System.out.println(manager.isCached(key));
-
-		manager.removeMemoryCache(key);
-		MeshChunkData data2 = manager.get(key);
-		System.out.println(data);
-		System.out.println(data2);
-		System.out.println(data.getMeshBufferType() == data2.getMeshBufferType());
-		System.out.println(data.getVertexBufferType() == data2.getVertexBufferType());
-	}
+//		
+////		for (int i = 0; i < amt; i++) {
+////			bigArr[i] = (byte) i;
+////			smallArr[i] = (byte) i;
+//////			bigArr[i] = (byte) ('A' + (i % 26));
+//////			smallArr[i] = (byte) ('a' + (i % 26));
+////		}
+////		big.put(bigArr);
+////		small.put(smallArr);
+//		
+//		big.flip();
+//		small.flip();
+//		
+//		MeshChunkData data = new MeshChunkData(
+//				VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT,
+//				MeshBufferType.TRIANGLES_CLOCKWISE_3_INT,
+//				amt,
+//				small,
+//				big
+//		);
+//		
+//		CacheManager<ChunkId, MeshChunkData> manager = new CacheManager<>(
+//				cacheDir,
+//				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
+//				MeshChunkData.createCacheFactory(),
+//				new ZipBufferedFileStreamFactory());
+//		
+//		ChunkId key = new ChunkId(
+//				new ChunkPosition(0, 0, 100, 100),
+//				QualityLevel.FIVE_BY_FIVE);
+//		manager.put(key, data);
+//		
+//		System.out.println(manager.isMemoryCached(key));
+//		System.out.println(manager.isDiskCached(key));
+//		System.out.println(manager.isCached(key));
+//
+//		manager.removeMemoryCache(key);
+//		MeshChunkData data2 = manager.get(key);
+//		System.out.println(data);
+//		System.out.println(data2);
+//		System.out.println(data.getMeshBufferType() == data2.getMeshBufferType());
+//		System.out.println(data.getVertexBufferType() == data2.getVertexBufferType());
+//	}
 
 }

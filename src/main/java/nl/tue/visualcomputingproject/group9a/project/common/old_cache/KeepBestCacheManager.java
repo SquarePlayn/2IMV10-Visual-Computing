@@ -1,7 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectSerializer;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.FileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Deprecated
 public class KeepBestCacheManager<V>
 		extends CacheManager<ChunkId, V> {
 	
@@ -27,7 +29,7 @@ public class KeepBestCacheManager<V>
 	public KeepBestCacheManager(
 			File cacheDir,
 			CacheNameFactory<ChunkId> keyFactory,
-			CacheFactory<V> valueFactory) {
+			ObjectSerializer<V> valueFactory) {
 		this(cacheDir, keyFactory, valueFactory, new BufferedFileStreamFactory());
 	}
 
@@ -43,7 +45,7 @@ public class KeepBestCacheManager<V>
 	public KeepBestCacheManager(
 			File cacheDir,
 			CacheNameFactory<ChunkId> keyFactory,
-			CacheFactory<V> valueFactory,
+			ObjectSerializer<V> valueFactory,
 			FileStreamFactory streamFactory) {
 		super(cacheDir, keyFactory, valueFactory, streamFactory);
 		memoryQualityMapper = new ConcurrentHashMap<>();
