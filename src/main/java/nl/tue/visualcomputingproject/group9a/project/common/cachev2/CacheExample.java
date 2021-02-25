@@ -5,7 +5,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.LRUCachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 
 import java.io.File;
@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+@Deprecated
 public class CacheExample {
 
 	@AllArgsConstructor

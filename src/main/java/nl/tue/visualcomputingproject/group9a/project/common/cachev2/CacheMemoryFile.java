@@ -3,10 +3,11 @@ package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheObject;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 
+@Deprecated
 @RequiredArgsConstructor
-public class CacheMemoryFile<V extends MemoryCacheObject> {
+public class CacheMemoryFile<V extends CacheableObject> {
 	@Getter
 	private final FileId id;
 	private final MemoryCacheManager<V> manager;

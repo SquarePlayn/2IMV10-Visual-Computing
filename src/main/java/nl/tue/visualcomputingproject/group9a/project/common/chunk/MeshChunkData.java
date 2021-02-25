@@ -1,8 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
 import lombok.*;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheObject;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectSerializer;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -14,7 +14,7 @@ import java.nio.IntBuffer;
  */
 @Value
 public class MeshChunkData
-		implements MemoryCacheObject {
+		implements CacheableObject {
 	/** The buffer storing the vertex data. */
 	@NonNull
 	@Getter(AccessLevel.NONE)

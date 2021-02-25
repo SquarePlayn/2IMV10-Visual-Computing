@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.util.*;
 
+@Deprecated
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class DiskCacheFileManager
 		extends CacheManager<File> {

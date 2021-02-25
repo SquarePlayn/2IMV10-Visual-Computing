@@ -3,7 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.FileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 
+@Deprecated
 @Getter
 @AllArgsConstructor
 public class CacheFileStreamRequester<T extends FileId> {

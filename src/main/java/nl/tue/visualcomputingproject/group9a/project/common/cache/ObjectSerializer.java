@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
+package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
 import nl.tue.visualcomputingproject.group9a.project.common.old_cache.CacheManager;
 import org.lwjgl.BufferUtils;

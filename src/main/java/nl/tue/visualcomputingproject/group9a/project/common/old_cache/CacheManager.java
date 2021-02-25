@@ -1,9 +1,9 @@
 package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.EOFException;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectSerializer;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.BufferedFileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.FileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.EOFException;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

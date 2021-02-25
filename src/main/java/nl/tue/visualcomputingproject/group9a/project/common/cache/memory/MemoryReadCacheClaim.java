@@ -2,9 +2,11 @@ package nl.tue.visualcomputingproject.group9a.project.common.cache.memory;
 
 import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
 
-public class MemoryReadCacheClaim<T extends MemoryCacheObject>
+public class MemoryReadCacheClaim<T extends CacheableObject>
 		implements ReadCacheClaim {
 	@Getter
 	protected final FileId id;

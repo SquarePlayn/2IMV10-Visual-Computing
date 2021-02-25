@@ -3,11 +3,13 @@ package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+@Deprecated
 @Getter
 @AllArgsConstructor
 public class ObjectCacheManager<T extends FileId, V> {

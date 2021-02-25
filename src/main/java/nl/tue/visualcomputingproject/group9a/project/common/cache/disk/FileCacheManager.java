@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cache.disk;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileIdFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
@@ -16,10 +17,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * An {@link CacheManager} implementation which stores the data on disk.
+ * A {@link CacheManager} implementation which stores the data on disk.
  */
 public class FileCacheManager
-		extends CacheManager<FileReadCacheClaim, FileReadWriteCacheClaim> {
+		extends SimpleCacheManager<FileReadCacheClaim, FileReadWriteCacheClaim> {
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

@@ -2,9 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cache.memory;
 
 import lombok.Getter;
 import lombok.NonNull;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileIdFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 
 /**
@@ -12,8 +10,8 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePo
  * 
  * @param <T> The type of data data being managed.
  */
-public class MemoryCacheManager<T extends MemoryCacheObject>
-		extends CacheManager<MemoryReadCacheClaim<T>, MemoryReadWriteCacheClaim<T>> {
+public class MemoryCacheManager<T extends CacheableObject>
+		extends SimpleCacheManager<MemoryReadCacheClaim<T>, MemoryReadWriteCacheClaim<T>> {
 
 	/**
 	 * Creates a new memory cache manager using the given cache policy.

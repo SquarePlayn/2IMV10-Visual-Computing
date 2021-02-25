@@ -1,14 +1,15 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheObject;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkData;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MemoryCacheManager<T extends MemoryCacheObject>
+@Deprecated
+public class MemoryCacheManager<T extends CacheableObject>
 		extends CacheManager<CacheMemoryFile<T>> {
 	
 	private final Map<FileId, CacheMemoryFile<T>> idToFile;

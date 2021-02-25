@@ -1,9 +1,11 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.memory;
 
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
 
-public class MemoryReadWriteCacheClaim<T extends MemoryCacheObject>
+public class MemoryReadWriteCacheClaim<T extends CacheableObject>
 		extends MemoryReadCacheClaim<T>
 		implements ReadWriteCacheClaim {
 

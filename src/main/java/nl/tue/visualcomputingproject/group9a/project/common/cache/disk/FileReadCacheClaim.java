@@ -4,7 +4,6 @@ import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.util.PostProcessInputStream;
 
 import java.io.File;
@@ -20,16 +19,16 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class FileReadCacheClaim
 		implements ReadCacheClaim {
+	@Getter
+	protected final FileId id;
+	
 	protected final ReentrantLock lock = new ReentrantLock();
 	protected final Condition awaitReading = lock.newCondition();
 	protected int numReading = 0;
+	protected boolean valid = true;
 	
 	@Getter
-	protected final FileId id;
-	@Getter
 	protected final File file;
-	@Getter
-	protected boolean valid = true;
 	
 	FileReadCacheClaim(FileId id, File cacheDir) {
 		this.id = id;
@@ -48,6 +47,16 @@ public class FileReadCacheClaim
 	protected void checkValid(String msg) {
 		if (!valid) {
 			throw new IllegalStateException("Cannot " + msg + " for an invalidated claim!");
+		}
+	}
+
+	@Override
+	public boolean isValid() {
+		lock.lock();
+		try {
+			return valid;
+		} finally {
+			lock.unlock();
 		}
 	}
 

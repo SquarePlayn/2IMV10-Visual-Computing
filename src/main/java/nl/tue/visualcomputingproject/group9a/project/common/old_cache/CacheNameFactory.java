@@ -6,6 +6,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
  * 
  * @param <V> The target class.
  */
+@Deprecated
 public interface CacheNameFactory<V> {
 
 	/**

@@ -1,16 +1,17 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache.memory;
+package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 
 /**
- * Memory store for storing a {@link MemoryCacheObject}.
+ * Memory store for storing a {@link CacheableObject}.
  * 
  * @param <T> The type of the object to store.
  */
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemoryStore<T extends MemoryCacheObject> {
+public class MemoryStore<T extends CacheableObject> {
 	/** The stored object. */
 	private T obj = null;
 

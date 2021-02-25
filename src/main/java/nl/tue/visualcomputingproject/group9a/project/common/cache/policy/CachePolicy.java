@@ -1,6 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.policy;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
@@ -41,7 +41,7 @@ public interface CachePolicy {
 	 */
 	<Read extends ReadCacheClaim, ReadWrite extends ReadWriteCacheClaim> void track(
 			FileId id,
-			CacheManager<Read, ReadWrite> manager,
+			SimpleCacheManager<Read, ReadWrite> manager,
 			ReadWrite claim);
 
 	/**

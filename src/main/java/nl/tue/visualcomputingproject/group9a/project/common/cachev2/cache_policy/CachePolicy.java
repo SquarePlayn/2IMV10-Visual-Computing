@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_polic
 
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.CacheManager;
 
+@Deprecated
 public interface CachePolicy {
 	long SIZE_KB = 1024L;
 	long SIZE_MB = 1048576L;

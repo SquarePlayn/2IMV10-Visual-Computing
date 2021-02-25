@@ -9,7 +9,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.cachev2.DiskCacheFil
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.LRUCachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;

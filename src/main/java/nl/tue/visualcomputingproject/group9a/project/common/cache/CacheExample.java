@@ -6,7 +6,6 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileCache
 import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileReadCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheObject;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryReadCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
@@ -62,7 +61,7 @@ public class CacheExample {
 	
 	@Value
 	private static class Str
-			implements MemoryCacheObject {
+			implements CacheableObject {
 		String str;
 		@Override
 		public long memorySize() {

@@ -3,7 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cache.policy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
@@ -56,7 +56,7 @@ public class LRUCachePolicy
 		/** The ID of the tracked file. */
 		private final FileId id;
 		/** The manager to notify after deletion. */
-		private final CacheManager<Read, ReadWrite> manager;
+		private final SimpleCacheManager<Read, ReadWrite> manager;
 		/** The claim used to delete the file. */
 		private final ReadWrite claim;
 		
@@ -97,7 +97,7 @@ public class LRUCachePolicy
 	@Override
 	public <Read extends ReadCacheClaim, ReadWrite extends ReadWriteCacheClaim> void track(
 			FileId id,
-			CacheManager<Read, ReadWrite> manager,
+			SimpleCacheManager<Read, ReadWrite> manager,
 			ReadWrite claim) {
 		lock.lock();
 		try {

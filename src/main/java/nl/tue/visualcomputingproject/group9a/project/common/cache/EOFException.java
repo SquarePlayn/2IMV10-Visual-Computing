@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
+package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
 import java.io.IOException;
 

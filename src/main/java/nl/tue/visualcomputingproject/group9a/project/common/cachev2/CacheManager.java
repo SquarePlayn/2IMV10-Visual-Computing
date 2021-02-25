@@ -5,6 +5,7 @@ import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 
+@Deprecated
 @Getter
 @AllArgsConstructor
 public abstract class CacheManager<T> {
