@@ -25,8 +25,7 @@ public class CacheExample {
 		@Override
 		public String getPath() {
 			return FileId.genPath(
-					"test" + File.separator +
-							position.getX(),
+					position.getX(),
 					position.getY(),
 					position.getWidth(),
 					position.getHeight());
@@ -34,7 +33,7 @@ public class CacheExample {
 		
 		public static FileIdFactory<TestFileId> createFactory() {
 			return (String path) -> {
-				String[] parts = path.split("_");
+				String[] parts = path.split(FileId.DELIM);
 				if (parts.length != 4) {
 					return null;
 				}
