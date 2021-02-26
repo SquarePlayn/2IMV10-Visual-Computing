@@ -1,9 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.policy;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 
 /**
  * Interface for cache policies.
@@ -41,7 +38,7 @@ public interface CachePolicy {
 	 */
 	<Read extends ReadCacheClaim, ReadWrite extends ReadWriteCacheClaim> void track(
 			FileId id,
-			SimpleCacheManager<Read, ReadWrite> manager,
+			CacheManager<Read, ReadWrite> manager,
 			ReadWrite claim);
 
 	/**
@@ -50,8 +47,10 @@ public interface CachePolicy {
 	 * This action is atomic.
 	 * 
 	 * @param id The ID of the file to update.
+	 * 
+	 * @return {@code true} if the file was updated. {@code false} otherwise.   
 	 */
-	void update(FileId id);
+	boolean update(FileId id);
 
 	/**
 	 * Stops tracking the file with the given ID. <br>

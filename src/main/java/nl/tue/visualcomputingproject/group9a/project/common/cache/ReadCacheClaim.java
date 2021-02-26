@@ -24,8 +24,10 @@ public interface ReadCacheClaim {
 	 * <br>
 	 * <b>WARNING!</b><br>
 	 * This function should ONLY be called by the {@link CacheManager}.
+	 * 
+	 * @return {@code true} if the validity of the claim was changed by this call. {@code false} otherwise.
 	 */
-	void invalidate();
+	boolean invalidate();
 
 	/**
 	 * @return The size of the claimed file, unaffected by the validity of this claim.

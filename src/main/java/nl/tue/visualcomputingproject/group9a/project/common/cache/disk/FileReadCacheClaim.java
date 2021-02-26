@@ -61,13 +61,16 @@ public class FileReadCacheClaim
 	}
 
 	@Override
-	public void invalidate() {
+	public boolean invalidate() {
 		lock.lock();
 		try {
+			boolean oldValid = valid;
 			valid = false;
 			while (numReading > 0) {
 				awaitReading.await();
 			}
+			
+			return oldValid;
 			
 		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);

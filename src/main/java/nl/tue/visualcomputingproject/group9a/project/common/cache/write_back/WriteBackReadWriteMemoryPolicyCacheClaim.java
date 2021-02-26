@@ -1,42 +1,43 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.write_back;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
 
 class WriteBackReadWriteMemoryPolicyCacheClaim<T extends CacheableObject>
 		implements WriteBackReadWriteCacheClaim<T> {
 	@Getter
 	private final FileId id;
 	@Getter
-	private boolean valid = true;
+	private final MemoryStore<T> store;
 	@Getter
-	private T obj;
+	private boolean valid = true;
 	
-	public WriteBackReadWriteMemoryPolicyCacheClaim(FileId id, T obj) {
+	public WriteBackReadWriteMemoryPolicyCacheClaim(FileId id, MemoryStore<T> store) {
 		this.id = id;
-		obj = obj;
+		this.store = store;
 	}
 	
 	@Override
-	public void invalidate() {
+	public boolean invalidate() {
+		boolean oldValid = valid;
 		valid = false;
+		return oldValid;
 	}
 
 	@Override
 	public long size() {
-		return (obj == null ? 0L : obj.memorySize());
+		return store.memorySize();
 	}
 
 	@Override
 	public boolean exists() {
-		return obj != null;
+		return !store.isEmpty();
 	}
 
 	@Override
 	public void delete() {
-		obj = null;
 	}
 
 	@Override

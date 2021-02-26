@@ -3,10 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.cache.policy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadCacheClaim;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ReadWriteCacheClaim;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +53,7 @@ public class LRUCachePolicy
 		/** The ID of the tracked file. */
 		private final FileId id;
 		/** The manager to notify after deletion. */
-		private final SimpleCacheManager<Read, ReadWrite> manager;
+		private final CacheManager<Read, ReadWrite> manager;
 		/** The claim used to delete the file. */
 		private final ReadWrite claim;
 		
@@ -97,7 +94,7 @@ public class LRUCachePolicy
 	@Override
 	public <Read extends ReadCacheClaim, ReadWrite extends ReadWriteCacheClaim> void track(
 			FileId id,
-			SimpleCacheManager<Read, ReadWrite> manager,
+			CacheManager<Read, ReadWrite> manager,
 			ReadWrite claim) {
 		lock.lock();
 		try {
@@ -124,11 +121,11 @@ public class LRUCachePolicy
 	}
 
 	@Override
-	public void update(FileId id) {
+	public boolean update(FileId id) {
 		lock.lock();
 		try {
 			QueueElem<?, ?> elem = elemMap.get(id);
-			if (elem == null) return;
+			if (elem == null) return false;
 			queue.remove(elem);
 			curSize += elem.claim.size() - elem.size;
 			elem.size = elem.claim.size();
@@ -136,6 +133,7 @@ public class LRUCachePolicy
 			queue.add(elem);
 			
 			checkSize();
+			return true;
 			
 		} finally {
 			lock.unlock();

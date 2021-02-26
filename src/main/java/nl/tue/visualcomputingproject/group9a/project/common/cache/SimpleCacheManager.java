@@ -97,23 +97,19 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		lock.lock();
 		try {
 			ClaimElem elem = claimMap.get(id);
-			if (elem != null && elem.hasClaim() && !elem.isTracked()) {
+			if (elem != null &&
+					((!elem.isTracked() && elem.hasClaim()) ||
+							elem.isTracked() && !untrackWithLock(id, elem))) {
 				return null;
 			}
 			
 			if (elem == null) {
 				elem = createClaimElem();
 				elem.tracked = false;
-				elem.writeClaim = createReadWriteClaim(id, elem);
 				claimMap.put(id, elem);
-
-			} else {
-				if (!untrackWithLock(id, elem)) {
-					return null;
-				}
-				elem.writeClaim = createReadWriteClaim(id, elem);
 			}
-			return elem.writeClaim;
+			
+			return elem.writeClaim = createReadWriteClaim(id, elem);
 
 		} finally {
 			lock.unlock();
@@ -122,10 +118,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 
 	@Override
 	public void releaseCacheClaim(ReadWrite claim) {
-		if (!claim.isValid()) {
-			throw new IllegalArgumentException("Cannot release an invalidated claim!");
-		}
-		claim.invalidate();
+		invalidateClaim(claim);
 		
 		ReadWrite trackClaim = null;
 		final FileId id = claim.getId();
@@ -155,18 +148,10 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 
 	@Override
 	public void releaseCacheClaim(Read claim) {
-		if (claim instanceof ReadWriteCacheClaim) {
-			//noinspection unchecked
-			releaseCacheClaim((ReadWrite) claim);
-		}
+		invalidateClaim(claim);
 
-		if (!claim.isValid()) {
-			throw new IllegalArgumentException("Cannot release an invalidated claim!");
-		}
-		claim.invalidate();
-		
-		ReadWrite trackClaim = null;
 		final FileId id = claim.getId();
+		ReadWrite trackClaim = null;
 		lock.lock();
 		try {
 			ClaimElem elem = claimMap.get(id);
@@ -194,14 +179,11 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 
 	@Override
 	public Read degradeClaim(ReadWrite readWrite) {
-		if (!readWrite.isValid()) {
-			throw new IllegalArgumentException("Cannot release an invalidated claim!");
-		}
-		readWrite.invalidate();
+		invalidateClaim(readWrite);
 		
 		lock.lock();
 		try {
-			FileId id = readWrite.getId();
+			final FileId id = readWrite.getId();
 			ClaimElem elem = claimMap.get(id);
 			if (elem == null || elem.writeClaim != readWrite) {
 				throw new IllegalArgumentException("The given claim is not valid for this cache manager!");
@@ -209,6 +191,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 			elem.writeClaim = null;
 			
 			if (!readWrite.exists()) {
+				claimMap.remove(id);
 				return null;
 			}
 			Read read = createReadClaim(id, elem);
@@ -217,6 +200,15 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 			
 		} finally {
 			lock.unlock();
+		}
+	}
+	
+	private void invalidateClaim(ReadCacheClaim claim) {
+		if (claim == null) {
+			throw new NullPointerException("Cannot release a null claim.");
+		}
+		if (!claim.isValid() || claim.invalidate()) {
+			throw new IllegalArgumentException("Cannot release a null or invalidated claim: " + claim);
 		}
 	}
 
@@ -235,25 +227,22 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		boolean removed;
 		lock.unlock();
 		try {
-			removed = policy.untrack(id);
-			if (removed) {
-				elem.writeClaim.invalidate();
+			if ((removed = policy.untrack(id)) && !elem.writeClaim.invalidate()) {
+				throw new IllegalStateException("Tracking claim was already invalid!");
 			}
 		} finally {
 			lock.lock();
 		}
-
+		
 		if (removed) {
-			elem.tracked = false;
 			elem.writeClaim = null;
-			return true;
-
-		} else {
-			if (elem.isTracked()) {
-				throw new IllegalStateException("Tracked element is not tracked!");
-			}
-			return false;
+			elem.tracked = false;
 		}
+
+		if (!removed && elem.isTracked()) {
+			throw new IllegalStateException("Tracked element is not tracked!");
+		}
+		return removed;
 	}
 
 	/**

@@ -29,8 +29,10 @@ public class MemoryReadCacheClaim<T extends CacheableObject>
 	}
 
 	@Override
-	public void invalidate() {
+	public boolean invalidate() {
+		boolean oldValid = valid;
 		valid = false;
+		return oldValid;
 	}
 
 	@Override

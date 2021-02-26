@@ -1,11 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.disk;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.SimpleCacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileIdFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,11 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache.write_back;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,8 +55,11 @@ public class WriteBackReadWriteUserCacheClaim<T extends CacheableObject>
 			
 			try {
 				Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
+				//noinspection ResultOfMethodCallIgnored
+				tmpFile.delete();
 			}
 
 		} finally {

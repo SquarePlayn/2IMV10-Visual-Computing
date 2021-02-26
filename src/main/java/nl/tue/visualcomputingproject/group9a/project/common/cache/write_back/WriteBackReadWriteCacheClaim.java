@@ -7,7 +7,7 @@ public interface WriteBackReadWriteCacheClaim<T extends CacheableObject>
 		extends ReadWriteCacheClaim {
 	
 	void toDisk();
-
+	
 	void set(T obj);
 	
 }
