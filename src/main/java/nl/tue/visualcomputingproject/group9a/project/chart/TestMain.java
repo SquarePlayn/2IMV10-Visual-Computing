@@ -60,7 +60,7 @@ public class TestMain {
 			
 			ArrayList<ChunkId> l = new ArrayList<>();
 			l.add(new ChunkId(new ChunkPosition(
-				150001,375001, 1000, 1000
+				150001,375001, 10000, 10000
 			), QualityLevel.FIVE_BY_FIVE));
 			bus.post(new ProcessorChunkRequestedEvent(l));
 		} catch (Exception e) {

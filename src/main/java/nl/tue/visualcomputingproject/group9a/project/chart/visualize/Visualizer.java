@@ -36,14 +36,14 @@ public class Visualizer {
 		double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE, minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
 		double maxZ = -Double.MAX_VALUE, minZ = Double.MAX_VALUE;
 		
-		for (Point p : event.getChunk().getData().getPoints()) {
+		for (Point p : event.getChunk().getData().getPointIterator()) {
 			xCoords.add(p.getX());
 			yCoords.add(p.getY());
 			minX = Math.min(minX, p.getX());
 			maxX = Math.max(maxX, p.getX());
 			minY = Math.min(minY, p.getY());
 			maxY = Math.max(maxY, p.getY());
-			if (p.getAlt() < 9999) {
+			if (p.getAlt() < 1000) {
 				maxZ = Math.max(maxZ, p.getAlt());
 				minZ = Math.min(minZ, p.getAlt());
 			}
@@ -60,7 +60,7 @@ public class Visualizer {
 		BufferedImage image = new BufferedImage(xCoords.size(), yCoords.size(), BufferedImage.TYPE_USHORT_GRAY);
 		WritableRaster raster = image.getRaster();
 		
-		for (Point p : event.getChunk().getData().getPoints()) {
+		for (Point p : event.getChunk().getData().getPointIterator()) {
 			double x = (p.getX() - minX) * wRatio;
 			double y = (p.getY() - minY) * hRatio;
 			if (x < 0 || y < 0) {

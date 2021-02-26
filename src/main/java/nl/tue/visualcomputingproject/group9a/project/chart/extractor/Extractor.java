@@ -11,6 +11,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 import org.geotools.coverage.grid.GridCoordinates2D;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.geometry.DirectPosition2D;
 import org.opengis.coverage.grid.GridEnvelope;
@@ -48,7 +49,7 @@ public class Extractor {
 		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
 		
 		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData(new ArrayList<>())));
+			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData()));
 		}
 		
 		try (InputStream inputStream = event.getClaim().getInputStream()) {
@@ -68,10 +69,11 @@ public class Extractor {
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
 				GridCoordinates2D trg = coverage.getGridGeometry().worldToGrid(tr);
+				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
 				logger.info("Chunk: {} {} {} {}", bl, tr, blg, trg);
 				
-				for (int i = (int) blg.getX(); i < trg.getX(); i++) {
-					for (int j = (int) trg.getY(); j < blg.getY(); j++) {
+				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i < Math.min(trg.getX(), range.getHigh(0)); i++) {
+					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j < Math.min(blg.getY(), range.getHigh(1)); j++) {
 						GridCoordinates2D coord = new GridCoordinates2D(i, j);
 						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
 						
@@ -80,7 +82,7 @@ public class Extractor {
 						double x = p.getOrdinate(0);
 						double y = p.getOrdinate(1);
 						
-						chunk.getData().getPoints().add(new Point(x, y, vals[0]));
+						chunk.getData().addPoint(x, y, vals[0]);
 						count++;
 					}
 				}
