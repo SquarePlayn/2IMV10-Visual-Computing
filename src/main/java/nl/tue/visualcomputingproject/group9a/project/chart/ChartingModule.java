@@ -30,8 +30,7 @@ public class ChartingModule
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy)
 			throws IOException {
 		logger.info("Charting starting up!");
-//		this.cacheManager = new MapSheetCacheManager(cacheManager); TODO
-		this.cacheManager = null; // TODO
+		this.cacheManager = new MapSheetCacheManager(diskPolicy);
 		assemblyManager = new ChunkAssemblyManager(eventBus); 
 		downloadManager = new DownloadManager(eventBus, this.cacheManager);
 		lookupManager = new LookupManager(eventBus, downloadManager, assemblyManager);

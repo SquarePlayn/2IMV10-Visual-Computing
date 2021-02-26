@@ -66,7 +66,12 @@ public class MapSheetCacheManager {
 					return null;
 				}
 				String bladnr = split[1];
-				QualityLevel level = QualityLevel.fromOrder(Integer.parseInt(split[2]));
+				QualityLevel level;
+				try {
+					level = QualityLevel.fromOrder(Integer.parseInt(split[2]));
+				} catch (NumberFormatException e) {
+					return null;
+				}
 				return new MapSheetFileId(bladnr, level);
 			};
 		}
