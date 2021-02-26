@@ -1,15 +1,22 @@
 package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.FileIdFactory;
 
 import java.io.File;
+import java.util.Objects;
 
 @Getter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class MeshChunkId
 		extends ChunkId {
-	VertexBufferType vertexType;
-	MeshBufferType meshType;
+	private static final String PRE = "mesh_chunk_id";
+	private final VertexBufferType vertexType;
+	private final MeshBufferType meshType;
 	
 	public MeshChunkId(
 			ChunkPosition position,
@@ -20,17 +27,50 @@ public class MeshChunkId
 		this.vertexType = vertexType;
 		this.meshType = meshType;
 	}
-
-
+	
 	@Override
 	public String getPath() {
-		return "mesh_chunk" + File.separator + FileId.genPath(
+		return FileId.genPath(
+				PRE,
 				getPosition().getX(),
 				getPosition().getY(),
 				getPosition().getWidth(),
 				getPosition().getHeight(),
+				getQuality().getOrder(),
 				vertexType.getId(),
 				meshType.getId());
+	}
+	
+	public ChunkId asChunkId() {
+		return new ChunkId(getPosition(), getQuality());
+	}
+	
+	public MeshChunkId withQuality(QualityLevel quality) {
+		return new MeshChunkId(getPosition(), quality, vertexType, meshType);
+	}
+	
+	public static FileIdFactory<MeshChunkId> createMeshChunkIdFactory() {
+		return (String path) -> {
+			String[] split = path.split(FileId.DELIM);
+			if (split.length != 7 || !Objects.equals(split[0], PRE)) {
+				return null;
+			}
+			try {
+				ChunkPosition position = new ChunkPosition(
+						Integer.parseInt(split[1]),
+						Integer.parseInt(split[2]),
+						Integer.parseInt(split[3]),
+						Integer.parseInt(split[4]));
+				QualityLevel quality = QualityLevel.fromOrder(Integer.parseInt(split[5]));
+				VertexBufferType vertexType = VertexBufferType.fromId(Integer.parseInt(split[5]));
+				MeshBufferType meshType = MeshBufferType.fromId(Integer.parseInt(split[6]));
+				return new MeshChunkId(position, quality, vertexType, meshType);
+				
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				return null;
+			}
+		};
 	}
 	
 }

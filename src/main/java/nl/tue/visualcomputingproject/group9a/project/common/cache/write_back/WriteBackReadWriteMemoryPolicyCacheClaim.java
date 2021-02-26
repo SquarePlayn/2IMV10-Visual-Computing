@@ -4,6 +4,10 @@ import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
+
+import java.io.File;
 
 class WriteBackReadWriteMemoryPolicyCacheClaim<T extends CacheableObject>
 		implements WriteBackReadWriteCacheClaim<T> {
@@ -41,12 +45,42 @@ class WriteBackReadWriteMemoryPolicyCacheClaim<T extends CacheableObject>
 	}
 
 	@Override
+	public File getFile() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public FileStreamFactory getStreamFactory() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public ObjectSerializer<T> getSerializer() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isInMemory() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isOnDisk() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public T get() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void toDisk() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void set(T obj) {
+	public void set(CacheableObject obj) {
 		throw new UnsupportedOperationException();
 	}
 

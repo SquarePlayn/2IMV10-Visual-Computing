@@ -91,7 +91,7 @@ public class InterpolatedGenerator<T extends PointData>
 	}
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<? extends T> chunk) {
 		if (!chunk.getQualityLevel().isInterpolated()) {
 			throw new IllegalArgumentException(
 					"This generator can only be used for interpolated datasets.");

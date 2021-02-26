@@ -90,12 +90,13 @@ public class WriteBackCacheManager<T extends CacheableObject>
 			CachePolicy memoryPolicy,
 			CachePolicy filePolicy,
 			File cacheDir,
+			String subDir,
 			FileStreamFactory streamFactory,
 			ObjectSerializer<T> serializer) {
 		claimMap = new HashMap<>();
 		this.memoryPolicy = memoryPolicy;
 		this.filePolicy = filePolicy;
-		this.cacheDir = cacheDir;
+		this.cacheDir = new File(cacheDir, subDir);
 		this.streamFactory = streamFactory;
 		this.serializer = serializer;
 	}

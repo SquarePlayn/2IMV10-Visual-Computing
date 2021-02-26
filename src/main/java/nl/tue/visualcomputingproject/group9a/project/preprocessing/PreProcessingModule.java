@@ -3,18 +3,28 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.ZipBufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.write_back.WriteBackCacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.write_back.WriteBackReadCacheClaim;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.write_back.WriteBackReadWriteCacheClaim;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkRequestedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Class for the pre-processing module.
@@ -23,40 +33,37 @@ import java.util.concurrent.Executors;
 public class PreProcessingModule
 		implements Module {
 	/** The logger of this class. */
-	private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-	
-	/** The event bus used in the application. */
-	private EventBus eventBus; // TODO maybe store this in {@link Settings}?
-	/** The cache manager used to store the mesh chunk data. */
-//	private ObjectCacheManager<ChunkId, MeshChunkData> diskCache;
-	
+	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	/** The thread used for io-operations. */
 	private static final ExecutorService ioThread = Executors.newSingleThreadExecutor();
 	
-	private Map<ChunkPosition, QualityLevel> requesting;
+	/** Map storing which chunks are requested from the chart module. */
+	private final Map<ChunkPosition, MeshChunkId> requesting = new HashMap<>();
+	/** Set storing which chunks are currently being processed. */
+	private final Set<MeshChunkId> processing = new HashSet<>();
+	/** Set storing which chunks should be delivered to the renderer module. */
+	private final Set<MeshChunkId> deliver = new HashSet<>();
+	/** The lock used for concurrently accessing the requesting map. */
+	private final Lock lock = new ReentrantLock();
+	
+	/** The event bus used in the application. */
+	private EventBus eventBus;
+	/** The cache manager used to store the mesh chunk data. */
+	private WriteBackCacheManager<MeshChunkData> cache;
 	
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
-		logger.info("Preprocessing starting up!");
-		requesting = new ConcurrentHashMap<>();
+		LOGGER.info("Preprocessing starting up!");
 		
 		this.eventBus = eventBus;
 		eventBus.register(this);
 		
-		// TODO: create cache managers.
-//		CachePolicy diskPolicy = new LRUCachePolicy(CachePolicy.SIZE_GB);
-//		
-//		DiskCacheFileManager cacheManager = new DiskCacheFileManager(diskPolicy, Settings.CACHE_DIR);
-//		
-//		diskCache = new ObjectCacheManager<>(
-//				new CacheFileStreamRequester<>(cacheManager, new BufferedFileStreamFactory()),
-//				MeshChunkData.createCacheFactory());
-//		
-////		cache = new KeepBestCacheManager<>(
-////				Settings.CACHE_DIR,
-////				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
-////				MeshChunkData.createCacheFactory(),
-////				new ZipBufferedFileStreamFactory());
-////		cache.indexDiskCache();
+		cache = new WriteBackCacheManager<>(
+				memoryPolicy,
+				diskPolicy,
+				Settings.CACHE_DIR, "mesh_chunk",
+				new ZipBufferedFileStreamFactory(),MeshChunkData.createSerializer());
+		cache.indexCache(MeshChunkId.createMeshChunkIdFactory());
 	}
 
 	/**
@@ -66,65 +73,88 @@ public class PreProcessingModule
 	 */
 	@Subscribe
 	public void rendererStatus(final RendererChunkStatusEvent e) {
-//		if (!e.getNewChunks().isEmpty()) {
-//			final List<ChunkPosition> diskCached = new ArrayList<>();
-//			final List<ChunkId> request = new ArrayList<>();
-//			
-//			// First return the chunks which are already in memory.
-//			for (ChunkPosition id : e.getNewChunks()) {
-//				Pair<MeshChunkData, QualityLevel> data = diskCache.getFromMemory(id);
-//				if (data != null) {
-//					eventBus.post(new ProcessorChunkLoadedEvent(
-//							new Chunk<>(id, data.getSecond(), data.getFirst())));
-//					
-//				} else if (diskCache.isDiskCached(id)) {
-//					diskCached.add(id);
-//				} else {
-//					request.add(new ChunkId(id, QualityLevel.getWorst()));
-//				}
-//			}
-//			
-//			// Then request the missing chunks from the chart module.
-//			if (!request.isEmpty()) {
-//				for (ChunkId req : request) {
-//					requesting.put(req.getPosition(), req.getQuality());
-//				}
-//				eventBus.post(new ProcessorChunkRequestedEvent(request));
-//				request.clear();
-//			}
-//
-//			// Then load the chunks from disk.
-//			ioThread.submit(() -> {
-//				for (ChunkPosition id : diskCached) {
-//					Pair<MeshChunkData, QualityLevel> data = diskCache.getBest(id);
-//					if (data == null) {
-//						request.add(new ChunkId(id, QualityLevel.getWorst()));
-//					} else {
-//						eventBus.post(new ProcessorChunkLoadedEvent(
-//								new Chunk<>(id, data.getSecond(), data.getFirst())));
-//						if (QualityLevel.getBest() != data.getSecond()) {
-//							request.add(new ChunkId(id, data.getSecond().next()));
-//						}
-//					}
-//				}
-//
-//				// Finally request any higher quality data and any unexpected cache-misses from the chart module.
-//				if (!request.isEmpty()) {
-//					for (ChunkId req : request) {
-//						requesting.put(req.getPosition(), req.getQuality());
-//					}
-//					eventBus.post(new ProcessorChunkRequestedEvent(request));
-//				}
-//			});
-//		}
-//		
-//		if (!e.getUnloadedChunks().isEmpty()) {
-//			ioThread.submit(() -> {
-//				for (ChunkPosition id : e.getUnloadedChunks()) {
-//					diskCache.removeMemoryCache(id);
-//				}
-//			});
-//		}
+		if (!e.getNewChunks().isEmpty()) {
+			// First obtain read-access for all requested chunks, if they exist.
+			// Also send memory cached chunks back to the renderer.
+			List<MeshChunkId> request = new ArrayList<>();
+			List<Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>>> claims = new ArrayList<>();
+			for (ChunkPosition pos : e.getNewChunks()) {
+				// TODO: move vertex + mesh type request to render.
+				VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+				MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
+				
+				MeshChunkId id = new MeshChunkId(
+						pos,
+						QualityLevel.getWorst(),
+						vertexType,
+						meshType);
+				WriteBackReadCacheClaim<MeshChunkData> claim = cache.requestReadClaim(id);
+				if (claim == null) {
+					// Cache miss.
+					request.add(id);
+				} else {
+					if (claim.isInMemory()) {
+						// Cache in memory.
+						eventBus.post(new ProcessorChunkLoadedEvent(
+								new Chunk<>(id, claim.get())));
+						cache.releaseCacheClaim(claim);
+					} else {
+						// Cache on disk.
+						claims.add(new Pair<>(id, claim));
+					}
+				}
+			}
+
+			// Request the cache misses from the chart module.
+			if (!request.isEmpty()) {
+				List<ChunkId> req = new ArrayList<>(request.size());
+				lock.lock();
+				try {
+					for (MeshChunkId id : request) {
+						requesting.put(id.getPosition(), id);
+						deliver.add(id);
+						req.add(id.asChunkId());
+					}
+				} finally {
+					lock.unlock();
+				}
+				eventBus.post(new ProcessorChunkRequestedEvent(req));
+			}
+			
+			// Then load the chunks from disk.
+			ioThread.submit(() -> {
+				// Read cache from disk.
+				for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+					eventBus.post(new ProcessorChunkLoadedEvent(
+							new Chunk<>(pair.getFirst(), pair.getSecond().get())));
+					cache.releaseCacheClaim(pair.getSecond());
+				}
+			});
+		}
+		
+		if (!e.getUnloadedChunks().isEmpty()) {
+			lock.lock();
+			try {
+				for (ChunkPosition pos : e.getUnloadedChunks()) {
+					// TODO: move vertex + mesh type request to render.
+					VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+					MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
+					
+					requesting.remove(pos);
+					for (QualityLevel level : QualityLevel.values()) {
+						MeshChunkId id = new MeshChunkId(
+								pos,
+								level,
+								vertexType,
+								meshType);
+						deliver.remove(id);
+					}
+				}
+				
+			} finally {
+				lock.unlock();
+			}
+		}
 	}
 
 	/**
@@ -134,57 +164,89 @@ public class PreProcessingModule
 	 */
 	@Subscribe
 	public void chunkLoaded(ChartChunkLoadedEvent e) {
-//		final ChunkId id = e.getChunk().getChunkId();
-//		final QualityLevel requestedQuality = requesting.get(id.getPosition());
-//		
-//		// Ignore event since the chunk is not needed anymore.
-//		if (requestedQuality == null) {
-//			return;
-//		}
-//		
-//		// Remove request if the highest quality level has been received.
-//		if (id.getQuality() == QualityLevel.getBest()) {
-//			requesting.remove(id.getPosition());
-//			
-//		} else if (id.getQuality().getOrder() < requestedQuality.getOrder()) {
-//			// Ignore event if a better quality is already available.
-//			return;
-//			
-//		} else {
-//			// Update request.
-//			requesting.put(id.getPosition(), id.getQuality().next());
-//		}
-//		
-//		// Check if the chunk is already cached.
-//		if (diskCache.isCached(id)) {
-//			MeshChunkData data = diskCache.get(id);
-//			if (data != null) {
-//				eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
-//						e.getChunk().getPosition(),
-//						e.getChunk().getQualityLevel(),
-//						diskCache.get(id))));
-//				return;
-//			}
-//		}
-//
-//		// Pre-process the chunk.
-//		Settings.executorService.submit(() -> {
-//			if (!requesting.containsKey(e.getChunk().getPosition())) return;
-//
-//			MeshChunkData data = Generator
-//					.<PointCloudChunkData>createGeneratorFor(e.getChunk().getQualityLevel())
-//					.generateChunkData(e.getChunk());
-//			
-//			
-//			if (requesting.containsKey(e.getChunk().getPosition())) {
-//				eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
-//						e.getChunk().getChunkId(),
-//						data)));
-//			}
-//			
-//			diskCache.putMemoryCache(id, data);
-//			ioThread.submit(() -> diskCache.putDiskCache(id, data));
-//		});
+		// First determine if the event is valid.
+		// If so, then update the request map accordingly.
+		final MeshChunkId id;
+		lock.lock();
+		try {
+			final ChunkId eventId = e.getChunk().getChunkId();
+			MeshChunkId reqId = requesting.get(eventId.getPosition());
+			if (reqId == null) {
+				// Ignore event since the chunk is not needed anymore.
+				return;
+			}
+			if (Objects.equals(eventId.getPosition(), reqId.getPosition()) && // Wrong position.
+					eventId.getQuality().getOrder() < reqId.getQuality().getOrder()) { // Wrong quality.
+				LOGGER.warn("Expected '" + reqId.asChunkId() + "', but got: '" + eventId + "'!");
+				return;
+			}
+			
+			// Update quality of current ID if needed.
+			if (eventId.getQuality() != reqId.getQuality()) {
+				reqId = reqId.withQuality(eventId.getQuality());
+			}
+			id = reqId;
+
+			// Remove request if the highest quality level has been received.
+			if (eventId.getQuality() == QualityLevel.getBest()) {
+				requesting.remove(id.getPosition());
+
+			} else {
+				// Update request.
+				requesting.put(id.getPosition(), id.withQuality(eventId.getQuality().next()));
+			}
+			
+			if (!processing.add(id)) {
+				// The request is already being processed.
+				return;
+			}
+			
+		} finally {
+			lock.unlock();
+		}
+		
+		// Pre-process the chunk.
+		Settings.executorService.submit(() -> {
+			// Check if the data still needs to be processed.
+			lock.lock();
+			try {
+				if (!deliver.contains(id)) return;
+			} finally {
+				lock.unlock();
+			}
+			
+			// Process the data.
+			MeshChunkData data = Generator
+					.createGeneratorFor(id.getQuality())
+					.generateChunkData(e.getChunk());
+
+			lock.lock();
+			try {
+				// Remove the id from the deliver set and notify the renderer
+				// about the data if it is still needed.
+				if (deliver.remove(id)) {
+					eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
+							id,
+							data)));
+				}
+			} finally {
+				lock.unlock();
+			}
+			
+			// Put the data in the cache.
+			WriteBackReadWriteCacheClaim<MeshChunkData> claim = cache.requestReadWriteClaim(id);
+			if (claim != null) {
+				claim.set(data);
+				cache.releaseCacheClaim(claim);
+			}
+			// Finish processing.
+			lock.lock();
+			try {
+				processing.remove(id);
+			} finally {
+				lock.lock();
+			}
+		});
 	}
 	
 }

@@ -15,7 +15,7 @@ public class MLSGenerator<T extends PointData>
 		extends Generator<T> {
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<? extends T> chunk) {
 		throw new UnsupportedOperationException("WIP");
 	}
 	

@@ -92,7 +92,7 @@ public class MeshChunkData
 	/**
 	 * @return A {@link ObjectSerializer} used to serialize and deserialize a {@link MeshChunkData} object.
 	 */
-	public static ObjectSerializer<MeshChunkData> createCacheFactory() {
+	public static ObjectSerializer<MeshChunkData> createSerializer() {
 		return new MeshChunkDataSerializer();
 	}
 	

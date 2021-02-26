@@ -19,7 +19,7 @@ public abstract class Generator<T extends PointData> {
 	 * 
 	 * @return A data chunk containing a vertex buffer and a mesh of the processed data.
 	 */
-	public abstract MeshChunkData generateChunkData(Chunk<T> chunk);
+	public abstract MeshChunkData generateChunkData(Chunk<? extends T> chunk);
 
 	/**
 	 * Creates a generator based on the quality level.
