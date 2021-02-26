@@ -207,7 +207,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		if (claim == null) {
 			throw new NullPointerException("Cannot release a null claim.");
 		}
-		if (!claim.isValid() || claim.invalidate()) {
+		if (!claim.isValid() || !claim.invalidate()) {
 			throw new IllegalArgumentException("Cannot release a null or invalidated claim: " + claim);
 		}
 	}
