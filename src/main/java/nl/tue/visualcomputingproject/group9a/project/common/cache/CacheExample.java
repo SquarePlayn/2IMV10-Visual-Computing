@@ -25,7 +25,7 @@ public class CacheExample {
 		@Override
 		public String getPath() {
 			return FileId.genPath(
-					"test" + File.separator +
+					
 							position.getX(),
 					position.getY(),
 					position.getWidth(),

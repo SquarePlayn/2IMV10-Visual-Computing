@@ -51,7 +51,7 @@ public class Extractor {
 			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData(new ArrayList<>())));
 		}
 		
-		try (InputStream inputStream = cacheManager.getInputStream(event.getSheet(), event.getLevel())) {
+		try (InputStream inputStream = event.getClaim().getInputStream()) {
 			ZipInputStream zipInputStream = new ZipInputStream(inputStream);
 			ZipEntry entry = zipInputStream.getNextEntry();
 			logger.info("Zip contents: {}", entry);
@@ -109,5 +109,7 @@ public class Extractor {
 		for (Chunk<PointCloudChunkData> chunk : chunks) {
 			eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
 		}
+		
+		cacheManager.releaseClaim(event.getClaim());
 	}
 }
