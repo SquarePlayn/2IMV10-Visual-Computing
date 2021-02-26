@@ -103,7 +103,7 @@ public class InterpolatedGenerator<T extends PointData>
 		PointIndex[][] points = new PointIndex[width][height];
 		
 		// Sort the data.
-		for (Point point : chunk.getData()) {
+		for (Point point : chunk.getData().getPointIterator()) {
 			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getY());
 			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getX());
 			if (points[x][y] != null) {
@@ -183,16 +183,16 @@ public class InterpolatedGenerator<T extends PointData>
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		List<Point> data = new ArrayList<>(9);
+		PointCloudChunkData data = new PointCloudChunkData();
 		for (int i = -1; i < 2; i++) {
 			for (int j = -1; j < 2; j++) {
-				data.add(new Point(5*i, 5*j, 5*Math.floorMod(i + j, 2)));
+				data.addPoint(5*i, 5*j, 5*Math.floorMod(i + j, 2));
 			}
 		}
 		Chunk<PointCloudChunkData> chunk = new Chunk<>(
 				new ChunkPosition(-5, -5, 15, 15),
 				QualityLevel.FIVE_BY_FIVE,
-				new PointCloudChunkData(data)
+				data
 		);
 		Generator
 				.<PointCloudChunkData>createGeneratorFor(chunk.getQualityLevel())

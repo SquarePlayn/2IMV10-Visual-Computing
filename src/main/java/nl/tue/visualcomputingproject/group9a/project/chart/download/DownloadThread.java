@@ -49,7 +49,7 @@ public class DownloadThread
 		logger.info("Downloading {} for {}...", url, job);
 		
 		try (BufferedInputStream in = new BufferedInputStream(url.openStream())) {
-			try (OutputStream out = cacheManager.getOutputStream(job.getSheet(), job.getLevel())) {
+			try (OutputStream out = job.getClaim().getOutputStream()) {
 				byte dataBuffer[] = new byte[1024];
 				int bytesRead;
 				while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {

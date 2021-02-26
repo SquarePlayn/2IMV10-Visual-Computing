@@ -44,12 +44,21 @@ public class ChunkAssemblyJob {
 	}
 	
 	public Chunk<PointCloudChunkData> assembleChunk() {
-		List<Point> points = new ArrayList<>();
+		PointCloudChunkData points = new PointCloudChunkData();
 		
 		for (Chunk<PointCloudChunkData> chunk : partialChunks) {
-			points.addAll(chunk.getData().getPoints());
+			points.getInterleavedPoints().addAll(chunk.getData().getInterleavedPoints());
 		}
 		
-		return new Chunk<>(chunkId, new PointCloudChunkData(points));
+		return new Chunk<>(chunkId, points);
+	}
+	
+	@Override
+	public String toString() {
+		return "ChunkAssemblyJob{" +
+			"chunkId=" + chunkId +
+			", sheetsLeft=" + sheetsLeft +
+			", partialChunks=" + partialChunks +
+			'}';
 	}
 }
