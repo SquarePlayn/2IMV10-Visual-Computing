@@ -40,6 +40,8 @@ public class ChunkAssemblyManager {
 			
 			ChunkAssemblyJob job = new ChunkAssemblyJob(chunk, new HashSet<>(sheets));
 			assemblyRequests.put(chunk, job);
+			
+			logger.info("New assembly request! {}", job);
 		}
 	}
 	

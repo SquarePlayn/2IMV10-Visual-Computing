@@ -24,4 +24,8 @@ public class PointCloudChunkData
 		return points.size();
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("%d points", points.size());
+	}
 }

@@ -52,4 +52,13 @@ public class ChunkAssemblyJob {
 		
 		return new Chunk<>(chunkId, new PointCloudChunkData(points));
 	}
+	
+	@Override
+	public String toString() {
+		return "ChunkAssemblyJob{" +
+			"chunkId=" + chunkId +
+			", sheetsLeft=" + sheetsLeft +
+			", partialChunks=" + partialChunks +
+			'}';
+	}
 }
