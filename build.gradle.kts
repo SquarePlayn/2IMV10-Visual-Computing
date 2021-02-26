@@ -48,6 +48,8 @@ dependencies {
     implementation("org.geotools:geotools:24.2")
     implementation("org.geotools:gt-wfs-ng:24.2")
     implementation("org.geotools:gt-epsg-hsql:24.2")
+    implementation("org.geotools:gt-coverage:24.2")
+    implementation("org.geotools:gt-geotiff:24.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 

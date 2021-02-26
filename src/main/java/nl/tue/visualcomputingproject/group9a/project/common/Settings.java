@@ -1,5 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.common;
 
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
+
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,4 +37,8 @@ public final class Settings {
 	/** The file extension of the temporary cache files. */
 	public static final String TMP_CACHE_EXT = ".part";
 	
+	/**
+	 * The maximum quality of map sheets the chart module will download.
+	 */
+	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.HALF_BY_HALF;
 }

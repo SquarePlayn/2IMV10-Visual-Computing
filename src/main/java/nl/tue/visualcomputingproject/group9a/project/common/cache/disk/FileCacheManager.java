@@ -29,10 +29,11 @@ public class FileCacheManager
 	 * 
 	 * @param policy   The cache policy used for deleting files.
 	 * @param cacheDir The cache directory to store the files at.
+	 * @param subDir   The subdirectory this cache manager is managing.   
 	 */
-	public FileCacheManager(CachePolicy policy, File cacheDir) {
+	public FileCacheManager(CachePolicy policy, File cacheDir, String subDir) {
 		super(policy);
-		this.cacheDir = cacheDir;
+		this.cacheDir = new File(cacheDir, subDir);
 	}
 
 	@Override
@@ -98,12 +99,12 @@ public class FileCacheManager
 	}
 
 	@Override
-	public FileReadCacheClaim createReadClaim(FileId id, ClaimElem elem) {
+	protected FileReadCacheClaim createReadClaim(FileId id, ClaimElem elem) {
 		return new FileReadCacheClaim(id, cacheDir);
 	}
 
 	@Override
-	public FileReadWriteCacheClaim createReadWriteClaim(FileId id, ClaimElem elem) {
+	protected FileReadWriteCacheClaim createReadWriteClaim(FileId id, ClaimElem elem) {
 		return new FileReadWriteCacheClaim(id, cacheDir);
 	}
 	

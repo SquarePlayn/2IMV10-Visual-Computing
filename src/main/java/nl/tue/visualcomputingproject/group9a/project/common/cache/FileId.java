@@ -7,6 +7,7 @@ import java.util.Objects;
  */
 @FunctionalInterface
 public interface FileId {
+	String DELIM = "_";
 
 	/**
 	 * @return The unique path of this ID.
@@ -22,12 +23,12 @@ public interface FileId {
 	 */
 	static String genPath(Object... objs) {
 		if (objs == null || objs.length == 0) {
-			return "_";
+			return DELIM;
 		}
 		
 		StringBuilder sb = new StringBuilder(Objects.toString(objs[0]));
 		for (int i = 1; i < objs.length; i++) {
-			sb.append("_");
+			sb.append(DELIM);
 			sb.append(objs[i]);
 		}
 		return sb.toString();

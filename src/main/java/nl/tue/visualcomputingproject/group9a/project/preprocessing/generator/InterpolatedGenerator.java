@@ -104,8 +104,8 @@ public class InterpolatedGenerator<T extends PointData>
 		
 		// Sort the data.
 		for (Point point : chunk.getData()) {
-			int x = getPos(chunk.getQualityLevel(), point.getLat() - pos.getY());
-			int y = getPos(chunk.getQualityLevel(), point.getLon() - pos.getX());
+			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getY());
+			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getX());
 			if (points[x][y] != null) {
 				throw new IllegalArgumentException(
 						"The point " + point.asVec3d() + " clashes with " + points[x][y]);

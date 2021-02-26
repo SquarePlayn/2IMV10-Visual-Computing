@@ -3,13 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
-import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.CacheFileStreamRequester;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.DiskCacheFileManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.ObjectCacheManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.LRUCachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
@@ -34,35 +28,35 @@ public class PreProcessingModule
 	/** The event bus used in the application. */
 	private EventBus eventBus; // TODO maybe store this in {@link Settings}?
 	/** The cache manager used to store the mesh chunk data. */
-	private ObjectCacheManager<ChunkId, MeshChunkData> diskCache;
+//	private ObjectCacheManager<ChunkId, MeshChunkData> diskCache;
 	
 	private static final ExecutorService ioThread = Executors.newSingleThreadExecutor();
 	
 	private Map<ChunkPosition, QualityLevel> requesting;
 	
 	@Override
-	public void startup(EventBus eventBus) {
+	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
 		logger.info("Preprocessing starting up!");
 		requesting = new ConcurrentHashMap<>();
 		
 		this.eventBus = eventBus;
 		eventBus.register(this);
 		
-		// TODO: move up hierarchy.
-		CachePolicy diskPolicy = new LRUCachePolicy(CachePolicy.SIZE_GB);
-		
-		DiskCacheFileManager cacheManager = new DiskCacheFileManager(diskPolicy, Settings.CACHE_DIR);
-		
-		diskCache = new ObjectCacheManager<>(
-				new CacheFileStreamRequester<>(cacheManager, new BufferedFileStreamFactory()),
-				MeshChunkData.createCacheFactory());
-		
-//		cache = new KeepBestCacheManager<>(
-//				Settings.CACHE_DIR,
-//				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
-//				MeshChunkData.createCacheFactory(),
-//				new ZipBufferedFileStreamFactory());
-//		cache.indexDiskCache();
+		// TODO: create cache managers.
+//		CachePolicy diskPolicy = new LRUCachePolicy(CachePolicy.SIZE_GB);
+//		
+//		DiskCacheFileManager cacheManager = new DiskCacheFileManager(diskPolicy, Settings.CACHE_DIR);
+//		
+//		diskCache = new ObjectCacheManager<>(
+//				new CacheFileStreamRequester<>(cacheManager, new BufferedFileStreamFactory()),
+//				MeshChunkData.createCacheFactory());
+//		
+////		cache = new KeepBestCacheManager<>(
+////				Settings.CACHE_DIR,
+////				ChunkId.createCacheNameFactory("mesh_data" + File.separator),
+////				MeshChunkData.createCacheFactory(),
+////				new ZipBufferedFileStreamFactory());
+////		cache.indexDiskCache();
 	}
 
 	/**

@@ -1,20 +1,23 @@
 package nl.tue.visualcomputingproject.group9a.project;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import nl.tue.visualcomputingproject.group9a.project.chart.ChartingModule;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.LRUCachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.PreProcessingModule;
 import nl.tue.visualcomputingproject.group9a.project.renderer.RendererModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.io.File;
 
 /**
  * The main class and start point of the application.
  */
+@SuppressWarnings("UnstableApiUsage")
 public class Main {
 	/** The logger of this class. */
 	static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -41,11 +44,18 @@ public class Main {
 	 * @param args The commandline arguments.
 	 */
 	public void run(String[] args) {
-		logger.info("Starting up modules...");
-		EventBus bus = new EventBus();
-		for(Module mod : modules) {
-			mod.startup(bus);
+		try {
+			logger.info("Setting up cache manager...");
+			CachePolicy diskPolicy = new LRUCachePolicy(5 * CachePolicy.SIZE_GiB);
+			CachePolicy memoryPolicy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
+			logger.info("Starting up modules...");
+			EventBus bus = new AsyncEventBus(Settings.executorService);
+			for (Module mod : modules) {
+				mod.startup(bus, diskPolicy, memoryPolicy);
+			}
+			logger.info("Finished starting up modules!");
+		} catch (Exception e) {
+			logger.error("An exception happened!", e);
 		}
-		logger.info("Finished starting up modules!");
 	}
 }

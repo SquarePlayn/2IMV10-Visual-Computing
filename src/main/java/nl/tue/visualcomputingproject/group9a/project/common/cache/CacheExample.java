@@ -34,12 +34,6 @@ public class CacheExample {
 		
 		public static FileIdFactory<TestFileId> createFactory() {
 			return (String path) -> {
-				String pre = "test" + File.separator;
-				if (!path.startsWith(pre)) {
-					return null;
-				}
-				path = path.substring(pre.length());
-
 				String[] parts = path.split("_");
 				if (parts.length != 4) {
 					return null;
@@ -72,7 +66,7 @@ public class CacheExample {
 	public static void main(String[] args) {
 		// Initial setup.
 		CachePolicy policy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
-		FileCacheManager fileManager = new FileCacheManager(policy, Settings.CACHE_DIR);
+		FileCacheManager fileManager = new FileCacheManager(policy, Settings.CACHE_DIR, "test");
 		MemoryCacheManager<Str> memoryManager = new MemoryCacheManager<>(policy);
 		
 		// Local initialisation.

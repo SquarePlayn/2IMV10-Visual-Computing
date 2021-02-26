@@ -9,14 +9,14 @@ import org.joml.Vector3d;
  */
 @Value
 public class Point {
-	double lat, lon, alt;
+	double x, y, alt;
 	
 	public Vector3d asVec3d() {
-		return new Vector3d(lat, alt, lon);
+		return new Vector3d(x, alt, y);
 	}
 	
 	public Vector2d getVec2d() {
-		return new Vector2d(lat, lon);
+		return new Vector2d(x, y);
 	}
 	
 	public static Point from3dVec(Vector3d vec) {

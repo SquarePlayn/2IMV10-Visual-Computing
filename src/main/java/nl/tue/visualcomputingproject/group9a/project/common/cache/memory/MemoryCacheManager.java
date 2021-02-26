@@ -27,12 +27,12 @@ public class MemoryCacheManager<T extends CacheableObject>
 	}
 
 	@Override
-	public @NonNull MemoryReadCacheClaim<T> createReadClaim(FileId id, ClaimElem elem) {
+	protected @NonNull MemoryReadCacheClaim<T> createReadClaim(FileId id, ClaimElem elem) {
 		return new MemoryReadCacheClaim<>(id, ((MemoryClaimElem) elem).store);
 	}
 
 	@Override
-	public @NonNull MemoryReadWriteCacheClaim<T> createReadWriteClaim(FileId id, ClaimElem elem) {
+	protected @NonNull MemoryReadWriteCacheClaim<T> createReadWriteClaim(FileId id, ClaimElem elem) {
 		return new MemoryReadWriteCacheClaim<>(id, ((MemoryClaimElem) elem).store);
 	}
 	
