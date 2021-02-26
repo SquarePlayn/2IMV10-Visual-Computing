@@ -6,33 +6,41 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.*;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.FileStreamFactory;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class WriteBackCacheManager<T extends CacheableObject>
 		implements CacheManager<WriteBackReadCacheClaim<T>, WriteBackReadWriteCacheClaim<T>> {
+	/** The logger object of this class. */
+	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	/** The lock for this class. */
 	private final Lock lock = new ReentrantLock();
-
+	/** The map containing all claims. */
 	protected final Map<FileId, WriteBackClaimElem> claimMap;
 	
+	/** The policy used for the memory cache. */
 	@Getter
 	private final CachePolicy memoryPolicy;
+	/** The policy used for the file cache. */
 	@Getter
 	private final CachePolicy filePolicy;
+	/** The directory used for caching. */
 	@Getter
 	private final File cacheDir;
+	/** The factory used to create a stream from a file.  */
 	@Getter
 	private final FileStreamFactory streamFactory;
+	/** The serializer used to serialize and deserialize an object. */
 	@Getter
 	private final ObjectSerializer<T> serializer;
 
@@ -44,37 +52,56 @@ public class WriteBackCacheManager<T extends CacheableObject>
 	protected class WriteBackClaimElem {
 		/** The set of all read claims. */
 		private final Set<WriteBackReadCacheClaim<T>> readClaims = new HashSet<>();
+		/** The object stored in memory. */
 		private final MemoryStore<T> store = new MemoryStore<>();
-		/** The current write claim. */
+		/** The write claim used for the user. */
 		private WriteBackReadWriteCacheClaim<T> userWriteClaim = null;
+		/** The write claim used by the memory policy. */
 		private WriteBackReadWriteMemoryPolicyCacheClaim<T> memoryWriteClaim = null;
+		/** The write claim used by the file policy. */
 		private WriteBackReadWriteFilePolicyCacheClaim<T> fileWriteClaim = null;
+		/** Denotes whether the element is stable. */
 		private int stable = 0;
-		
+
+		/**
+		 * @return {@code true} if the object is stored in memory. {@code false} otherwise.
+		 */
 		public boolean isMemoryTracked() {
 			return memoryWriteClaim != null;
 		}
-		
+
+		/**
+		 * @return {@code true} if the object is stored on disk. {@code false} otherwise.
+		 */
 		public boolean isFileTracked() {
 			return fileWriteClaim != null;
 		}
-		
+
+		/**
+		 * @return {@code true} if the object is tracked by any policy.
+		 */
 		public boolean isTracked() {
 			return isMemoryTracked() || isFileTracked();
 		}
 
 		/**
-		 * @return {@code true} if the claim element has a write claim.
+		 * @return {@code true} if the claim element has a write claim which is held by the user.
 		 *     {@code false} otherwise.
 		 */
 		public boolean hasUserWriteClaim() {
 			return userWriteClaim != null;
 		}
-		
+
+		/**
+		 * @return {@code true} if the claim element has any user claim.
+		 */
 		public boolean hasUserClaim() {
 			return userWriteClaim != null && !readClaims.isEmpty();
 		}
-		
+
+		/**
+		 * @return {@code true} if the claim element is stable. {@code false} otherwise.
+		 */
 		public boolean isStable() {
 			return stable == 0;
 		}
@@ -381,7 +408,64 @@ public class WriteBackCacheManager<T extends CacheableObject>
 
 	@Override
 	public void indexCache(FileIdFactory<? extends FileId> idFactory) {
-		// TODO
+//		try {
+//			LOGGER.info("Indexing disk cache...");
+//			if (!cacheDir.exists() && !cacheDir.mkdirs()) {
+//				LOGGER.error("Could not create cache directory: " + cacheDir);
+//				LOGGER.error("Continuing without disk cache.");
+//				return;
+//			}
+//
+//			if (!Files.isDirectory(cacheDir.toPath())) {
+//				LOGGER.error("Disk cache directory is not a directory");
+//				LOGGER.error("Continuing without disk cache.");
+//				return;
+//			}
+//
+//			String cachePath = cacheDir.getAbsolutePath();
+//			int rootDirLength = cachePath.length() +
+//					(cachePath.endsWith(File.separator)
+//							? 0
+//							: File.separator.length());
+//			File[] fileArr = cacheDir.listFiles();
+//			if (fileArr == null) return;
+//			List<File> files = new ArrayList<>(Arrays.asList(fileArr));
+//			for (int i = 0; i < files.size(); i++) {
+//				File file = files.get(i);
+//				if (file.isDirectory()) {
+//					fileArr = file.listFiles();
+//					if (fileArr != null) {
+//						files.addAll(Arrays.asList(fileArr));
+//					}
+//
+//				} else if (file.getName().endsWith(Settings.CACHE_EXT)) {
+//					String path = file.getAbsolutePath();
+//					String name = path.substring(
+//							rootDirLength,
+//							path.length() - Settings.CACHE_EXT.length());
+//					try {
+//						FileId id = idFactory.fromPath(name);
+//						if (id != null) {
+//							track(id);
+//							LOGGER.info("Added " + name + " to disk cache!");
+//						}
+//					} catch (Exception e) {
+//						LOGGER.info("Exception occurred while indexing " + name);
+//						e.printStackTrace();
+//					}
+//				} else if (file.getName().endsWith(Settings.TMP_CACHE_EXT)) {
+//					// Delete old temporary cache files if found.
+//					//noinspection ResultOfMethodCallIgnored
+//					file.delete();
+//				}
+//			}
+//
+//			LOGGER.info("Finished indexing disk cache!");
+//
+//		} catch (Exception e) {
+//			LOGGER.error("Aborted indexing disk cache!");
+//			e.printStackTrace();
+//		}
 	}
 	
 	private void invalidateClaim(ReadCacheClaim claim) {
