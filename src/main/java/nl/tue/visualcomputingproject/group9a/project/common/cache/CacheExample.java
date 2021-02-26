@@ -1,81 +1,152 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
-import lombok.AllArgsConstructor;
+import lombok.Value;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.CachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.LRUCachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.stream.BufferedFileStreamFactory;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileCacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileReadCacheClaim;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.disk.FileReadWriteCacheClaim;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryCacheManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryReadCacheClaim;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.memory.MemoryReadWriteCacheClaim;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.LRUCachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class CacheExample {
 
-	@AllArgsConstructor
-	static class TestFileId
-			extends FileId {
-		private final ChunkPosition position;
+	@Value
+	private static class TestFileId
+			implements FileId {
+		ChunkPosition position;
 
 		@Override
 		public String getPath() {
-			return genPath(
+			return FileId.genPath(
 					"test" + File.separator +
-					position.getX(),
+							position.getX(),
 					position.getY(),
 					position.getWidth(),
 					position.getHeight());
 		}
+		
+		public static FileIdFactory<TestFileId> createFactory() {
+			return (String path) -> {
+				String[] parts = path.split("_");
+				if (parts.length != 4) {
+					return null;
+				}
+
+				try {
+					double x = Double.parseDouble(parts[0]);
+					double y = Double.parseDouble(parts[1]);
+					double w = Double.parseDouble(parts[2]);
+					double h = Double.parseDouble(parts[3]);
+					return new TestFileId(new ChunkPosition(x, y, w, h));
+					
+				} catch (NumberFormatException e) {
+					return null;
+				}
+			};
+		}
 	}
-
+	
+	@Value
+	private static class Str
+			implements CacheableObject {
+		String str;
+		@Override
+		public long memorySize() {
+			return 2L*str.length();
+		}
+	}
+	
 	public static void main(String[] args) {
-		CacheFileManager<File> cacheManager = new DiskCacheFileManager(
-				new LRUCachePolicy<>(5 * CachePolicy.SIZE_GB),
-				Settings.CACHE_DIR);
-		cacheManager.indexCache();
-		// ------------------------------------------------------
-		// Initialization
-		CacheFileStreamRequester<TestFileId> requester = new CacheFileStreamRequester<>(
-				cacheManager,
-				new BufferedFileStreamFactory()
-		);
+		// Initial setup.
+		CachePolicy policy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
+		FileCacheManager fileManager = new FileCacheManager(policy, Settings.CACHE_DIR, "test");
+		MemoryCacheManager<Str> memoryManager = new MemoryCacheManager<>(policy);
 		
-		// Dynamically update cache memory consumption.
-		cacheManager.getPolicy().setMaxSize(5 * CachePolicy.SIZE_KB);
+		// Local initialisation.
+		fileManager.indexCache(TestFileId.createFactory());
 		
-		// Writing
-		TestFileId id = new TestFileId(new ChunkPosition(0, 1, 2, 3));
-		File file = requester.claim(id); // Claimed files won't be removed by the cache manager unless released.
-		// Note: the data is first written to a temp file, and when the stream is closed,
-		// it is moved to the returned file.
-		if (!requester.isCached(id)) {
-			try (OutputStream os = requester.getOutputStream(id)) {
-				os.write("Hello there".getBytes(StandardCharsets.UTF_8));
+		diskExample(fileManager);
+		memoryExample(memoryManager);
+	}
+	
+	public static void diskExample(FileCacheManager manager) {
+		// Implementation.
+		TestFileId id = new TestFileId(new ChunkPosition(1, 2, 3, 4));
 
-			} catch (IOException | IllegalOwnerException e) {
+		// Atomically checks if file exists/reads are allowed.
+		FileReadCacheClaim read = manager.requestReadClaim(id);
+		if (read == null) {
+			// If not, atomically request a write claim and write data.
+			FileReadWriteCacheClaim write = manager.requestReadWriteClaim(id);
+			if (write == null) {
+				// The file is already being written to.
+				return;
+			}
+			try (OutputStream os = new BufferedOutputStream(write.getOutputStream())) {
+				os.write("Hello there".getBytes(StandardCharsets.UTF_8));
+				
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			// Atomically convert the write claim to a read claim
+			read = manager.degradeClaim(write);
+			if (read == null) {
+				// The file is empty.
+				return;
+			}
 		}
-
-		// Reading (equivalent api is commented).
-		try (InputStream is = requester.getInputStreamReleaseOnClose(id)) {
-//		try (InputStream is = requester.getInputStream(id)) {
+		
+		try (InputStream is = new BufferedInputStream(read.getInputStream())) {
+			byte[] buffer = new byte[1024];
 			StringBuilder sb = new StringBuilder();
-			byte[] buf = new byte[1024];
-			int count;
-			while ((count = is.read(buf)) != -1) {
-				sb.append(new String(buf, 0, count, StandardCharsets.UTF_8));
+			int amt;
+			while ((amt = is.read(buffer)) != -1) {
+				sb.append(new String(buffer, 0, amt, StandardCharsets.UTF_8));
 			}
 			System.out.println(sb.toString());
-
-		} catch (IOException | IllegalOwnerException e) {
+			
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-//		finally {
-//			requester.release(id);
-//		}
+
+		manager.releaseCacheClaim(read);
 	}
+	
+	public static void memoryExample(MemoryCacheManager<Str> manager) {
+		// Implementation.
+		TestFileId id = new TestFileId(new ChunkPosition(1, 2, 3, 4));
+
+		// Atomically checks if file exists/reads are allowed.
+		MemoryReadCacheClaim<Str> read = manager.requestReadClaim(id);
+		if (read == null) {
+			// If not, atomically request a write claim and write data.
+			MemoryReadWriteCacheClaim<Str> write = manager.requestReadWriteClaim(id);
+			if (write == null) {
+				// The file is already being written to.
+				return;
+			}
+			
+			write.set(new Str("Hello there"));
+			
+			// Atomically convert the write claim to a read claim
+			read = manager.degradeClaim(write);
+			if (read == null) {
+				// The file is empty.
+				return;
+			}
+		}
+		
+		Str str = read.get();
+		System.out.println("Memory: " + str.toString());
+
+		manager.releaseCacheClaim(read);
+	}
+	
 }

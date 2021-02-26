@@ -1,9 +1,8 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy;
+package nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.CacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,32 +14,37 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+@Deprecated
 @AllArgsConstructor
-public class LRUCachePolicy<T>
-		implements CachePolicy<T> {
+public class LRUCachePolicy
+		implements CachePolicy {
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-	private final PriorityQueue<QueueElem<T>> queue;
-	private final Map<T, QueueElem<T>> fileMap;
+	private final PriorityQueue<QueueElem<?>> queue;
+	private final Map<Object, QueueElem<?>> fileMap;
 	@Getter
 	private long maxSize;
 	private final AtomicLong curSize;
-	private final AtomicLong id;
+	private final AtomicLong nextOrdering;
 	private final Lock lock;
 	
-	@Getter
-	@Setter
 	@AllArgsConstructor
 	private static class QueueElem<V>
-			implements Comparable<QueueElem<V>> {
-		private final V file;
+			implements Comparable<QueueElem<?>> {
+		private final CacheManager<V> manager;
+		private final V id;
 		private long size;
-		private long id;
+		private long ordering;
 
 		@Override
-		public int compareTo(QueueElem elem) {
-			return Long.compare(id, elem.id);
+		public int compareTo(QueueElem<?> elem) {
+			return Long.compare(ordering, elem.ordering);
 		}
+		
+		public void delete() {
+			manager.notifyCacheDelete(id);
+		}
+		
 	}
 	
 	public LRUCachePolicy(long maxSize) {
@@ -48,34 +52,39 @@ public class LRUCachePolicy<T>
 		fileMap = new ConcurrentHashMap<>();
 		this.maxSize = maxSize;
 		curSize = new AtomicLong(0);
-		id = new AtomicLong(Long.MIN_VALUE);
+		nextOrdering = new AtomicLong(Long.MIN_VALUE);
 		lock = new ReentrantLock();
 	}
 	
 	@Override
-	public boolean update(CacheFileManager<T> fileManager, T file) {
-		long newId = id.incrementAndGet();
+	public <T> boolean update(CacheManager<T> cacheManager, T id) {
+		long newOrdering = this.nextOrdering.incrementAndGet();
 		long size = 0;
-		if (fileManager.exists(file)) {
-			size = fileManager.sizeOf(file);
+		if (cacheManager.exists(id)) {
+			size = cacheManager.sizeOf(id);
 		}
 		
 		long addSize = 0;
 		lock.lock();
 		try {
-			QueueElem<T> elem = fileMap.get(file);
+			QueueElem<?> elem = fileMap.get(id);
 			if (elem == null) {
 				addSize = size;
-				elem = new QueueElem<>(file, size, newId);
-				fileMap.put(file, elem);
+				elem = new QueueElem<>(cacheManager, id, size, newOrdering);
+				fileMap.put(id, elem);
 				queue.add(elem);
 				return true;
 				
 			} else {
+				if (cacheManager != elem.manager) {
+					throw new IllegalStateException("The cache manager " + cacheManager +
+							" tried to update the file " + id +
+							" which is owned by " + elem.manager);
+				}
 				addSize = size - elem.size;
 				queue.remove(elem);
 				elem.size = size;
-				elem.id = newId;
+				elem.ordering = newOrdering;
 				queue.add(elem);
 				return false;
 			}
@@ -85,15 +94,15 @@ public class LRUCachePolicy<T>
 				curSize.addAndGet(addSize);
 			}
 			lock.unlock();
-			checkSize(fileManager);
+			checkSize();
 		}
 	}
 
 	@Override
-	public boolean remove(T file) {
+	public <T> boolean remove(T file) {
 		lock.lock();
 		try {
-			QueueElem<T> elem = fileMap.get(file);
+			QueueElem<?> elem = fileMap.get(file);
 			if (elem == null) {
 				return false;
 			}
@@ -108,7 +117,7 @@ public class LRUCachePolicy<T>
 	}
 
 	@Override
-	public boolean isRegistered(T file) {
+	public <T> boolean isRegistered(T file) {
 		return fileMap.containsKey(file);
 	}
 	
@@ -122,9 +131,9 @@ public class LRUCachePolicy<T>
 		return curSize.get();
 	}
 
-	private void checkSize(CacheFileManager<T> fileManager) {
+	private void checkSize() {
 		while (curSize.get() > maxSize) {
-			QueueElem<T> elem;
+			QueueElem<?> elem;
 			lock.lock();
 			try {
 				elem = queue.poll();
@@ -134,11 +143,12 @@ public class LRUCachePolicy<T>
 					return;
 				}
 				curSize.addAndGet(-elem.size);
+				
 			} finally {
 				lock.unlock();
 			}
-			LOGGER.info("Removed cache file " + elem.file);
-			fileManager.cacheDeleteFile(elem.file);
+			elem.delete();
+			LOGGER.info("Removed cache file " + elem.id);
 		}
 	}
 	

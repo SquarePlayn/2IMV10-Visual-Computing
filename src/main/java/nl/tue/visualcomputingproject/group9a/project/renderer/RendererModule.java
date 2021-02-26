@@ -3,12 +3,11 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -26,7 +25,7 @@ public class RendererModule
 	
 	
 	@Override
-	public void startup(EventBus eventBus, CacheFileManager<File> cacheManager) {
+	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
 		LOGGER.info("Rendering starting up!");
 		this.start();
 		eventBus.register(this);

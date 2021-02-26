@@ -17,14 +17,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("UnstableApiUsage")
 public class LookupManager {
 	/**
 	 * The logger of this class.
 	 */
-	static final Logger logger = LoggerFactory.getLogger(LookupManager.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final EventBus eventBus;
 	private final DownloadManager downloadManager;

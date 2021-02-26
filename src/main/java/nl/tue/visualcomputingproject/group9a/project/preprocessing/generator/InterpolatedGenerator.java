@@ -174,9 +174,6 @@ public class InterpolatedGenerator<T extends PointData>
 		}
 		
 		return new MeshChunkData(
-				VERTEX_TYPE,
-				MESH_TYPE,
-				chunk.getData().size(),
 				vertexManager.finalizeBuffer(),
 				meshManager.finalizeBuffer());
 	}

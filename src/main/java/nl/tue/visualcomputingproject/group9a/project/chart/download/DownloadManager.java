@@ -9,11 +9,12 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.*;
 
 public class DownloadManager {
 	/** The logger of this class. */
-	static final Logger logger = LoggerFactory.getLogger(DownloadManager.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final Map<QualityLevel, Queue<DownloadJob>> queues = new HashMap<QualityLevel, Queue<DownloadJob>>() {{
 		put(QualityLevel.FIVE_BY_FIVE, new ArrayDeque<>());

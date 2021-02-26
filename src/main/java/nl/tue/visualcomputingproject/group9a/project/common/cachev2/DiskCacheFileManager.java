@@ -1,6 +1,7 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,18 +11,19 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.util.*;
 
+@Deprecated
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class DiskCacheFileManager
-		extends CacheFileManager<File> {
+		extends CacheManager<File> {
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The file extension of the cache files. */
 	static private final String CACHE_EXT = ".cache";
 	static private final String TMP_EXT = ".tmp";
 
-	private File cacheDir;
+	private final File cacheDir;
 	
-	public DiskCacheFileManager(CachePolicy<File> policy, File cacheDir) {
+	public DiskCacheFileManager(CachePolicy policy, File cacheDir) {
 		super(policy);
 		this.cacheDir = cacheDir;
 	}
@@ -67,6 +69,7 @@ public class DiskCacheFileManager
 		}
 	}
 
+	@Override
 	public File fileOf(FileId id) {
 		return new File(cacheDir.getPath() + File.separator +
 				id.getPath() +
@@ -101,7 +104,7 @@ public class DiskCacheFileManager
 	}
 
 	@Override
-	public void cacheDeleteFile(File file) {
+	public void notifyCacheDelete(File file) {
 		file.delete();
 	}
 

@@ -1,5 +1,6 @@
-package nl.tue.visualcomputingproject.group9a.project.common.old_cache;
+package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
+import nl.tue.visualcomputingproject.group9a.project.common.old_cache.CacheManager;
 import org.lwjgl.BufferUtils;
 
 import java.io.*;
@@ -16,7 +17,7 @@ import java.nio.ByteBuffer;
  * 
  * @param <T> The target class.
  */
-public interface CacheFactory<T> {
+public interface ObjectSerializer<T> {
 	/** The buffer size used for the byte buffers. */
 	int BUFFER_SIZE = 1024;
 

@@ -21,16 +21,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@SuppressWarnings("UnstableApiUsage")
 public class Extractor {
 	/**
 	 * The logger of this class.
 	 */
-	static final Logger logger = LoggerFactory.getLogger(Extractor.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final EventBus eventBus;
 	private final MapSheetCacheManager cacheManager;

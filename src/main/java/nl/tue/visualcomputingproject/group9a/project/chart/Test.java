@@ -20,10 +20,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 public class Test {
 	/** The logger of this class. */
-	static final Logger logger = LoggerFactory.getLogger(Test.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	public static void main(String[] args) {
 		try {

@@ -12,14 +12,16 @@ import nl.tue.visualcomputingproject.group9a.project.common.event.ChartChunkLoad
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ChunkAssemblyManager {
 	/** The logger of this class. */
-	static final Logger logger = LoggerFactory.getLogger(ChunkAssemblyManager.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final Map<ChunkId, ChunkAssemblyJob> assemblyRequests = new HashMap<>();
 	private final EventBus eventBus;

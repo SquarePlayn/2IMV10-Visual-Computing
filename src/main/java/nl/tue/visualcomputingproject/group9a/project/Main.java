@@ -5,10 +5,8 @@ import com.google.common.eventbus.EventBus;
 import nl.tue.visualcomputingproject.group9a.project.chart.ChartingModule;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.DiskCacheFileManager;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.CachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.LRUCachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.LRUCachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.PreProcessingModule;
 import nl.tue.visualcomputingproject.group9a.project.renderer.RendererModule;
 import org.slf4j.Logger;
@@ -19,6 +17,7 @@ import java.io.File;
 /**
  * The main class and start point of the application.
  */
+@SuppressWarnings("UnstableApiUsage")
 public class Main {
 	/** The logger of this class. */
 	static final Logger logger = LoggerFactory.getLogger(Main.class);
@@ -47,14 +46,12 @@ public class Main {
 	public void run(String[] args) {
 		try {
 			logger.info("Setting up cache manager...");
-			CacheFileManager<File> cacheManager = new DiskCacheFileManager(
-				new LRUCachePolicy<>(5 * CachePolicy.SIZE_GB),
-				Settings.CACHE_DIR);
-			cacheManager.indexCache();
+			CachePolicy diskPolicy = new LRUCachePolicy(5 * CachePolicy.SIZE_GiB);
+			CachePolicy memoryPolicy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
 			logger.info("Starting up modules...");
 			EventBus bus = new AsyncEventBus(Settings.executorService);
 			for (Module mod : modules) {
-				mod.startup(bus, cacheManager);
+				mod.startup(bus, diskPolicy, memoryPolicy);
 			}
 			logger.info("Finished starting up modules!");
 		} catch (Exception e) {

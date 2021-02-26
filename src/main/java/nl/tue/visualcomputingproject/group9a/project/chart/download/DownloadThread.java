@@ -7,14 +7,16 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.Optional;
 
-public class DownloadThread extends Thread {
+public class DownloadThread
+		extends Thread {
 	/**
 	 * The logger of this class.
 	 */
-	static final Logger logger = LoggerFactory.getLogger(DownloadThread.class);
+	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final DownloadManager manager;
 	private final MapSheetCacheManager cacheManager;

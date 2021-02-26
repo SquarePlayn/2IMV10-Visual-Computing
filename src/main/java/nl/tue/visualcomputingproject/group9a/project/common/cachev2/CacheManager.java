@@ -1,21 +1,19 @@
-package nl.tue.visualcomputingproject.group9a.project.common.cache;
+package nl.tue.visualcomputingproject.group9a.project.common.cachev2;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.cache_policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
+import nl.tue.visualcomputingproject.group9a.project.common.cachev2.cache_policy.CachePolicy;
 
+@Deprecated
 @Getter
-public abstract class CacheFileManager<T> {
-	protected final CachePolicy<T> policy;
-	
-	public CacheFileManager(CachePolicy<T> policy) {
-		this.policy = policy;
-	}
+@AllArgsConstructor
+public abstract class CacheManager<T> {
+	protected final CachePolicy policy;
 	
 	public abstract void indexCache();
 	
 	public abstract T fileOf(FileId id);
-
-	public abstract T tmpFileOf(FileId id);
 	
 	public T claimFile(FileId id) {
 		T file = fileOf(id);
@@ -24,19 +22,20 @@ public abstract class CacheFileManager<T> {
 	}
 	
 	public void releaseFile(FileId id) {
-		policy.update(this, fileOf(id));
+		T file = fileOf(id);
+		policy.update(this, file);
 	}
 	
 	public abstract void deleteFile(FileId id);
 
-	public abstract void cacheDeleteFile(T file);
+	public abstract void notifyCacheDelete(T file);
 	
 	public boolean isClaimed(T file) {
-		return policy.isRegistered(file);
+		return !policy.isRegistered(file);
 	}
 	
 	public boolean isClaimed(FileId id) {
-		return isClaimed(fileOf(id));
+		return !policy.isRegistered(fileOf(id));
 	}
 	
 	public abstract long sizeOf(T file);
