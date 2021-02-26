@@ -35,5 +35,5 @@ public final class Settings {
 	/**
 	 * The maximum quality of map sheets the chart module will download.
 	 */
-	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.HALF_BY_HALF;
+	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.FIVE_BY_FIVE;
 }

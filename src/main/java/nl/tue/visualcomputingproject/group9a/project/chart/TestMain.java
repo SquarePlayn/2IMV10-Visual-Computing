@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.chart;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import nl.tue.visualcomputingproject.group9a.project.chart.visualize.Visualizer;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheFileManager;
@@ -60,10 +61,12 @@ public class TestMain {
 			}
 			logger.info("Finished starting up modules!");
 			
+			new Visualizer(bus);
+			
 			ArrayList<ChunkId> l = new ArrayList<>();
 			l.add(new ChunkId(new ChunkPosition(
-				154862.52,378917.306914, 100, 100
-			), QualityLevel.HALF_BY_HALF));
+				150001,375001, 1000, 1000
+			), QualityLevel.FIVE_BY_FIVE));
 			bus.post(new ProcessorChunkRequestedEvent(l));
 		} catch (Exception e) {
 			logger.error("An exception happened!", e);
