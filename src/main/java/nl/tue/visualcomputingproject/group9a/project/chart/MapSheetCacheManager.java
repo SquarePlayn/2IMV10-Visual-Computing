@@ -1,6 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.chart;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
@@ -41,6 +43,8 @@ public class MapSheetCacheManager {
 		return cacheManager.degradeClaim(claim);
 	}
 	
+	@ToString
+	@EqualsAndHashCode
 	@AllArgsConstructor
 	static class MapSheetFileId
 			implements FileId {

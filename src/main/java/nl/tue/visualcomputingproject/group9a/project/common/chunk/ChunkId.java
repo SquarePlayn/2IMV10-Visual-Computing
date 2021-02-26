@@ -58,28 +58,7 @@ public class ChunkId
 		};
 	}
 	
-	@Override
-	public String toString() {
-		return "ChunkId{" +
-			"position=" + position +
-			", quality=" + quality +
-			'}';
-	}
-	
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ChunkId)) return false;
-		ChunkId chunkId = (ChunkId) o;
-		return Objects.equals(getPosition(), chunkId.getPosition()) && getQuality() == chunkId.getQuality();
-	}
-	
-	@Override
-	public int hashCode() {
-		return Objects.hash(getPosition(), getQuality());
-	}
-	
-	//	/**
+//	/**
 //	 * Factory class for serializing and deserializing this ID
 //	 * to a string used for storing cache files.
 //	 */

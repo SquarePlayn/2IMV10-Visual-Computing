@@ -261,9 +261,9 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 				throw new IllegalArgumentException("Tried to track claim which is already claimed!");
 			}
 
-			boolean newClaim = (elem == null);
-			if (newClaim) {
+			if (elem == null) {
 				elem = createClaimElem();
+				claimMap.put(id, elem);
 			}
 			elem.tracked = true;
 			ReadWrite claim = createReadWriteClaim(id, elem);
@@ -271,9 +271,6 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 				throw new IllegalArgumentException("Tried to track claim which doesn't exist!");
 			}
 			elem.writeClaim = claim;
-			if (newClaim) {
-				claimMap.put(id, elem);
-			}
 
 		} finally {
 			lock.unlock();

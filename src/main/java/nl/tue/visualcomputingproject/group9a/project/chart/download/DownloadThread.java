@@ -13,9 +13,7 @@ import java.util.Optional;
 
 public class DownloadThread
 		extends Thread {
-	/**
-	 * The logger of this class.
-	 */
+	/** The logger of this class. */
 	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
 	private final DownloadManager manager;
@@ -24,6 +22,7 @@ public class DownloadThread
 	public DownloadThread(DownloadManager manager, MapSheetCacheManager cacheManager) {
 		this.manager = manager;
 		this.cacheManager = cacheManager;
+		setDaemon(true);
 	}
 	
 	@Override

@@ -5,6 +5,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Global project settings class.
@@ -28,7 +29,12 @@ public final class Settings {
 	
 	/** The service used for scheduling tasks. */
 	public static final ExecutorService executorService = Executors.newFixedThreadPool(
-			Math.max(1, Runtime.getRuntime().availableProcessors() - Settings.NUM_DEDICATED_THREADS));
+			Math.max(1, Runtime.getRuntime().availableProcessors() - Settings.NUM_DEDICATED_THREADS),
+			r -> {
+				Thread t = Executors.defaultThreadFactory().newThread(r);
+				t.setDaemon(true);
+				return t;
+			});
 	
 	/** The directory used for caching. */
 	public static File CACHE_DIR = new File("cache");
