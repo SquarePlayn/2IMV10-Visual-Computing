@@ -58,10 +58,9 @@ public class LookupManager {
 		for (MapSheet sheet : sheets) {
 			Map<QualityLevel, List<ChunkPosition>> requests = new HashMap<>();
 			for (ChunkId requestedChunk : event.getNewChunksRequested()) {
-				Geometry chunkGeom = requestedChunk.getPosition().getJtsGeometry(api.getGeometryFactory());
+				Geometry chunkGeom = requestedChunk.getPosition().getJtsGeometry(api.getGeometryFactory(), api.getCrs());
 				if (chunkGeom.intersects(sheet.getGeom())) {
 					//We now know that requestedChunk needs data from sheet.
-					
 					//Make sure we cover both the requested and higher qualities.
 					QualityLevel q = requestedChunk.getQuality();
 					while (q.getOrder() <= Settings.MAX_DOWNLOAD_QUALITY.getOrder()) {

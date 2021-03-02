@@ -93,12 +93,17 @@ public class WFSApi {
 		List<MapSheet> results = new ArrayList<>();
 		GeometryFactory factory = getGeometryFactory();
 		for (MapSheet sheet : sheets) {
+			boolean found = false;
 			for (ChunkPosition position : positions) {
-				Geometry chunkGeom = position.getJtsGeometry(factory);
+				Geometry chunkGeom = position.getJtsGeometry(factory, getCrs());
 				if (chunkGeom.intersects(sheet.getGeom())) {
 					results.add(sheet);
+					found = true;
 					break;
 				}
+			}
+			if (!found) {
+				logger.warn("Rejecting sheet! {} {}", sheet.getBladnr(), sheet.getGeom());
 			}
 		}
 		

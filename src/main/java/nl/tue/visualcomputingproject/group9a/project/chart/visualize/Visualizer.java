@@ -73,7 +73,7 @@ public class Visualizer {
 			}
 			double r = Math.max(Math.min((p.getAlt() - minZ) / (maxZ - minZ), 1.0), 0.0);
 			raster.setPixel((int) x, image.getHeight() - (int)y - 1, new int[]{
-				(int)(r * Short.MAX_VALUE)
+				(int)(r * (Short.MAX_VALUE * 2))
 			});
 		}
 		
