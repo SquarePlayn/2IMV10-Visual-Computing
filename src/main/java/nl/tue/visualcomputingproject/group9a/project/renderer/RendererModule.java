@@ -58,7 +58,7 @@ public class RendererModule extends Thread implements Module {
 		// TODO Test territory
 
 		ChunkPosition newChunk = new ChunkPosition(
-				150001,375001, 20000, 20000
+				150001,375001, 2000, 2000
 		);
 
 		Collection<ChunkPosition> newChunks = new ArrayList<>();
@@ -74,7 +74,7 @@ public class RendererModule extends Thread implements Module {
 	@Override
 	public void run() {
 		// Here is your thread
-		System.out.println("Render thread started");
+		LOGGER.info("Render thread started");
 		initialize();
 		while (!window.closed()) {
 			if (window.shouldUpdate()) {
@@ -84,8 +84,11 @@ public class RendererModule extends Thread implements Module {
 		}
 		cleanup();
 
+		LOGGER.info("Closing renderer");
 
-		System.out.println("Closing renderer");
+		// TODO Fix daemon threads auto shutting down when this thread shuts down
+		LOGGER.info("Killing system");
+		System.exit(0);
 	}
 
 	private void initialize() {
@@ -175,6 +178,7 @@ public class RendererModule extends Thread implements Module {
 
 	@Subscribe
 	public void receiveEvent(ProcessorChunkLoadedEvent event) {
+		LOGGER.info("RECEIVED EVENT =======================");
 		eventQueue.add(event);
 	}
 }
