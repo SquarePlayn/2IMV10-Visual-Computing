@@ -20,10 +20,10 @@ public class DownloadThread
 	private final MapSheetCacheManager cacheManager;
 	
 	public DownloadThread(DownloadManager manager, MapSheetCacheManager cacheManager) {
+		super("download-thread");
 		this.manager = manager;
 		this.cacheManager = cacheManager;
-		//TODO: Set to daemon once we have everything working.
-		//setDaemon(true);
+		setDaemon(true);
 	}
 	
 	@Override
