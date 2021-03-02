@@ -3,8 +3,6 @@
 in vec3 color;
 in vec3 surfaceNormal;
 in vec3 toLightVector;
-in vec3 reflectedVector;
-in float reflectiveness;
 
 out vec4 out_Color;
 

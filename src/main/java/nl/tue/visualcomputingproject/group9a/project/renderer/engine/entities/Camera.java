@@ -11,6 +11,8 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 @Setter
 public class Camera {
 
+	private static final Vector3f UP = new Vector3f(0f, 1f, 0f);
+
 	/**
 	 * The window the camera should render on
 	 * TODO Use window to get keys and move the camera
@@ -75,6 +77,12 @@ public class Camera {
 						case GLFW.GLFW_KEY_LEFT:
 							increaseYaw(-degr);
 							break;
+						case GLFW.GLFW_KEY_RIGHT_BRACKET:
+							increaseRoll(degr);
+							break;
+						case GLFW.GLFW_KEY_LEFT_BRACKET:
+							increaseRoll(-degr);
+							break;
 					}
 				}
 
@@ -130,6 +138,15 @@ public class Camera {
 	 */
 	public void increaseYaw(float degrees) {
 		yaw = (yaw + degrees) % 360;
+	}
+
+	/**
+	 * Increase the roll. Wraps around.
+	 *
+	 * @param degrees Angle in degrees to increase the roll with
+	 */
+	public void increaseRoll(float degrees) {
+		roll = (roll + degrees) % 360;
 	}
 
 	/**

@@ -80,19 +80,35 @@ public class RendererModule extends Thread implements Module {
 
 		light = new Light(new Vector3f(1, 1, 1), new Vector3f(1, 1, 1));
 
-		float height = 1f;
-		float size = 0.5f;
-		testModel = Loader.loadToVAO(
-				new float[]{
-						-size * 2, height, size,
-						size * 2, height, size / 2.f,
-						size * 2, height, -size / 2.f,
-						-size * 2, height, -size
-				}, new int[]{
-						0, 1, 2,
-						0, 3, 2
-				}
-		);
+		if (false) {
+			float height = 1f;
+			float size = 0.5f;
+			testModel = Loader.loadToVAO(
+					new float[]{
+							-size * 2, height, size,
+							size * 2, height, size,
+							size * 2, height, -size,
+							-size * 2, height, -size
+					}, new int[]{
+							0, 1, 2,
+							0, 3, 2
+					}
+			);
+		} else {
+			float dist = -1f;
+			float size = 0.5f;
+			testModel = Loader.loadToVAO(
+					new float[]{
+							-size, size, dist,
+							size, size, dist,
+							size, -size, dist,
+							-size, -size, dist
+					}, new int[]{
+							0, 1, 2,
+							0, 3, 2
+					}
+			);
+		}
 	}
 
 	private void runFrame() {

@@ -49,9 +49,9 @@ public class Maths {
 		matrix.identity();
 
 		// Rotate according to the camera rotations
-		matrix.rotateZ((float) Math.toRadians(camera.getRoll()), matrix);
-		matrix.rotateY((float) Math.toRadians(camera.getYaw()), matrix);
 		matrix.rotateX((float) Math.toRadians(-camera.getPitch()), matrix);
+		matrix.rotateY((float) Math.toRadians(camera.getYaw()), matrix);
+		matrix.rotateZ((float) Math.toRadians(camera.getRoll()), matrix);
 
 		// Translate the view matrix. NB: Backwards
 		matrix.translate(new Vector3f(camera.getPosition()).mul(-1));
