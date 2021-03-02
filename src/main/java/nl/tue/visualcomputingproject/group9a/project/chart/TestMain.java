@@ -63,6 +63,7 @@ public class TestMain {
 				150001,375001, 20000, 20000
 			), QualityLevel.FIVE_BY_FIVE));
 			bus.post(new ProcessorChunkRequestedEvent(l));
+			Thread.sleep(1000_000_000_000L);
 		} catch (Exception e) {
 			logger.error("An exception happened!", e);
 		}
