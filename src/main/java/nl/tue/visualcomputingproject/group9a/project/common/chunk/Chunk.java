@@ -16,21 +16,6 @@ public class Chunk<ID extends ChunkId, T> {
 	/** The data of the chunk. */
 	T data;
 
-//	/**
-//	 * Alternative constructor of a chunk.
-//	 * 
-//	 * @param position     The position of the chunk. Part of the ID.
-//	 * @param qualityLevel The quality level of the chunk. Part of the ID.
-//	 * @param data         The data of the chunk.
-//	 */
-//	public Chunk(
-//			ChunkPosition position,
-//			QualityLevel qualityLevel,
-//			T data) {
-//		chunkId = new ChunkId(position, qualityLevel);
-//		this.data = data;
-//	}
-
 	/**
 	 * @return The position of the chunk.
 	 */
