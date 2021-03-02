@@ -33,6 +33,9 @@ public final class Settings {
 			r -> {
 				Thread t = Executors.defaultThreadFactory().newThread(r);
 				t.setDaemon(true);
+				t.setUncaughtExceptionHandler((Thread thread, Throwable e) -> {
+					e.printStackTrace();
+				});
 				return t;
 			});
 	
