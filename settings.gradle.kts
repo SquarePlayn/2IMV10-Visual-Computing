@@ -1,2 +1,2 @@
-rootProject.name = "project"
+rootProject.name = "2IMV10-Visual-Computing"
 
