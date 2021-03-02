@@ -49,6 +49,8 @@ public class Visualizer {
 			}
 		}
 		
+		maxZ = 50; //Hardcoded
+		
 		double w = maxX - minX;
 		double h = maxY - minY;
 		
@@ -69,8 +71,9 @@ public class Visualizer {
 			if (x >= image.getWidth() || y >= image.getHeight()) {
 				logger.error("AAAAA {} x {}", x, y);
 			}
+			double r = Math.max(Math.min((p.getAlt() - minZ) / (maxZ - minZ), 1.0), 0.0);
 			raster.setPixel((int) x, image.getHeight() - (int)y - 1, new int[]{
-				(short) (((p.getAlt() - minZ) / (maxZ - minZ)) * Short.MAX_VALUE)
+				(int)(r * Short.MAX_VALUE)
 			});
 		}
 		

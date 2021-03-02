@@ -22,7 +22,8 @@ public class DownloadThread
 	public DownloadThread(DownloadManager manager, MapSheetCacheManager cacheManager) {
 		this.manager = manager;
 		this.cacheManager = cacheManager;
-		setDaemon(true);
+		//TODO: Set to daemon once we have everything working.
+		//setDaemon(true);
 	}
 	
 	@Override
