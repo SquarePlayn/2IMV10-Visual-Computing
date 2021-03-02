@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.event;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 
 /**
@@ -11,5 +12,5 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChun
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class ChartChunkLoadedEvent extends AbstractEvent {
-	Chunk<PointCloudChunkData> chunk;
+	Chunk<ChunkId, PointCloudChunkData> chunk;
 }

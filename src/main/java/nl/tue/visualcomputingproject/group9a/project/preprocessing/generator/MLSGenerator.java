@@ -1,6 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkData;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointData;
 
@@ -11,11 +12,11 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointData;
  *
  * @param <T> The type of point data container.
  */
-public class MLSGenerator<T extends PointData>
-		extends Generator<T> {
+public class MLSGenerator<ID extends ChunkId, T extends PointData>
+		extends Generator<ID, T> {
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<? extends T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk) {
 		throw new UnsupportedOperationException("WIP");
 	}
 	

@@ -7,6 +7,7 @@ import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequ
 import nl.tue.visualcomputingproject.group9a.project.chart.events.PartialChunkAvailableEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.Point;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 import org.geotools.coverage.grid.GridCoordinates2D;
@@ -45,11 +46,11 @@ public class Extractor {
 		logger.info("Extractor is ready!");
 	}
 	
-	public List<Chunk<PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
-		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+	public List<Chunk<ChunkId, PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
+		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 		
 		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData()));
+			chunks.add(new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData()));
 		}
 		
 		try (InputStream inputStream = event.getClaim().getInputStream()) {
@@ -64,7 +65,7 @@ public class Extractor {
 			//If not, useful link: https://gis.stackexchange.com/questions/278350/obtaining-longitude-and-latitude-from-geotiff-with-geotools
 			
 			long count = 0;
-			for (Chunk<PointCloudChunkData> chunk : chunks) {
+			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
@@ -98,7 +99,7 @@ public class Extractor {
 	public void request(ExtractionRequestEvent event) throws IOException, TransformException {
 		logger.info("Extracting {}...", event);
 		
-		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 		switch (event.getLevel()) {
 			case FIVE_BY_FIVE:
 			case HALF_BY_HALF:
@@ -108,7 +109,7 @@ public class Extractor {
 				throw new UnsupportedOperationException("Unimplemented: LAZ");
 		}
 		
-		for (Chunk<PointCloudChunkData> chunk : chunks) {
+		for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 			eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
 		}
 		

@@ -10,26 +10,26 @@ import lombok.Value;
  */
 @Value
 @AllArgsConstructor
-public class Chunk<T> {
+public class Chunk<ID extends ChunkId, T> {
 	/** The ID uniquely identifying of a chunk. */
-	ChunkId chunkId;
+	ID chunkId;
 	/** The data of the chunk. */
 	T data;
 
-	/**
-	 * Alternative constructor of a chunk.
-	 * 
-	 * @param position     The position of the chunk. Part of the ID.
-	 * @param qualityLevel The quality level of the chunk. Part of the ID.
-	 * @param data         The data of the chunk.
-	 */
-	public Chunk(
-			ChunkPosition position,
-			QualityLevel qualityLevel,
-			T data) {
-		chunkId = new ChunkId(position, qualityLevel);
-		this.data = data;
-	}
+//	/**
+//	 * Alternative constructor of a chunk.
+//	 * 
+//	 * @param position     The position of the chunk. Part of the ID.
+//	 * @param qualityLevel The quality level of the chunk. Part of the ID.
+//	 * @param data         The data of the chunk.
+//	 */
+//	public Chunk(
+//			ChunkPosition position,
+//			QualityLevel qualityLevel,
+//			T data) {
+//		chunkId = new ChunkId(position, qualityLevel);
+//		this.data = data;
+//	}
 
 	/**
 	 * @return The position of the chunk.

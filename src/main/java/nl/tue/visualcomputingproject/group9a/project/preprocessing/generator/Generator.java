@@ -1,16 +1,13 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkData;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointData;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 
 /**
  * The generator used to pre-process a raw data chunk with point data.
  *
  * @param <T> The type of point data container.
  */
-public abstract class Generator<T extends PointData> {
+public abstract class Generator<ID extends ChunkId, T extends PointData> {
 
 	/**
 	 * Generates the mesh data chunk.
@@ -19,7 +16,7 @@ public abstract class Generator<T extends PointData> {
 	 * 
 	 * @return A data chunk containing a vertex buffer and a mesh of the processed data.
 	 */
-	public abstract MeshChunkData generateChunkData(Chunk<? extends T> chunk);
+	public abstract MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk);
 
 	/**
 	 * Creates a generator based on the quality level.
@@ -30,7 +27,7 @@ public abstract class Generator<T extends PointData> {
 	 * 
 	 * @return A generator suitable for the given quality.
 	 */
-	public static <T extends PointData> Generator<T> createGeneratorFor(QualityLevel quality) {
+	public static <ID extends ChunkId, T extends PointData> Generator<ID, T> createGeneratorFor(QualityLevel quality) {
 		if (quality.isInterpolated()) {
 			return new InterpolatedGenerator<>();
 		} else {

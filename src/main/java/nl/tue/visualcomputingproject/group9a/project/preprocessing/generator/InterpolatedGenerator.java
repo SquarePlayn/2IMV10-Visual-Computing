@@ -17,8 +17,8 @@ import java.util.List;
  * 
  * @param <T> The type of point data container.
  */
-public class InterpolatedGenerator<T extends PointData>
-		extends Generator<T> {
+public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
+		extends Generator<ID, T> {
 	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
 	/** The type of vertex buffer to generate. */
@@ -91,7 +91,7 @@ public class InterpolatedGenerator<T extends PointData>
 	}
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<? extends T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk) {
 		if (!chunk.getQualityLevel().isInterpolated()) {
 			throw new IllegalArgumentException(
 					"This generator can only be used for interpolated datasets.");
@@ -189,13 +189,14 @@ public class InterpolatedGenerator<T extends PointData>
 				data.addPoint(5*i, 5*j, 5*Math.floorMod(i + j, 2));
 			}
 		}
-		Chunk<PointCloudChunkData> chunk = new Chunk<>(
-				new ChunkPosition(-5, -5, 15, 15),
-				QualityLevel.FIVE_BY_FIVE,
+		Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(
+				new ChunkId(
+						new ChunkPosition(-5, -5, 15, 15),
+						QualityLevel.FIVE_BY_FIVE),
 				data
 		);
 		Generator
-				.<PointCloudChunkData>createGeneratorFor(chunk.getQualityLevel())
+				.createGeneratorFor(chunk.getQualityLevel())
 				.generateChunkData(chunk);
 	}
 	
