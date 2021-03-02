@@ -11,7 +11,8 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 @Setter
 public class Camera {
 
-	private static final Vector3f UP = new Vector3f(0f, 1f, 0f);
+	private static final Vector3f UP = new Vector3f(0, 1, 0);
+	private static final Vector3f FORWARD = new Vector3f(0, 0, -1);
 
 	/**
 	 * The window the camera should render on
@@ -92,14 +93,50 @@ public class Camera {
 	}
 
 	/**
+	 * Get the direction of length 1 the camera is looking in.
+	 *
+	 * @return Direction the camera is looking in
+	 */
+	public Vector3f getForward() {
+		float fPitch = (float) Math.toRadians(pitch);
+		float fYaw = (float) Math.toRadians(yaw);
+		float fRoll = (float) Math.toRadians(roll);
+
+
+		Vector3f forward = new Vector3f(FORWARD);
+		forward.rotateZ(fRoll);
+		forward.rotateX(fPitch);
+		forward.rotateY(-fYaw);
+
+		return forward;
+	}
+
+	/**
+	 * Get the direction going right from the camera
+	 * @return Right direction of the camera
+	 */
+	public Vector3f getRight() {
+		return getForward().cross(getUp()).normalize();
+	}
+
+	/**
+	 * Get the upwards direction of the camera.
+	 *
+	 * @return Upwards direction of the camera
+	 */
+	public Vector3f getUp() {
+		// NB: Up always straight up disregarding camera rotations
+		return new Vector3f(UP);
+	}
+
+
+	/**
 	 * Move the camera in the viewed direction
 	 *
 	 * @param dist Distance to move the camera
 	 */
 	public void moveForward(float dist) {
-		// TODO Move based on camera rotation
-		// For now just moves in X direction
-		position.add(dist, 0, 0);
+		position.add(getForward().mul(dist));
 	}
 
 	/**
@@ -108,9 +145,7 @@ public class Camera {
 	 * @param dist Distance to move the camera
 	 */
 	public void moveSideways(float dist) {
-		// TODO Move based on camera rotation
-		// For now just move in Z direction
-		position.add(0, 0, dist);
+		position.add(getRight().mul(dist));
 	}
 
 	/**
@@ -119,7 +154,7 @@ public class Camera {
 	 * @param dist Distance to move the camera
 	 */
 	public void moveUp(float dist) {
-		position.add(0, dist, 0);
+		position.add(getUp().mul(dist));
 	}
 
 	/**
