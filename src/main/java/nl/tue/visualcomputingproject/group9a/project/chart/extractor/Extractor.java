@@ -64,6 +64,8 @@ public class Extractor {
 			//Assumption: CRS of the geotiff is EPSG:28992
 			//If not, useful link: https://gis.stackexchange.com/questions/278350/obtaining-longitude-and-latitude-from-geotiff-with-geotools
 			
+			logger.info("Sheet info: {}x{} - {}x{}", coverage.getEnvelope2D().getMinX(), coverage.getEnvelope2D().getMinY(), coverage.getEnvelope2D().getMaxX(), coverage.getEnvelope2D().getMaxY());
+			
 			long count = 0;
 			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
@@ -71,7 +73,7 @@ public class Extractor {
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
 				GridCoordinates2D trg = coverage.getGridGeometry().worldToGrid(tr);
 				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
-				logger.info("Chunk: {} {} {} {}", bl, tr, blg, trg);
+				logger.info("Chunk: {} {} {} {} - {} {} {} {}", bl, tr, blg, trg, range.getLow(0), range.getHigh(0), range.getLow(1), range.getHigh(1));
 				
 				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i < Math.min(trg.getX(), range.getHigh(0)); i++) {
 					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j < Math.min(blg.getY(), range.getHigh(1)); j++) {
