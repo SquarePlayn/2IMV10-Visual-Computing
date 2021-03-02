@@ -117,33 +117,28 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
 				VERTEX_TYPE, chunk.getData().size());
 		
-		try {
-			for (int y = 0; y < height; y++) {
-				for (int x = 0; x < width; x++) {
-					if (points[x][y] == null) continue;
-					Vector3d normal = new Vector3d();
-					for (int dy = -DIST; dy <= DIST; dy++) {
-						for (int dx = -DIST; dx <= DIST; dx++) {
-							if (dx == 0 && dy == 0) continue;
-							int x2 = x + dx;
-							int y2 = y + dy;
-							if (x2 < 0 || x2 >= width) continue;
-							if (y2 < 0 || y2 >= height) continue;
-							if (points[x2][y2] == null) continue;
-							normal.add(upProjection(points[x][y].getPoint(), points[x2][y2].getPoint()));
-						}
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				if (points[x][y] == null) continue;
+				Vector3d normal = new Vector3d();
+				for (int dy = -DIST; dy <= DIST; dy++) {
+					for (int dx = -DIST; dx <= DIST; dx++) {
+						if (dx == 0 && dy == 0) continue;
+						int x2 = x + dx;
+						int y2 = y + dy;
+						if (x2 < 0 || x2 >= width) continue;
+						if (y2 < 0 || y2 >= height) continue;
+						if (points[x2][y2] == null) continue;
+						normal.add(upProjection(points[x][y].getPoint(), points[x2][y2].getPoint()));
 					}
-					if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
-						normal.y = 1;
-					} else {
-						normal.normalize();
-					}
-					points[x][y].setIndex(vertexManager.addVertex(points[x][y].getPoint(), normal));
 				}
+				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+					normal.y = 1;
+				} else {
+					normal.normalize();
+				}
+				points[x][y].setIndex(vertexManager.addVertex(points[x][y].getPoint(), normal));
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("here");
 		}
 		
 		// Create mesh buffer.
