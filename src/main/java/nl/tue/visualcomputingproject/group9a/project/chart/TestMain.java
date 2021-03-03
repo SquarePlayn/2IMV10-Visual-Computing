@@ -47,7 +47,7 @@ public class TestMain {
 	public void run(String[] args) {
 		try {
 			logger.info("Setting up cache manager...");
-			CachePolicy diskPolicy = new LRUCachePolicy(5 * CachePolicy.SIZE_GiB);
+			CachePolicy diskPolicy = new LRUCachePolicy(10 * CachePolicy.SIZE_GiB);
 			CachePolicy memoryPolicy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
 			logger.info("Starting up modules...");
 			EventBus bus = new AsyncEventBus(Settings.executorService);
@@ -60,8 +60,8 @@ public class TestMain {
 			
 			ArrayList<ChunkId> l = new ArrayList<>();
 			l.add(new ChunkId(new ChunkPosition(
-				150001,375001, 20000, 20000
-			), QualityLevel.FIVE_BY_FIVE));
+				150001,375001, 100, 100
+			), QualityLevel.LAS));
 			bus.post(new ProcessorChunkRequestedEvent(l));
 		} catch (Exception e) {
 			logger.error("An exception happened!", e);

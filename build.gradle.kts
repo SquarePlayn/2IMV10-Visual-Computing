@@ -51,6 +51,8 @@ dependencies {
     implementation("org.geotools:gt-coverage:24.2")
     implementation("org.geotools:gt-geotiff:24.2")
 
+    implementation("com.github.mreutegg:laszip4j:0.8")
+
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 
     implementation("org.lwjgl", "lwjgl")

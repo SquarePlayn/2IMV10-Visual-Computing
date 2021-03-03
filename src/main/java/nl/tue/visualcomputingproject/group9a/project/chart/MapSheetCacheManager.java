@@ -55,13 +55,13 @@ public class MapSheetCacheManager {
 		
 		@Override
 		public String getPath() {
-			return FileId.genPath(PRE, bladnr, level.getOrder());
+			return FileId.genPath(PRE, bladnr, level.getOrder(), ".LAZ");
 		}
 		
 		public static FileIdFactory<MapSheetFileId> createFactory() {
 			return (String path) -> {
 				String[] split = path.split(FileId.DELIM);
-				if (split.length != 3 || !Objects.equals(split[0], PRE)) {
+				if (split.length != 4 || !Objects.equals(split[0], PRE)) {
 					return null;
 				}
 				String bladnr = split[1];

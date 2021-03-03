@@ -1,11 +1,13 @@
 package nl.tue.visualcomputingproject.group9a.project.chart.extractor;
 
+import com.github.mreutegg.laszip4j.LASHeader;
+import com.github.mreutegg.laszip4j.LASPoint;
+import com.github.mreutegg.laszip4j.LASReader;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.chart.MapSheetCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.PartialChunkAvailableEvent;
-import nl.tue.visualcomputingproject.group9a.project.common.Point;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
@@ -14,12 +16,12 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.geometry.DirectPosition2D;
-import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
@@ -96,6 +98,43 @@ public class Extractor {
 		}
 	}
 	
+	public List<Chunk<PointCloudChunkData>> handleLazFile(ExtractionRequestEvent event) throws IOException, TransformException {
+		File lazFile = event.getClaim().getFile();
+		if (lazFile == null) {
+			throw new IllegalStateException("Null file!");
+		}
+		LASReader reader = new LASReader(lazFile);
+		LASHeader header = reader.getHeader();
+		
+		logger.info("LAZ info:");
+		logger.info(" - Identifier: {}", header.getSystemIdentifier());
+		logger.info(" - Software: {}", header.getGeneratingSoftware());
+		logger.info(" - Year: {}", header.getFileCreationYear());
+		logger.info(" - Num points: {}", header.getNumberOfPointsByReturn());
+		logger.info(" - {}x{} -> {}x{} from {} to {}", header.getMinX(), header.getMinY(), header.getMaxX(), header.getMaxY(), header.getMinZ(), header.getMaxZ());
+		
+		
+		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+		
+		for (ChunkPosition pos : event.getPositions()) {
+			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData()));
+		}
+		
+		for (Chunk<PointCloudChunkData> chunk : chunks) {
+			LASReader chunkReader = reader.insideRectangle(
+				chunk.getPosition().getX(),
+				chunk.getPosition().getY(),
+				chunk.getPosition().getX() + chunk.getPosition().getWidth(),
+				chunk.getPosition().getY() + chunk.getPosition().getHeight());
+			for (LASPoint p : chunkReader.getPoints()) {
+				chunk.getData().addPoint(p.getX(), p.getY(), p.getZ());
+			}
+			logger.info("Extracted {} points for chunk {}.", chunk.getData().size(), chunk.getPosition());
+		}
+		
+		return chunks;
+	}
+	
 	@Subscribe
 	public void request(ExtractionRequestEvent event) throws IOException, TransformException {
 		logger.info("Extracting {}...", event);
@@ -107,7 +146,7 @@ public class Extractor {
 				chunks = handleGeotiffFile(event);
 				break;
 			case LAS:
-				throw new UnsupportedOperationException("Unimplemented: LAZ");
+				chunks = handleLazFile(event);
 		}
 		
 		for (Chunk<PointCloudChunkData> chunk : chunks) {
