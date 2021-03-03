@@ -29,6 +29,7 @@ public class Test {
 	public static void main(String[] args) {
 		try {
 			new Test().run();
+			Thread.sleep(1000_000_000_000L);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

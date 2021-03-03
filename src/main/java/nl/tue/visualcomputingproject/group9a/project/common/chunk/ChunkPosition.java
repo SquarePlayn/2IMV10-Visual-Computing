@@ -3,7 +3,6 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 import lombok.Value;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.*;
-import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**

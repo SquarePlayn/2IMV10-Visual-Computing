@@ -23,7 +23,8 @@ public class Test2 {
 			for (MapSheet sheet: sheets) {
 				logger.info("- {}", sheet);
 			}
-		} catch (IOException | FactoryException e) {
+			Thread.sleep(1000_000_000_000L);
+		} catch (IOException | FactoryException | InterruptedException e) {
 			e.printStackTrace();
 		}
 	}

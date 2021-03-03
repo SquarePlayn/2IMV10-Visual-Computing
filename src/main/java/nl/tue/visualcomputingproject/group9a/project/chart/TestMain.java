@@ -61,8 +61,9 @@ public class TestMain {
 			ArrayList<ChunkId> l = new ArrayList<>();
 			l.add(new ChunkId(new ChunkPosition(
 				150001,375001, 100, 100
-			), QualityLevel.LAS));
+			), Settings.MAX_DOWNLOAD_QUALITY));
 			bus.post(new ProcessorChunkRequestedEvent(l));
+			Thread.sleep(1000_000_000_000L);
 		} catch (Exception e) {
 			logger.error("An exception happened!", e);
 		}

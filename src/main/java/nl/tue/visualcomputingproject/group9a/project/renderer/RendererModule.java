@@ -4,6 +4,9 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
@@ -16,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -30,7 +35,9 @@ public class RendererModule extends Thread implements Module {
 	/**
 	 * Message queue from the event queue.
 	 */
-	final ConcurrentLinkedQueue<String> messages = new ConcurrentLinkedQueue<>();
+	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
+
+	private EventBus eventBus;
 
 	private Window window;
 	private StaticShader shader;
@@ -44,14 +51,30 @@ public class RendererModule extends Thread implements Module {
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
 		LOGGER.info("Rendering starting up!");
-		this.start();
+		this.eventBus = eventBus;
 		eventBus.register(this);
+		this.start();
+
+		// TODO Test territory
+
+		ChunkPosition newChunk = new ChunkPosition(
+				150001,375001, 2000, 2000
+		);
+
+		Collection<ChunkPosition> newChunks = new ArrayList<>();
+		newChunks.add(newChunk);
+		eventBus.post(new RendererChunkStatusEvent(
+				new ArrayList<>(),
+				new ArrayList<>(),
+				newChunks,
+				new ArrayList<>()
+		));
 	}
 
 	@Override
 	public void run() {
 		// Here is your thread
-		System.out.println("Render thread started");
+		LOGGER.info("Render thread started");
 		initialize();
 		while (!window.closed()) {
 			if (window.shouldUpdate()) {
@@ -61,8 +84,11 @@ public class RendererModule extends Thread implements Module {
 		}
 		cleanup();
 
+		LOGGER.info("Closing renderer");
 
-		System.out.println("Closing renderer");
+		// TODO Fix daemon threads auto shutting down when this thread shuts down
+		LOGGER.info("Killing system");
+		System.exit(0);
 	}
 
 	private void initialize() {
@@ -126,13 +152,22 @@ public class RendererModule extends Thread implements Module {
 		renderer.render(testModel, shader, camera);
 		shader.stop();
 
-		// TODO Test territory
-		camera.getPosition().add(0.0f, 0.00f, 0.0f);
-//		camera.setPitch(camera.getPitch() + 0.1f);
-		// End of test territory
-
 		// Put the new frame on the screen
 		window.swapBuffers();
+
+		// Update state
+		update();
+	}
+
+	/**
+	 * Update state
+	 */
+	private void update() {
+		if (!eventQueue.isEmpty()) {
+			// TODO Handle events
+			eventQueue.poll();
+			LOGGER.info("Extracted an event =============================================");
+		}
 	}
 
 	private void cleanup() {
@@ -142,7 +177,8 @@ public class RendererModule extends Thread implements Module {
 	}
 
 	@Subscribe
-	public void someEvent(String event) {
-		messages.add(event);
+	public void receiveEvent(ProcessorChunkLoadedEvent event) {
+		LOGGER.info("RECEIVED EVENT =======================");
+		eventQueue.add(event);
 	}
 }

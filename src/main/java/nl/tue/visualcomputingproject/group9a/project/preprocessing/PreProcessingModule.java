@@ -73,6 +73,7 @@ public class PreProcessingModule
 	 */
 	@Subscribe
 	public void rendererStatus(final RendererChunkStatusEvent e) {
+		LOGGER.info("Got renderer status event!");
 		if (!e.getNewChunks().isEmpty()) {
 			// First obtain read-access for all requested chunks, if they exist.
 			// Also send memory cached chunks back to the renderer.
@@ -90,11 +91,14 @@ public class PreProcessingModule
 						meshType);
 				WriteBackReadCacheClaim<MeshChunkData> claim = cache.requestReadClaim(id);
 				if (claim == null) {
+					LOGGER.info("Cache miss: " + id.getPosition());
 					// Cache miss.
 					request.add(id);
 				} else {
 					if (claim.isInMemory()) {
 						// Cache in memory.
+						LOGGER.info("Memory cache hit: " + id.getPosition());
+						LOGGER.info("Posting preprocessor loaded event!");
 						eventBus.post(new ProcessorChunkLoadedEvent(
 								new Chunk<>(id, claim.get())));
 						cache.releaseCacheClaim(claim);
@@ -111,6 +115,7 @@ public class PreProcessingModule
 				lock.lock();
 				try {
 					for (MeshChunkId id : request) {
+						LOGGER.info("Cache miss: " + id.getPosition());
 						requesting.put(id.getPosition(), id);
 						deliver.add(id);
 						req.add(id.asChunkId());
@@ -118,6 +123,7 @@ public class PreProcessingModule
 				} finally {
 					lock.unlock();
 				}
+				LOGGER.info("Posting chunk request event!");
 				eventBus.post(new ProcessorChunkRequestedEvent(req));
 			}
 			
@@ -125,6 +131,8 @@ public class PreProcessingModule
 			ioThread.submit(() -> {
 				// Read cache from disk.
 				for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+					LOGGER.info("Disk cache hit: " + pair.getFirst().getPosition());
+					LOGGER.info("Posting preprocessor loaded event!");
 					eventBus.post(new ProcessorChunkLoadedEvent(
 							new Chunk<>(pair.getFirst(), pair.getSecond().get())));
 					cache.releaseCacheClaim(pair.getSecond());
@@ -164,6 +172,7 @@ public class PreProcessingModule
 	 */
 	@Subscribe
 	public void chunkLoaded(ChartChunkLoadedEvent e) {
+		LOGGER.info("Got chunk loaded event: " + e.getChunk().getChunkId().getPosition());
 		// First determine if the event is valid.
 		// If so, then update the request map accordingly.
 		final MeshChunkId id;

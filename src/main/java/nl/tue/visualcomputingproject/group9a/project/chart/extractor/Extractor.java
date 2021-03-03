@@ -9,6 +9,7 @@ import nl.tue.visualcomputingproject.group9a.project.chart.MapSheetCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.PartialChunkAvailableEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointCloudChunkData;
 import org.geotools.coverage.grid.GridCoordinates2D;
@@ -47,11 +48,11 @@ public class Extractor {
 		logger.info("Extractor is ready!");
 	}
 	
-	public List<Chunk<PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
-		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+	public List<Chunk<ChunkId, PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
+		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 		
 		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData()));
+			chunks.add(new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData()));
 		}
 		
 		try (InputStream inputStream = event.getClaim().getInputStream()) {
@@ -68,7 +69,7 @@ public class Extractor {
 			logger.info("Sheet info: {}x{} - {}x{}", coverage.getEnvelope2D().getMinX(), coverage.getEnvelope2D().getMinY(), coverage.getEnvelope2D().getMaxX(), coverage.getEnvelope2D().getMaxY());
 			
 			long count = 0;
-			for (Chunk<PointCloudChunkData> chunk : chunks) {
+			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
@@ -76,8 +77,8 @@ public class Extractor {
 				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
 				logger.info("Chunk: {} {} {} {} - {} {} {} {}", bl, tr, blg, trg, range.getLow(0), range.getHigh(0), range.getLow(1), range.getHigh(1));
 				
-				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i < Math.min(trg.getX(), range.getHigh(0)); i++) {
-					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j < Math.min(blg.getY(), range.getHigh(1)); j++) {
+				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i <= Math.min(trg.getX(), range.getHigh(0)); i++) {
+					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j <= Math.min(blg.getY(), range.getHigh(1)); j++) {
 						GridCoordinates2D coord = new GridCoordinates2D(i, j);
 						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
 						
@@ -139,7 +140,7 @@ public class Extractor {
 	public void request(ExtractionRequestEvent event) throws IOException, TransformException {
 		logger.info("Extracting {}...", event);
 		
-		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 		switch (event.getLevel()) {
 			case FIVE_BY_FIVE:
 			case HALF_BY_HALF:
@@ -149,7 +150,7 @@ public class Extractor {
 				chunks = handleLazFile(event);
 		}
 		
-		for (Chunk<PointCloudChunkData> chunk : chunks) {
+		for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 			eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
 		}
 		

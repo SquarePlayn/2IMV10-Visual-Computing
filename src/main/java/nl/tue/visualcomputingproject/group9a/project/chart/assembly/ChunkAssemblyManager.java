@@ -71,7 +71,7 @@ public class ChunkAssemblyManager {
 		if (job.isReadyForAssembly()) {
 			logger.info("Chunk {} is ready for assembly!", job.getChunkId());
 			
-			Chunk<PointCloudChunkData> assembledChunk = event.getChunk();
+			Chunk<ChunkId, PointCloudChunkData> assembledChunk = event.getChunk();
 			
 			if (job.getNumberOfPartialChunks() > 1) {
 				//This chunk needs assembly.

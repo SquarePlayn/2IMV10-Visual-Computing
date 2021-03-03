@@ -49,8 +49,8 @@ public class InterleavedVertexFloatBufferManager
 	@Override
 	public int addVertex(float vx, float vy, float vz,
 						 float nx, float ny, float nz) {
-		LOGGER.info(String.format("\n%3d: v=[%+.3f  %+.3f  %+.3f], n=[%+.3f  %+.3f  %+.3f]",
-				size, vx, vy, vz, nx, ny, nz));
+//		LOGGER.info(String.format("\n%3d: v=[%+.3f  %+.3f  %+.3f], n=[%+.3f  %+.3f  %+.3f]",
+//				size, vx, vy, vz, nx, ny, nz));
 		cache[0] = vx;
 		cache[1] = vy;
 		cache[2] = vz;

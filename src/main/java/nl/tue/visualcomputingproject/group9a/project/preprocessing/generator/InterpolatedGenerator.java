@@ -17,8 +17,8 @@ import java.util.List;
  * 
  * @param <T> The type of point data container.
  */
-public class InterpolatedGenerator<T extends PointData>
-		extends Generator<T> {
+public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
+		extends Generator<ID, T> {
 	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
 	/** The type of vertex buffer to generate. */
@@ -91,21 +91,21 @@ public class InterpolatedGenerator<T extends PointData>
 	}
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<? extends T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk) {
 		if (!chunk.getQualityLevel().isInterpolated()) {
 			throw new IllegalArgumentException(
 					"This generator can only be used for interpolated datasets.");
 		}
 		
 		ChunkPosition pos = chunk.getPosition();
-		int width = getPos(chunk.getQualityLevel(), pos.getWidth());
-		int height = getPos(chunk.getQualityLevel(), pos.getHeight());
+		int width = getPos(chunk.getQualityLevel(), pos.getWidth()) + 1;
+		int height = getPos(chunk.getQualityLevel(), pos.getHeight()) + 1;
 		PointIndex[][] points = new PointIndex[width][height];
 		
 		// Sort the data.
 		for (Point point : chunk.getData().getPointIterator()) {
-			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getY());
-			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getX());
+			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getX());
+			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getY());
 			if (points[x][y] != null) {
 				throw new IllegalArgumentException(
 						"The point " + point.asVec3d() + " clashes with " + points[x][y]);
@@ -116,9 +116,10 @@ public class InterpolatedGenerator<T extends PointData>
 		// Create vertex buffer.
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
 				VERTEX_TYPE, chunk.getData().size());
-
+		
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
+				if (points[x][y] == null) continue;
 				Vector3d normal = new Vector3d();
 				for (int dy = -DIST; dy <= DIST; dy++) {
 					for (int dx = -DIST; dx <= DIST; dx++) {
@@ -127,6 +128,7 @@ public class InterpolatedGenerator<T extends PointData>
 						int y2 = y + dy;
 						if (x2 < 0 || x2 >= width) continue;
 						if (y2 < 0 || y2 >= height) continue;
+						if (points[x2][y2] == null) continue;
 						normal.add(upProjection(points[x][y].getPoint(), points[x2][y2].getPoint()));
 					}
 				}
@@ -148,17 +150,39 @@ public class InterpolatedGenerator<T extends PointData>
 
 		for (int y = 0; y < height - 1; y++) {
 			for (int x = 0; x < width - 1; x++) {
+				PointIndex v00 = points[x  ][y  ];
+				PointIndex v10 = points[x+1][y  ];
+				PointIndex v01 = points[x  ][y+1];
+				PointIndex v11 = points[x+1][y+1];
+				
 				switch (MESH_TYPE) {
 					case TRIANGLES_CLOCKWISE_3_INT:
 					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
-						meshManager.add(
-								points[x  ][y  ].getIndex(),
-								points[x+1][y  ].getIndex(),
-								points[x  ][y+1].getIndex());
-						meshManager.add(
-								points[x  ][y+1].getIndex(),
-								points[x+1][y  ].getIndex(),
-								points[x+1][y+1].getIndex());
+						if (v00 != null && v01 != null && v11 != null) {
+							meshManager.add(
+									v00.getIndex(),
+									v01.getIndex(),
+									v11.getIndex());
+						}
+						if (v00 != null && v11 != null && v10 != null) {
+							meshManager.add(
+									v00.getIndex(),
+									v11.getIndex(),
+									v10.getIndex());
+						}
+						if ((v00 == null ^ v11 == null) && v01 != null && v10 != null) {
+							if (v00 == null) {
+								meshManager.add(
+										v01.getIndex(),
+										v10.getIndex(),
+										v11.getIndex());
+							} else {
+								meshManager.add(
+										v01.getIndex(),
+										v00.getIndex(),
+										v10.getIndex());
+							}
+						}
 						break;
 						
 					case QUADS_CLOCKWISE_4_INT:
@@ -189,13 +213,14 @@ public class InterpolatedGenerator<T extends PointData>
 				data.addPoint(5*i, 5*j, 5*Math.floorMod(i + j, 2));
 			}
 		}
-		Chunk<PointCloudChunkData> chunk = new Chunk<>(
-				new ChunkPosition(-5, -5, 15, 15),
-				QualityLevel.FIVE_BY_FIVE,
+		Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(
+				new ChunkId(
+						new ChunkPosition(-5, -5, 15, 15),
+						QualityLevel.FIVE_BY_FIVE),
 				data
 		);
 		Generator
-				.<PointCloudChunkData>createGeneratorFor(chunk.getQualityLevel())
+				.createGeneratorFor(chunk.getQualityLevel())
 				.generateChunkData(chunk);
 	}
 	

@@ -44,11 +44,10 @@ public class MeshIntBufferManager
 
 	@Override
 	public void add(int... indices) {
-		if (indices == null ||
-				indices.length != vertexCount ) {
+		if (indices == null || indices.length != vertexCount) {
 			throw new IllegalArgumentException("Invalid number of indices!");
 		}
-		LOGGER.info(String.format("\n%3d", size) + ": " + Arrays.toString(indices));
+//		LOGGER.info(String.format("\n%3d", size) + ": " + Arrays.toString(indices));
 		if (reversed) {
 			for (int i = 0; i < indices.length / 2; i++) {
 				int j = indices.length - i - 1;
@@ -56,8 +55,9 @@ public class MeshIntBufferManager
 				indices[i] = indices[j];
 				indices[j] = tmp;
 			}
+		} else {
+			intBuffer.put(indices);
 		}
-		intBuffer.put(indices);
 		size++;
 	}
 

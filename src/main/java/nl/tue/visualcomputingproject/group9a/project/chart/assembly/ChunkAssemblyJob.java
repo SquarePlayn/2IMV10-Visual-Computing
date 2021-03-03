@@ -15,14 +15,14 @@ public class ChunkAssemblyJob {
 	@Getter
 	private final ChunkId chunkId;
 	private final Set<MapSheet> sheetsLeft;
-	private final List<Chunk<PointCloudChunkData>> partialChunks = new ArrayList<>();
+	private final List<Chunk<ChunkId, PointCloudChunkData>> partialChunks = new ArrayList<>();
 	
 	public ChunkAssemblyJob(ChunkId chunkId, Set<MapSheet> sheetsLeft) {
 		this.chunkId = chunkId;
 		this.sheetsLeft = sheetsLeft;
 	}
 	
-	public void newPartialChunk(Chunk<PointCloudChunkData> chunk, MapSheet sheet) {
+	public void newPartialChunk(Chunk<ChunkId, PointCloudChunkData> chunk, MapSheet sheet) {
 		if (!sheetsLeft.contains(sheet)) {
 			//Either we were never meant to get data from this sheet or we already have it.
 			throw new IllegalStateException("New partial chunk of sheet that we're not looking for data from.");
@@ -43,10 +43,10 @@ public class ChunkAssemblyJob {
 		return partialChunks.size();
 	}
 	
-	public Chunk<PointCloudChunkData> assembleChunk() {
+	public Chunk<ChunkId, PointCloudChunkData> assembleChunk() {
 		PointCloudChunkData points = new PointCloudChunkData();
 		
-		for (Chunk<PointCloudChunkData> chunk : partialChunks) {
+		for (Chunk<ChunkId, PointCloudChunkData> chunk : partialChunks) {
 			points.getInterleavedPoints().addAll(chunk.getData().getInterleavedPoints());
 		}
 		
