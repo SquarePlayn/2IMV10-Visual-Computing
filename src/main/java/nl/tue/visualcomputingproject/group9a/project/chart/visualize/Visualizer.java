@@ -28,21 +28,37 @@ public class Visualizer {
 		eventBus.register(this);
 	}
 	
+	private int mapToGridX(ChartChunkLoadedEvent event, double x) {
+		switch (event.getChunk().getQualityLevel()) {
+			case FIVE_BY_FIVE:
+				return (int) ((x - event.getChunk().getPosition().getX()) / 5.0);
+			case HALF_BY_HALF:
+				return (int) ((x - event.getChunk().getPosition().getX()) * 2.0);
+			case LAS:
+				throw new UnsupportedOperationException("LAS not supported yet");
+		}
+		return 0;
+	}
+	
+	private int mapToGridY(ChartChunkLoadedEvent event, double y) {
+		switch (event.getChunk().getQualityLevel()) {
+			case FIVE_BY_FIVE:
+				return (int) ((y - event.getChunk().getPosition().getY()) / 5.0);
+			case HALF_BY_HALF:
+				return (int) ((y - event.getChunk().getPosition().getY()) * 2.0);
+			case LAS:
+				throw new UnsupportedOperationException("LAS not supported yet");
+		}
+		return 0;
+	}
+	
 	@Subscribe
 	public void loadedEvent(ChartChunkLoadedEvent event) throws IOException {
 		logger.info("Got chunk!");
 		
-		Set<Double> xCoords = new HashSet<>(), yCoords = new HashSet<>();
-		double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE, minY = Double.MAX_VALUE, maxY = -Double.MAX_VALUE;
 		double maxZ = -Double.MAX_VALUE, minZ = Double.MAX_VALUE;
 		
 		for (Point p : event.getChunk().getData().getPointIterator()) {
-			xCoords.add(p.getX());
-			yCoords.add(p.getY());
-			minX = Math.min(minX, p.getX());
-			maxX = Math.max(maxX, p.getX());
-			minY = Math.min(minY, p.getY());
-			maxY = Math.max(maxY, p.getY());
 			if (p.getAlt() < 1000) {
 				maxZ = Math.max(maxZ, p.getAlt());
 				minZ = Math.min(minZ, p.getAlt());
@@ -51,20 +67,19 @@ public class Visualizer {
 		
 		maxZ = 50; //Hardcoded
 		
-		double w = maxX - minX;
-		double h = maxY - minY;
+		double far_x = event.getChunk().getPosition().getX() + event.getChunk().getPosition().getWidth();
+		double far_y = event.getChunk().getPosition().getY() + event.getChunk().getPosition().getHeight();
+		int image_w = mapToGridX(event, far_x) + 1;
+		int image_h = mapToGridY(event, far_y) + 1;
 		
-		double wRatio = (double) (xCoords.size()-1) / w;
-		double hRatio = (double) (yCoords.size()-1) / h;
+		logger.info("Decided to use: {} x {} image, minZ = {}, maxZ = {}", image_w, image_h, minZ, maxZ);
 		
-		logger.info("Decided to use: {} x {} image, w = {}, h = {}, wRatio = {}, hRatio = {}, minZ = {}, maxZ = {}", xCoords.size(), yCoords.size(), w, h, wRatio, hRatio, minZ, maxZ);
-		
-		BufferedImage image = new BufferedImage(xCoords.size(), yCoords.size(), BufferedImage.TYPE_USHORT_GRAY);
+		BufferedImage image = new BufferedImage(image_w, image_h, BufferedImage.TYPE_USHORT_GRAY);
 		WritableRaster raster = image.getRaster();
 		
 		for (Point p : event.getChunk().getData().getPointIterator()) {
-			double x = (p.getX() - minX) * wRatio;
-			double y = (p.getY() - minY) * hRatio;
+			int x = mapToGridX(event, p.getX());
+			int y = mapToGridY(event, p.getY());
 			if (x < 0 || y < 0) {
 				logger.error("AAAAA {} x {}", x, y);
 			}
