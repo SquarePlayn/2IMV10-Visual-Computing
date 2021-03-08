@@ -61,7 +61,7 @@ public class Renderer {
 		shader.loadViewMatrix(camera);
 
 		// Draw all vertices
-		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
+		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
 
 		// Deactivate the VAO & VBOs
 		GL20.glDisableVertexAttribArray(0);

@@ -28,6 +28,16 @@ public class Loader {
 			float[] positions,
 			int[] indices
 	) {
+		FloatBuffer positionsBuffer = storeDataInFloatBuffer(positions);
+		IntBuffer indicesBuffer = storeDataInIntBuffer(indices);
+		return loadToVAO(positionsBuffer, indicesBuffer, indices.length);
+	}
+
+	public static RawModel loadToVAO(
+			FloatBuffer positions,
+			IntBuffer indices,
+			int indicesCount
+	) {
 		// Create a new VAO
 		int vaoID = createVAO();
 
@@ -42,7 +52,7 @@ public class Loader {
 		// Unbind the VAO as we are no longer working on it
 		unbindVAO();
 
-		return new RawModel(vaoID, indices.length);
+		return new RawModel(vaoID, indicesCount);
 	}
 
 	/**
@@ -100,32 +110,38 @@ public class Loader {
 	 *
 	 * @param indices Indices to bind
 	 */
-	private static void bindIndicesBuffer(int[] indices) {
+	private static void bindIndicesBuffer(IntBuffer indices) {
 		int vbo = createVBO();
 		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vbo);
-		IntBuffer buffer = storeDataInIntBuffer(indices);
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indices, GL15.GL_STATIC_DRAW);
 	}
 
 	/**
-	 * Puts float data into a VBO, which is then put into the active VAO in position {@data attributeNumber}.
+	 * Bind an indices buffer to the VAO
+	 *
+	 * @param indices Indices to bind
+	 */
+	private static void bindIndicesBuffer(int[] indices) {
+		IntBuffer buffer = storeDataInIntBuffer(indices);
+		bindIndicesBuffer(buffer);
+	}
+
+	/**
+	 * Puts float data into a VBO, which is then put into the active VAO in position {@code attributeNumber}.
 	 *
 	 * @param attributeNumber Position in the VAO to put the VBO
 	 * @param data            Data to save
 	 * @param dataSize        Size of the data to save
 	 */
-	private static void storeDataInAttributeList(int attributeNumber, float[] data, int dataSize) {
+	private static void storeDataInAttributeList(int attributeNumber, FloatBuffer data, int dataSize) {
 		// Make a new VBO
 		int vbo = createVBO();
 
 		// Enable the VBO so we can work on it here
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
 
-		// Convert data to a buffer
-		FloatBuffer buffer = storeDataInFloatBuffer(data);
-
 		// Insert the data from the buffer
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, buffer, GL15.GL_STATIC_DRAW);
+		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data, GL15.GL_STATIC_DRAW);
 
 		// Specify the location and organization in the VAO
 		GL20.glVertexAttribPointer(
@@ -133,13 +149,24 @@ public class Loader {
 				dataSize, // Number of data points per vertex
 				GL11.GL_FLOAT, // Type of vertices
 				false, // Not normalized
-				0, // Distance between vertices in the array
+				4 * 6, // Distance between vertices in the array TODO Parameterize
 				0 // Offset
 		);
 
 		// Unbind the VBO as we are no longer working on it
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+	}
 
+	/**
+	 * Puts float data into a VBO, which is then put into the active VAO in position {@code attributeNumber}.
+	 *
+	 * @param attributeNumber Position in the VAO to put the VBO
+	 * @param data            Data to save
+	 * @param dataSize        Size of the data to save
+	 */
+	private static void storeDataInAttributeList(int attributeNumber, float[] data, int dataSize) {
+		FloatBuffer buffer = storeDataInFloatBuffer(data);
+		storeDataInAttributeList(attributeNumber, buffer, dataSize);
 	}
 
 	/**
