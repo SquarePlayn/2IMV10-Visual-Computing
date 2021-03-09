@@ -44,8 +44,8 @@ public class Camera {
 			public void invoke(long window, int key, int scancode, int action, int mods) {
 				if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
 					// TODO Move constants elsewhere
-					float dist = 0.1f;
-					float degr = 5f;
+					float dist = 10f;
+					float degr = 10f;
 
 					switch (key) {
 						case GLFW.GLFW_KEY_W:

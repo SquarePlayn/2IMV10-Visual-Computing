@@ -34,7 +34,7 @@ public class Loader {
 	}
 
 	public static RawModel loadToVAO(
-			FloatBuffer positions,
+			FloatBuffer vertices,
 			IntBuffer indices,
 			int indicesCount
 	) {
@@ -46,7 +46,8 @@ public class Loader {
 
 		// Fill the VAO
 		bindIndicesBuffer(indices);
-		storeDataInAttributeList(0, positions, 3);
+		storeDataInAttributeList(0, vertices, 3, 0);
+		storeDataInAttributeList(1, vertices, 3, 3);
 		// TODO Store more data such as normals
 
 		// Unbind the VAO as we are no longer working on it
@@ -133,7 +134,7 @@ public class Loader {
 	 * @param data            Data to save
 	 * @param dataSize        Size of the data to save
 	 */
-	private static void storeDataInAttributeList(int attributeNumber, FloatBuffer data, int dataSize) {
+	private static void storeDataInAttributeList(int attributeNumber, FloatBuffer data, int dataSize, int offset) {
 		// Make a new VBO
 		int vbo = createVBO();
 
@@ -149,8 +150,8 @@ public class Loader {
 				dataSize, // Number of data points per vertex
 				GL11.GL_FLOAT, // Type of vertices
 				false, // Not normalized
-				4 * 6, // Distance between vertices in the array TODO Parameterize
-				0 // Offset
+				Float.BYTES * 6, // Distance between vertices in the array TODO Parameterize
+				Float.BYTES * offset // Offset
 		);
 
 		// Unbind the VBO as we are no longer working on it
@@ -164,9 +165,9 @@ public class Loader {
 	 * @param data            Data to save
 	 * @param dataSize        Size of the data to save
 	 */
-	private static void storeDataInAttributeList(int attributeNumber, float[] data, int dataSize) {
+	private static void storeDataInAttributeList(int attributeNumber, float[] data, int dataSize, int offset) {
 		FloatBuffer buffer = storeDataInFloatBuffer(data);
-		storeDataInAttributeList(attributeNumber, buffer, dataSize);
+		storeDataInAttributeList(attributeNumber, buffer, dataSize, offset);
 	}
 
 	/**

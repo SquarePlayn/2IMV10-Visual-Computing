@@ -63,7 +63,7 @@ public class RendererModule extends Thread implements Module {
 		// TODO Test territory
 
 		ChunkPosition newChunk = new ChunkPosition(
-				150001, 375001, 20000, 2000
+				150001, 375001, 300, 300
 		);
 
 		if (true) {
@@ -251,6 +251,7 @@ public class RendererModule extends Thread implements Module {
 
 			// Load all to model so it can be rendered
 			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer, indexBuffer.remaining());
+			models.clear(); // TODO Smarter switching than just replacing
 			models.add(model);
 		}
 	}

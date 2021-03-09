@@ -30,7 +30,7 @@ void main(void) {
     gl_Position = projectionMatrix * viewMatrix * transPosition;
 
     // normal
-    surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
+    surfaceNormal = (vec4(normal, 1.0)).xyz; //(transformationMatrix * vec4(normal, 1.0)).xyz;
 
     color = in_color;
 }

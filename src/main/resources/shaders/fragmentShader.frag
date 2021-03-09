@@ -22,9 +22,9 @@ void main(void) {
 
     out_Color = vec4(diffuse, 1.0) * vec4(color, 1.0);
 
-    out_Color = vec4(0.5, 0.5, 0.5, 1.0);
+//    out_Color = vec4(0.5, 0.5, 0.5, 1.0);
 
     // Uncomment to display normals for debugging
-    //out_Color = vec4(surfaceNormal, 1.0);
+//    out_Color = vec4(unitNormal, 1.0);
 
 }

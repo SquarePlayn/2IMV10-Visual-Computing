@@ -48,7 +48,7 @@ public class Renderer {
 		// Activate the VAO and VBOs
 		GL30.glBindVertexArray(model.getVaoID());
 		GL20.glEnableVertexAttribArray(0); // Positions
-		// TODO When more attributes (normals etc) are bound, enable them
+		GL20.glEnableVertexAttribArray(1); // Normals
 
 		// Load transformation matrix into the shader
 		// TODO Wrap model in entity or something to be able to move it without modifing VBOs
