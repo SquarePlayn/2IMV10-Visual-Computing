@@ -62,19 +62,21 @@ public class RendererModule extends Thread implements Module {
 
 		// TODO Test territory
 
-		ChunkPosition newChunk = new ChunkPosition(
-				150001, 375001, 300, 300
-		);
-
 		if (true) {
 			Collection<ChunkPosition> newChunks = new ArrayList<>();
-			newChunks.add(newChunk);
+			for (int ix = 0; ix < 2; ix++) {
+				ChunkPosition newChunk = new ChunkPosition(
+						150001 + 300 * ix, 375001, 300, 300
+				);
+				newChunks.add(newChunk);
+			}
 			eventBus.post(new RendererChunkStatusEvent(
 					new ArrayList<>(),
 					new ArrayList<>(),
 					newChunks,
 					new ArrayList<>()
 			));
+
 		} else {
 			// Create a test event containing a simple square of 4 vertices / 6 indices
 
