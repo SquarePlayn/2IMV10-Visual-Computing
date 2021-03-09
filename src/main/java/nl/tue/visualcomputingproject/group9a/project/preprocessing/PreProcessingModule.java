@@ -86,7 +86,7 @@ public class PreProcessingModule
 						Settings.VERTEX_TYPE,
 						Settings.MESH_TYPE);
 				// Scan the cache for each quality level, starting from the best quality.
-				WriteBackReadCacheClaim<MeshChunkData> claim = null;
+				WriteBackReadCacheClaim<MeshChunkData> claim;
 				QualityLevel level = null;
 				boolean found = false;
 				while (level != QualityLevel.getWorst()) {
@@ -198,6 +198,7 @@ public class PreProcessingModule
 			MeshChunkId reqId = requesting.get(eventId.getPosition());
 			if (reqId == null) {
 				// Ignore event since the chunk is not needed anymore.
+				LOGGER.info("Ignoring '" + e.getChunk().getChunkId() + "' since it is not needed anymore.");
 				return;
 			}
 			if (Objects.equals(eventId.getPosition(), reqId.getPosition()) && // Wrong position.
@@ -217,12 +218,13 @@ public class PreProcessingModule
 				// Update request.
 				requesting.put(id.getPosition(), id.withQuality(eventId.getQuality().next()));
 			}
-			
+
+			deliver.add(id);
 			if (!processing.add(id)) {
 				// The request is already being processed.
+				LOGGER.info("The id '" + id + "' is already being processed. Ignoring current request.");
 				return;
 			}
-			deliver.add(id);
 			
 		} finally {
 			lock.unlock();
