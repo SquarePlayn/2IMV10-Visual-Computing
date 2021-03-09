@@ -22,7 +22,7 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
 	/** The type of vertex buffer to generate. */
-	private static final VertexBufferType VERTEX_TYPE = VertexBufferType.VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+	private static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
 	/** The type of mesh buffer to generate. */
 	private static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
 

@@ -33,16 +33,10 @@ public class MeshChunkData
 	public MeshChunkData(
 			ByteBuffer vertexBuffer,
 			ByteBuffer meshBuffer) {
-		if (vertexBuffer.isReadOnly()) {
-			this.vertexBuffer = vertexBuffer;
-		} else {
-			this.vertexBuffer = vertexBuffer.asReadOnlyBuffer();
-		}
-		if (meshBuffer.isReadOnly()) {
-			this.meshBuffer = meshBuffer;
-		} else {
-			this.meshBuffer = meshBuffer.asReadOnlyBuffer();
-		}
+
+		this.vertexBuffer = vertexBuffer;
+		this.meshBuffer = meshBuffer;
+		// TODO Check if we want to make them readonly here
 	}
 
 	/**

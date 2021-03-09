@@ -81,7 +81,7 @@ public class PreProcessingModule
 			List<Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>>> claims = new ArrayList<>();
 			for (ChunkPosition pos : e.getNewChunks()) {
 				// TODO: move vertex + mesh type request to render.
-				VertexBufferType vertexType = VertexBufferType.VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+				VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
 				MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
 				
 				MeshChunkId id = new MeshChunkId(
@@ -145,7 +145,7 @@ public class PreProcessingModule
 			try {
 				for (ChunkPosition pos : e.getUnloadedChunks()) {
 					// TODO: move vertex + mesh type request to render.
-					VertexBufferType vertexType = VertexBufferType.VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+					VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
 					MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
 					
 					requesting.remove(pos);

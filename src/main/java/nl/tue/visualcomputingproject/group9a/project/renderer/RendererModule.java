@@ -7,10 +7,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePo
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.BufferManager;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.MeshBufferManager;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.SeparatedVertexFloatBufferManager;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.VertexBufferManager;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.*;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
@@ -69,7 +66,7 @@ public class RendererModule extends Thread implements Module {
 				150001, 375001, 20000, 2000
 		);
 
-		if (false) {
+		if (true) {
 			Collection<ChunkPosition> newChunks = new ArrayList<>();
 			newChunks.add(newChunk);
 			eventBus.post(new RendererChunkStatusEvent(
@@ -85,16 +82,17 @@ public class RendererModule extends Thread implements Module {
 			float size = 0.5f;
 			Vector3f offset = new Vector3f(10, 10, 10);
 
-			MeshBufferManager meshManager = MeshBufferManager.createManagerFor(MeshBufferType.TRIANGLES_CLOCKWISE_3_INT, 2);
+			MeshBufferManager meshManager = new MeshIntBufferManager(3, 2, false);
+			MeshBufferManager.createManagerFor(
+					MeshBufferType.TRIANGLES_CLOCKWISE_3_INT, 2);
 			meshManager.add(0, 1, 2);
 			meshManager.add(0, 3, 2);
 
-			VertexBufferManager vertexManager = new SeparatedVertexFloatBufferManager(4);
+			VertexBufferManager vertexManager = new InterleavedVertexFloatBufferManager(4);
 			vertexManager.addVertex(new Vector3f(-size, size, dist).add(offset), new Vector3f());
-			vertexManager.addVertex(new Vector3f(size, size * 2, dist).add(offset), new Vector3f()); // Top right has a point
+			vertexManager.addVertex(new Vector3f(size, size, dist).add(offset), new Vector3f()); // Top right has a point
 			vertexManager.addVertex(new Vector3f(size, -size, dist).add(offset), new Vector3f());
 			vertexManager.addVertex(new Vector3f(-size, -size, dist).add(offset), new Vector3f());
-
 
 			MeshChunkId meshChunkId = new MeshChunkId(
 					new ChunkPosition(1, 1, 10, 10),
@@ -240,23 +238,6 @@ public class RendererModule extends Thread implements Module {
 			System.out.println("= Indices");
 			for (int i = 0; i < 3 * 4 && i < indexBuffer.remaining(); i += 3) {
 				System.out.println(indexBuffer.get(i) + " -> " + indexBuffer.get(i + 1) + " -> " + indexBuffer.get(i + 2));
-			}
-
-			if (vertexType == VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT) {
-				// Convert interleaved buffer to separated buffer
-				FloatBuffer buffer = BufferUtils.createFloatBuffer(vertexBuffer.remaining());
-				for (int i = 0; i < vertexBuffer.remaining(); i += 6) {
-					// Positions
-					buffer.put(vertexBuffer.get(i));
-					buffer.put(vertexBuffer.get(i + 2));
-					buffer.put(vertexBuffer.get(i + 4));
-					// Normals
-					buffer.put(vertexBuffer.get(i + 1));
-					buffer.put(vertexBuffer.get(i + 3));
-					buffer.put(vertexBuffer.get(i + 5));
-				}
-				buffer.flip();
-				vertexBuffer = buffer;
 			}
 
 			// Print again just to test interleaved transformation, but that's not applicable in current test
