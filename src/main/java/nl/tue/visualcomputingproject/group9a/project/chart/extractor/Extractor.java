@@ -8,6 +8,7 @@ import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.chart.MapSheetCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.PartialChunkAvailableEvent;
+import nl.tue.visualcomputingproject.group9a.project.common.Point;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
@@ -99,7 +100,7 @@ public class Extractor {
 		}
 	}
 	
-	public List<Chunk<PointCloudChunkData>> handleLazFile(ExtractionRequestEvent event) throws IOException, TransformException {
+	public List<Chunk<ChunkId, PointCloudChunkData>> handleLazFile(ExtractionRequestEvent event) throws IOException, TransformException {
 		File lazFile = event.getClaim().getFile();
 		if (lazFile == null) {
 			throw new IllegalStateException("Null file!");
@@ -115,13 +116,13 @@ public class Extractor {
 		logger.info(" - {}x{} -> {}x{} from {} to {}", header.getMinX(), header.getMinY(), header.getMaxX(), header.getMaxY(), header.getMinZ(), header.getMaxZ());
 		
 		
-		List<Chunk<PointCloudChunkData>> chunks = new ArrayList<>();
+		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 		
 		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(pos, event.getLevel(), new PointCloudChunkData()));
+			chunks.add(new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData()));
 		}
 		
-		for (Chunk<PointCloudChunkData> chunk : chunks) {
+		for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 			LASReader chunkReader = reader.insideRectangle(
 				chunk.getPosition().getX(),
 				chunk.getPosition().getY(),

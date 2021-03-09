@@ -49,5 +49,5 @@ public final class Settings {
 	/**
 	 * The maximum quality of map sheets the chart module will download.
 	 */
-	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.LAS;
+	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.HALF_BY_HALF;
 }
