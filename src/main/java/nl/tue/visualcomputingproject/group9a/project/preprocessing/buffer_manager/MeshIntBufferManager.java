@@ -55,9 +55,10 @@ public class MeshIntBufferManager
 				indices[i] = indices[j];
 				indices[j] = tmp;
 			}
-		} else {
-			intBuffer.put(indices);
 		}
+
+		intBuffer.put(indices);
+
 		size++;
 	}
 
