@@ -75,8 +75,8 @@ public class Extractor {
 				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
 				logger.info("Chunk: {} {} {} {} - {} {} {} {}", bl, tr, blg, trg, range.getLow(0), range.getHigh(0), range.getLow(1), range.getHigh(1));
 				
-				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i < Math.min(trg.getX(), range.getHigh(0)); i++) {
-					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j < Math.min(blg.getY(), range.getHigh(1)); j++) {
+				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i <= Math.min(trg.getX(), range.getHigh(0)); i++) {
+					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j <= Math.min(blg.getY(), range.getHigh(1)); j++) {
 						GridCoordinates2D coord = new GridCoordinates2D(i, j);
 						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
 						
