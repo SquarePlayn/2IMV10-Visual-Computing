@@ -27,6 +27,9 @@ public class Camera {
 	private float yaw = 0;
 	private float roll = 0;
 
+	// Other settings
+	private boolean wireframe = false;
+
 	GLFWKeyCallback keyboardCallback;
 
 	public Camera(Window window) {
@@ -83,6 +86,9 @@ public class Camera {
 							break;
 						case GLFW.GLFW_KEY_LEFT_BRACKET:
 							increaseRoll(-degr);
+							break;
+						case GLFW.GLFW_KEY_T:
+							wireframe = !wireframe;
 							break;
 					}
 				}

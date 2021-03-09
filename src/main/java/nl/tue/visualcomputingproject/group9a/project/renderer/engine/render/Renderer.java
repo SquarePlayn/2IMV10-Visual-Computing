@@ -60,6 +60,9 @@ public class Renderer {
 		// Load view matrix into the shader
 		shader.loadViewMatrix(camera);
 
+		// Wireframe rendering if enabled
+		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, camera.isWireframe() ? GL11.GL_LINE : GL11.GL_FILL);
+
 		// Draw all vertices
 		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
 
