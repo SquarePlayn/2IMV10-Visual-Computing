@@ -110,7 +110,7 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getX());
 			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getY());
 			if (points[x][y] != null) {
-				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][y] + ". Ignoring that former.");
+//				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][y] + ". Ignoring that former.");
 			}
 			points[x][y] = new PointIndex(point.asVec3d());
 		}

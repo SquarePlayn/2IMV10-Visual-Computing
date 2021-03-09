@@ -300,7 +300,7 @@ public class PreProcessingModule
 							data)));
 				}
 			} finally {
-				lock.lock();
+				lock.unlock();
 			}
 		});
 	}
