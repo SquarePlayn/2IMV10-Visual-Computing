@@ -1,8 +1,12 @@
 package nl.tue.visualcomputingproject.group9a.project.common.cache;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Memory store for storing a {@link CacheableObject}.
@@ -14,6 +18,8 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObjec
 public class MemoryStore<T extends CacheableObject> {
 	/** The stored object. */
 	private T obj = null;
+	@Getter
+	private Lock lock = new ReentrantLock(); 
 
 	/**
 	 * @return The stored object.
@@ -44,6 +50,18 @@ public class MemoryStore<T extends CacheableObject> {
 	 */
 	public boolean isEmpty() {
 		return (obj == null);
+	}
+	
+	public void lock() {
+		lock.lock();
+	}
+	
+	public void unlock() {
+		lock.unlock();
+	}
+	
+	public boolean tryLock() {
+		return lock.tryLock();
 	}
 	
 }

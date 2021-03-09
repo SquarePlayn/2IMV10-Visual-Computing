@@ -29,7 +29,6 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 	protected final MemoryStore<T> store;
 	@Getter
 	protected final File file;
-	protected boolean inMemory;
 
 	@Getter
 	protected final FileStreamFactory streamFactory;
@@ -47,7 +46,6 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 		this.streamFactory = streamFactory;
 		this.serializer = serializer;
 		file = new File(cacheDir, id.getPath() + Settings.CACHE_EXT);
-		inMemory = (store != null);
 	}
 
 	protected void waitForRead(String msg)
@@ -67,9 +65,11 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 	
 	public boolean isInMemory() {
 		lock.lock();
+		store.lock();
 		try {
-			return inMemory;
+			return store.isEmpty();
 		} finally {
+			store.unlock();
 			lock.unlock();
 		}
 	}
@@ -97,11 +97,12 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 			while (numReading > 0) {
 				awaitReading.await();
 			}
+			
 			return oldValid;
-
+			
 		} catch (InterruptedException e) {
 			throw new IllegalStateException(e);
-
+			
 		} finally {
 			lock.unlock();
 		}
@@ -109,15 +110,20 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 
 	@Override
 	public long size() {
-		if (inMemory) {
-			return store.memorySize();
-		} else {
-			try {
-				return Files.size(file.toPath());
-
-			} catch (IOException e) {
-				return 0L;
+		store.lock();
+		try {
+			if (!store.isEmpty()) {
+				return store.memorySize();
 			}
+		} finally {
+			store.unlock();
+		}
+		
+		try {
+			return Files.size(file.toPath());
+
+		} catch (IOException e) {
+			return 0L;
 		}
 	}
 
@@ -128,32 +134,35 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 
 	protected void fetch() {
 		lock.lock();
+		store.lock();
 		try {
 			try (InputStream is = streamFactory.read(file)) {
 				store.set(serializer.deserialize(is));
-				inMemory = true;
 				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
 		} finally {
+			store.unlock();
 			lock.unlock();
 		}
 	}
 	
 	public T get() {
 		lock.lock();
+		store.lock();
 		try {
-			if (!inMemory && isOnDisk()) {
+			if (store.isEmpty() && isOnDisk()) {
 				fetch();
 			}
-			if (inMemory) {
+			if (!store.isEmpty()) {
 				return store.get();
 			} else {
 				return null;
 			}
 		} finally {
+			store.unlock();
 			lock.unlock();
 		}
 	}

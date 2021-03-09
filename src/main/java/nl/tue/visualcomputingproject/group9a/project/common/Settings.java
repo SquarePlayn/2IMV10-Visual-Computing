@@ -1,6 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.common;
 
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshBufferType;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.VertexBufferType;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -46,8 +48,12 @@ public final class Settings {
 	/** The file extension of the temporary cache files. */
 	public static final String TMP_CACHE_EXT = ".part";
 	
-	/**
-	 * The maximum quality of map sheets the chart module will download.
-	 */
+	/** The maximum quality of map sheets the chart module will download. */
 	public static final QualityLevel MAX_DOWNLOAD_QUALITY = QualityLevel.HALF_BY_HALF;
+
+	/** The type used in the vertex buffer. */
+	public static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
+	/** The type used in the mesh buffer. */
+	public static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
+	
 }

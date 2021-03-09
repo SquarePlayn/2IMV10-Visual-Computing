@@ -8,9 +8,10 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.MeshBufferManager;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.VertexBufferManager;
 import org.joml.Vector3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.invoke.MethodHandles;
 
 /**
  * A trivial {@link Generator} implementation suitable for data interpolated on a grid.
@@ -19,6 +20,8 @@ import java.util.List;
  */
 public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 		extends Generator<ID, T> {
+	/** The logger of this class. */
+	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
 	/** The type of vertex buffer to generate. */
@@ -107,8 +110,7 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getX());
 			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getY());
 			if (points[x][y] != null) {
-				throw new IllegalArgumentException(
-						"The point " + point.asVec3d() + " clashes with " + points[x][y]);
+				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][y] + ". Ignoring that former.");
 			}
 			points[x][y] = new PointIndex(point.asVec3d());
 		}

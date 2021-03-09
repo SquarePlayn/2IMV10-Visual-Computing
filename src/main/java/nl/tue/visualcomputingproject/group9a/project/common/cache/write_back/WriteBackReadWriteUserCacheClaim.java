@@ -27,10 +27,14 @@ public class WriteBackReadWriteUserCacheClaim<T extends CacheableObject>
 	public void delete() {
 		lock.lock();
 		try {
-			if (inMemory) {
+			store.lock();
+			try {
 				store.set(null);
-				inMemory = false;
+				
+			} finally {
+				store.unlock();
 			}
+			
 			if (isOnDisk()) {
 				//noinspection ResultOfMethodCallIgnored
 				file.delete();
@@ -45,9 +49,21 @@ public class WriteBackReadWriteUserCacheClaim<T extends CacheableObject>
 	public void toDisk() {
 		lock.lock();
 		try {
+			T obj;
+			store.lock();
+			try {
+				if (store.isEmpty()) {
+					return;
+				} else {
+					obj = store.get();
+				}
+			} finally {
+				store.unlock();
+			}
+			
 			final File tmpFile = new File(file.getPath() + Settings.TMP_CACHE_EXT);
 			try (OutputStream os = streamFactory.write(tmpFile)) {
-				serializer.serialize(os, store.get());
+				serializer.serialize(os, obj);
 				
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -71,8 +87,12 @@ public class WriteBackReadWriteUserCacheClaim<T extends CacheableObject>
 	public void set(T obj) {
 		lock.lock();
 		try {
-			store.set(obj);
-			inMemory = true;
+			store.lock();
+			try {
+				store.set(obj);
+			} finally {
+				store.unlock();
+			}
 			
 			// Delete invalid disk cached file.
 			if (isOnDisk()) {

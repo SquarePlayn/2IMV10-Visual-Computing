@@ -80,32 +80,54 @@ public class PreProcessingModule
 			List<MeshChunkId> request = new ArrayList<>();
 			List<Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>>> claims = new ArrayList<>();
 			for (ChunkPosition pos : e.getNewChunks()) {
-				// TODO: move vertex + mesh type request to render.
-				VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
-				MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
-				
 				MeshChunkId id = new MeshChunkId(
 						pos,
 						QualityLevel.getWorst(),
-						vertexType,
-						meshType);
-				WriteBackReadCacheClaim<MeshChunkData> claim = cache.requestReadClaim(id);
-				if (claim == null) {
-					LOGGER.info("Cache miss: " + id.getPosition());
-					// Cache miss.
-					request.add(id);
-				} else {
+						Settings.VERTEX_TYPE,
+						Settings.MESH_TYPE);
+				// Scan the cache for each quality level, starting from the best quality.
+				WriteBackReadCacheClaim<MeshChunkData> claim = null;
+				QualityLevel level = null;
+				boolean found = false;
+				while (level != QualityLevel.getWorst()) {
+					if (level == null) level = QualityLevel.getBest();
+					else level = level.prev();
+					
+					lock.lock();
+					try {
+						if (processing.contains(id)) {
+							deliver.add(id);
+							found = true;
+							break;
+						}
+					} finally {
+						lock.unlock();
+					}
+
+					claim = cache.requestReadClaim(id);
+					if (claim == null) continue; // Cache miss.
 					if (claim.isInMemory()) {
 						// Cache in memory.
+						// Simply post the data and release the claim.
 						LOGGER.info("Memory cache hit: " + id.getPosition());
 						LOGGER.info("Posting preprocessor loaded event!");
 						eventBus.post(new ProcessorChunkLoadedEvent(
 								new Chunk<>(id, claim.get())));
 						cache.releaseCacheClaim(claim);
+
 					} else {
 						// Cache on disk.
+						// Keep the claim open and read the data later.
+						LOGGER.info("Disk cache hit: " + id.getPosition());
 						claims.add(new Pair<>(id, claim));
 					}
+					found = true;
+					break;
+				}
+				if (!found) {
+					LOGGER.info("Cache miss: " + id.getPosition());
+					// Request the lowest quality data from chart module later.
+					request.add(id);
 				}
 			}
 
@@ -115,9 +137,7 @@ public class PreProcessingModule
 				lock.lock();
 				try {
 					for (MeshChunkId id : request) {
-						LOGGER.info("Cache miss: " + id.getPosition());
 						requesting.put(id.getPosition(), id);
-						deliver.add(id);
 						req.add(id.asChunkId());
 					}
 				} finally {
@@ -127,34 +147,30 @@ public class PreProcessingModule
 				eventBus.post(new ProcessorChunkRequestedEvent(req));
 			}
 			
-			// Then load the chunks from disk.
-			ioThread.submit(() -> {
-				// Read cache from disk.
-				for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
-					LOGGER.info("Disk cache hit: " + pair.getFirst().getPosition());
-					LOGGER.info("Posting preprocessor loaded event!");
-					eventBus.post(new ProcessorChunkLoadedEvent(
-							new Chunk<>(pair.getFirst(), pair.getSecond().get())));
-					cache.releaseCacheClaim(pair.getSecond());
-				}
-			});
+			// Load the chunks from disk.
+			if (!claims.isEmpty()) {
+				ioThread.submit(() -> {
+					for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+						LOGGER.info("Posting preprocessor loaded event!");
+						eventBus.post(new ProcessorChunkLoadedEvent(
+								new Chunk<>(pair.getFirst(), pair.getSecond().get())));
+						cache.releaseCacheClaim(pair.getSecond());
+					}
+				});
+			}
 		}
 		
 		if (!e.getUnloadedChunks().isEmpty()) {
 			lock.lock();
 			try {
 				for (ChunkPosition pos : e.getUnloadedChunks()) {
-					// TODO: move vertex + mesh type request to render.
-					VertexBufferType vertexType = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
-					MeshBufferType meshType = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
-					
 					requesting.remove(pos);
 					for (QualityLevel level : QualityLevel.values()) {
 						MeshChunkId id = new MeshChunkId(
 								pos,
 								level,
-								vertexType,
-								meshType);
+								Settings.VERTEX_TYPE,
+								Settings.MESH_TYPE);
 						deliver.remove(id);
 					}
 				}
@@ -190,14 +206,11 @@ public class PreProcessingModule
 				return;
 			}
 			
-			// Update quality of current ID if needed.
-			if (eventId.getQuality() != reqId.getQuality()) {
-				reqId = reqId.withQuality(eventId.getQuality());
-			}
-			id = reqId;
+			// Update quality of current ID.
+			id = reqId.withQuality(eventId.getQuality());
 
 			// Remove request if the highest quality level has been received.
-			if (eventId.getQuality() == QualityLevel.getBest()) {
+			if (id.getQuality() == QualityLevel.getBest()) {
 				requesting.remove(id.getPosition());
 
 			} else {
@@ -209,6 +222,7 @@ public class PreProcessingModule
 				// The request is already being processed.
 				return;
 			}
+			deliver.add(id);
 			
 		} finally {
 			lock.unlock();
@@ -219,15 +233,26 @@ public class PreProcessingModule
 			// Check if the data still needs to be processed.
 			lock.lock();
 			try {
-				if (!deliver.contains(id)) return;
+				if (!deliver.contains(id)) {
+					LOGGER.info("Ignoring " + id + " since it is no longer requested!");
+					return;
+				}
+				
 			} finally {
 				lock.unlock();
 			}
 			
 			// Process the data.
-			MeshChunkData data = Generator
-					.createGeneratorFor(id.getQuality())
-					.generateChunkData(e.getChunk());
+			MeshChunkData data;
+			try {
+				data = Generator
+						.createGeneratorFor(id.getQuality())
+						.generateChunkData(e.getChunk());
+				
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				throw ex;
+			}
 
 			lock.lock();
 			try {
@@ -238,6 +263,7 @@ public class PreProcessingModule
 							id,
 							data)));
 				}
+				
 			} finally {
 				lock.unlock();
 			}
@@ -246,12 +272,31 @@ public class PreProcessingModule
 			WriteBackReadWriteCacheClaim<MeshChunkData> claim = cache.requestReadWriteClaim(id);
 			if (claim != null) {
 				claim.set(data);
+				// Cache new data.
 				cache.releaseCacheClaim(claim);
+				
+				// Delete old data.
+				MeshChunkId mcId = id;
+				while (mcId.getQuality() != QualityLevel.getWorst()) {
+					claim = cache.requestReadWriteClaim(id);
+					if (claim != null) {
+						claim.delete();
+						cache.releaseCacheClaim(claim);
+					}
+					mcId = mcId.withQuality(mcId.getQuality().prev());
+				}
 			}
+			
 			// Finish processing.
 			lock.lock();
 			try {
 				processing.remove(id);
+				// Check if the data still needs to be delivered again, and do so if needed.
+				if (deliver.remove(id)) {
+					eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
+							id,
+							data)));
+				}
 			} finally {
 				lock.lock();
 			}

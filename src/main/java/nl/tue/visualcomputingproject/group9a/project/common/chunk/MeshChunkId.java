@@ -46,7 +46,11 @@ public class MeshChunkId
 	}
 	
 	public MeshChunkId withQuality(QualityLevel quality) {
-		return new MeshChunkId(getPosition(), quality, vertexType, meshType);
+		if (quality == this.getQuality()) {
+			return this;
+		} else {
+			return new MeshChunkId(getPosition(), quality, vertexType, meshType);
+		}
 	}
 	
 	public static FileIdFactory<MeshChunkId> createMeshChunkIdFactory() {
