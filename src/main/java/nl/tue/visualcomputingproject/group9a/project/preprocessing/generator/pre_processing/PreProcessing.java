@@ -36,8 +36,6 @@ public class PreProcessing {
 
 				int num = 0;
 				double height = 0;
-				double coordX = transform.toCoordX(x);
-				double coordZ = transform.toCoordZ(z);
 				double expDX = 0;
 				double expDZ = 0;
 				for (int i = -1; i <= 1; i++) {
@@ -48,9 +46,9 @@ public class PreProcessing {
 						if (points.hasPoint(otherX, otherZ)) {
 							Vector3d other = points.getPoint(otherX, otherZ);
 							num++;
-							expDX += other.x() - coordX;
+							expDX += other.x() - transform.toCoordX(otherX);
 							height += other.y();
-							expDZ += other.z() - coordZ;
+							expDZ += other.z() - transform.toCoordZ(otherZ);
 						}
 					}
 				}

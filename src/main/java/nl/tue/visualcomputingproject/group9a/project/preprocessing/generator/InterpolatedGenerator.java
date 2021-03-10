@@ -107,7 +107,8 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 						int x2 = x + dx;
 						int z2 = z + dz;
 						if (!store.hasPoint(x2, z2)) continue;
-						normal.add(upProjection(store.getPoint(x, z), store.getPoint(x2, z2)));
+						double dist = store.getPoint(x2, z2).distance(store.getPoint(x, z));
+						normal.add(upProjection(store.getPoint(x, z), store.getPoint(x2, z2)).mul(dist));
 					}
 				}
 				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {

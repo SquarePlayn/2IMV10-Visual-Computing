@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
@@ -52,6 +53,7 @@ public class RendererModule extends Thread implements Module {
 	// TODO Remove test model
 	private Light light;
 	private final Collection<RawModel> models = new ArrayList<>();
+	private boolean firstCameraRelocation = true;
 
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
@@ -64,11 +66,18 @@ public class RendererModule extends Thread implements Module {
 
 		if (true) {
 			Collection<ChunkPosition> newChunks = new ArrayList<>();
-			for (int ix = 0; ix < 2; ix++) {
-				ChunkPosition newChunk = new ChunkPosition(
-						150001 + 300 * ix, 375001, 300, 300
-				);
-				newChunks.add(newChunk);
+			final int DIST = 5;
+			for (int x = -DIST; x <= DIST; x++) {
+				for (int y = -DIST; y <= DIST; y++) {
+					if (Math.abs(x) + Math.abs(y) > DIST) continue;
+					ChunkPosition newChunk = new ChunkPosition(
+							162000 + Settings.CHUNK_WIDTH * x,  // Old: 150001
+							384300 + Settings.CHUNK_HEIGHT * y, // Old: 375001
+							Settings.CHUNK_WIDTH,
+							Settings.CHUNK_HEIGHT
+					);
+					newChunks.add(newChunk);
+				}
 			}
 			eventBus.post(new RendererChunkStatusEvent(
 					new ArrayList<>(),
@@ -117,10 +126,12 @@ public class RendererModule extends Thread implements Module {
 		LOGGER.info("Render thread started");
 		initialize();
 		while (!window.closed()) {
-			if (window.shouldUpdate()) {
-				runFrame();
-			}
-			// TODO Sleep or something, don't just keep checking in the while
+			window.waitUntilUpdate();
+			runFrame();
+//			if (window.shouldUpdate()) {
+//				runFrame();
+//			}
+			// TODO Sleep or something, don't just keep checking in the while (done)
 		}
 		cleanup();
 
@@ -195,7 +206,7 @@ public class RendererModule extends Thread implements Module {
 		// Rendering of models
 		shader.start();
 		shader.loadLight(light);
-		shader.loadTime((float) (System.nanoTime() * 1000000000.0));
+		shader.loadTime((float) (System.nanoTime() * 1000_000_000.0));
 		for (RawModel model : models) {
 			renderer.render(model, shader, camera);
 		}
@@ -249,11 +260,15 @@ public class RendererModule extends Thread implements Module {
 			}
 
 			// Set the camera to the position of the model
-			camera.setPosition(new Vector3f(vertexBuffer.get(0), vertexBuffer.get(1), vertexBuffer.get(2)));
+			// TODO: smarter camera handling
+			if (firstCameraRelocation) {
+				firstCameraRelocation = false;
+				camera.setPosition(new Vector3f(vertexBuffer.get(0), vertexBuffer.get(1) + 100, vertexBuffer.get(2)));
+			}
 
 			// Load all to model so it can be rendered
 			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer, indexBuffer.remaining());
-			models.clear(); // TODO Smarter switching than just replacing
+//			models.clear(); // TODO Smarter switching than just replacing
 			models.add(model);
 		}
 	}

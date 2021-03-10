@@ -1,6 +1,5 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.joml.Vector3f;
@@ -9,8 +8,14 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL42;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
 
 public class Window {
+	/** The logger of this class. */
+	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Getter
 	private long window;
@@ -93,11 +98,33 @@ public class Window {
 		GLFW.glfwSwapBuffers(window);
 	}
 
+	public void waitUntilUpdate() {
+		// Check how much time has passed since the last check
+		double nextTime = getTime();
+		double passedTime = nextTime - time;
+		time = nextTime;
+
+		// Add this time to the total time waited
+		processedTime += passedTime;
+
+		// If waiting for longer than the frame time, subtract the time.
+		double timePerFrame = 1.0 / fps;
+		if (processedTime < timePerFrame) {
+			try {
+				Thread.sleep((long) (1000 * (timePerFrame - processedTime)));
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		processedTime %= timePerFrame;
+	}
+	
 	/**
-	 * Whether enough time has passed that the frame should be updated again
-	 *
-	 * @return
+	 * @return Whether enough time has passed that the frame should be updated again
+	 * 
+	 * @deprecated This function is replaced by {@link #waitUntilUpdate()}.
 	 */
+	@Deprecated
 	public boolean shouldUpdate() {
 		// Check how much time has passed since the last check
 		double nextTime = getTime();
