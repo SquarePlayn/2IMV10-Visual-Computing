@@ -146,7 +146,7 @@ public class Window {
 
 	/**
 	 * Get the current nano time in seconds
-	 * TODO Move this somehwere more logical than in the Window class
+	 * TODO Move this somewhere more logical than in the Window class
 	 *
 	 * @return Current time in seconds
 	 */

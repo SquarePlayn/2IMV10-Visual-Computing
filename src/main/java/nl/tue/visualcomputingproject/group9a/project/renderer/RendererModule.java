@@ -177,22 +177,61 @@ public class RendererModule extends Thread implements Module {
 			// Create a test square at the start
 			float dist = -1f;
 			float size = 0.5f;
-			RawModel testModel = Loader.loadToVAO(
-					new float[]{
-							-size, size, dist, // Position
-							0, 1, 0, // Normal
-							size, size, dist,
-							0, 1, 0,
-							size, -size, dist,
-							0, 1, 0,
-							-size, -size, dist,
-							0, 1, 0
-					}, new int[]{ // Indices
-							0, 1, 2,
-							0, 3, 2
-					}
-			);
-			models.add(testModel);
+			float[][] arrows = new float[][]{
+					new float[]{30, 1, 1},
+					new float[]{1, 20, 1},
+					new float[]{1, 1, 10},
+			};
+			for (float[] xyz : arrows) {
+				RawModel arrow = Loader.loadToVAO(
+						// Create box from (0,0,0) to (x,y,z)
+						new float[]{
+								0, 0, 0, // Position
+								0, 1, 0, // Normal
+
+								0, 0, xyz[2],
+								0, 1, 0, // Normal
+
+								xyz[0], 0, xyz[2],
+								0, 1, 0, // Normal
+
+								xyz[0], 0, 0,
+								0, 1, 0, // Normal
+
+								0, xyz[1], 0,
+								0, 1, 0, // Normal
+
+								0, xyz[1], xyz[2],
+								0, 1, 0, // Normal
+
+								xyz[0], xyz[1], xyz[2],
+								0, 1, 0, // Normal
+
+								xyz[0], xyz[1], 0,
+								0, 1, 0, // Normal
+						}, new int[]{ // Indices
+								// Bottom (Y-0)
+								0, 2, 1,
+								0, 2, 3,
+								// Top (Y-1)
+								4, 6, 5,
+								4, 6, 7,
+								// X-0
+								0, 5, 4,
+								0, 5, 1,
+								// X-1
+								3, 6, 2,
+								3, 6, 7,
+								// Z-0
+								0, 7, 3,
+								0, 7, 4,
+								// Z-1
+								1, 6, 2,
+								1, 6, 5,
+						}
+				);
+				models.add(arrow);
+			}
 		}
 	}
 
