@@ -30,14 +30,16 @@ public class Loader {
 	) {
 		FloatBuffer positionsBuffer = storeDataInFloatBuffer(positions);
 		IntBuffer indicesBuffer = storeDataInIntBuffer(indices);
-		return loadToVAO(positionsBuffer, indicesBuffer, indices.length);
+		return loadToVAO(positionsBuffer, indicesBuffer);
 	}
 
 	public static RawModel loadToVAO(
 			FloatBuffer vertices,
-			IntBuffer indices,
-			int indicesCount
+			IntBuffer indices
 	) {
+		// Determine how many indices there are
+		int indicesCount = indices.remaining();
+
 		// Create a new VAO
 		int vaoID = createVAO();
 

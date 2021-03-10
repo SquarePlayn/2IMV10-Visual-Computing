@@ -9,6 +9,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.*;
+import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
@@ -49,6 +50,7 @@ public class RendererModule extends Thread implements Module {
 	private StaticShader shader;
 	private Renderer renderer;
 	private Camera camera;
+	private ChunkManager chunkManager;
 
 	// TODO Remove test model
 	private Light light;
@@ -63,7 +65,7 @@ public class RendererModule extends Thread implements Module {
 		this.start();
 
 		// TODO Test territory
-
+/*
 		if (true) {
 			Collection<ChunkPosition> newChunks = new ArrayList<>();
 			final int DIST = 5;
@@ -118,6 +120,7 @@ public class RendererModule extends Thread implements Module {
 			)
 			)));
 		}
+ */
 	}
 
 	@Override
@@ -150,6 +153,7 @@ public class RendererModule extends Thread implements Module {
 		shader = new StaticShader();
 		renderer = new Renderer(window, shader);
 		camera = new Camera(window);
+		chunkManager = new ChunkManager(eventBus);
 
 
 		// TODO Remainder of this function is test territory
@@ -249,6 +253,9 @@ public class RendererModule extends Thread implements Module {
 		for (RawModel model : models) {
 			renderer.render(model, shader, camera);
 		}
+		for (RawModel chunk : chunkManager.getModels()) {
+			renderer.render(chunk, shader, camera);
+		}
 		shader.stop();
 
 		// Put the new frame on the screen
@@ -262,10 +269,13 @@ public class RendererModule extends Thread implements Module {
 	 * Update state
 	 */
 	private void update() {
-		if (!eventQueue.isEmpty()) {
+		// Update chunks
+		chunkManager.update(camera);
+
+		if (!eventQueue.isEmpty() && false) {
 			// TODO Handle events
 			ProcessorChunkLoadedEvent event = eventQueue.poll();
-			LOGGER.info("Extracted an event =============================================");
+			LOGGER.info("Extracted an event: " + event.toString());
 			Chunk<MeshChunkId, MeshChunkData> chunk = event.getChunk();
 			MeshChunkId chunkId = chunk.getChunkId();
 			QualityLevel qualityLevel = chunkId.getQuality();
@@ -278,26 +288,6 @@ public class RendererModule extends Thread implements Module {
 			IntBuffer indexBuffer = meshChunkData.getMeshBuffer();
 			FloatBuffer vertexBuffer = meshChunkData.getVertexBuffer();
 
-			// Seems correct
-			System.out.println("Received ints/vertices " + indexBuffer.remaining() + "/" + vertexBuffer.remaining());
-
-			// Somehow prints super small values
-			for (int i = 0; i < 10; i++) {
-				System.out.println(i + " - " + vertexBuffer.get(i));
-			}
-
-			// Somehow only prints zeros
-			System.out.println("= Indices");
-			for (int i = 0; i < 3 * 4 && i < indexBuffer.remaining(); i += 3) {
-				System.out.println(indexBuffer.get(i) + " -> " + indexBuffer.get(i + 1) + " -> " + indexBuffer.get(i + 2));
-			}
-
-			// Print again just to test interleaved transformation, but that's not applicable in current test
-			System.out.println("Read position (" + vertexBuffer.get(0) + ", " + vertexBuffer.get(1) + ", " + vertexBuffer.get(2) + ") with " + vertexBuffer.remaining() + " remaining.");
-			for (int i = 0; i < 10; i++) {
-				System.out.println(i + " - " + vertexBuffer.get(i));
-			}
-
 			// Set the camera to the position of the model
 			// TODO: smarter camera handling
 			if (firstCameraRelocation) {
@@ -306,7 +296,7 @@ public class RendererModule extends Thread implements Module {
 			}
 
 			// Load all to model so it can be rendered
-			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer, indexBuffer.remaining());
+			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer);
 //			models.clear(); // TODO Smarter switching than just replacing
 			models.add(model);
 		}
