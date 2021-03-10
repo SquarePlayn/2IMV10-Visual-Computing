@@ -1,12 +1,17 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import nl.tue.visualcomputingproject.group9a.project.common.Point;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.MeshBufferManager;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.VertexBufferManager;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.mesh.FullMeshGenerator;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.ArrayPointIndexStore;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndex;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexStore;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.DeleteInvalidPointFilter;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.PointFilter;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.PreProcessing;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.GridTransform;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,45 +29,9 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The local distance used to approximate the normals with. */
 	private static final int DIST = 1;
-	/** The type of vertex buffer to generate. */
-	private static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
-	/** The type of mesh buffer to generate. */
-	private static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
+	/** The filter used to filter out illegal points. */
+	private static final PointFilter filter = new DeleteInvalidPointFilter();
 
-	/**
-	 * Data class storing a point with it's index in the vertex buffer.
-	 */
-	@Getter
-	@RequiredArgsConstructor
-	private static class PointIndex {
-		final private Vector3d point;
-		@Setter
-		private int index = -1;
-		
-		public String toString() {
-			return "[" + index + ": " + point + "]";
-		}
-		
-	}
-
-	/**
-	 * Computes the relative position of a value in the grid.
-	 * 
-	 * @param quality The quality level.
-	 * @param val     The value.
-	 * 
-	 * @return The relative position of the value in the grid.
-	 */
-	private static int getPos(QualityLevel quality, double val) {
-		switch (quality) {
-			case FIVE_BY_FIVE:
-				return ((int) val) / 5;
-			case HALF_BY_HALF:
-				return (int) (val * 2);
-			default:
-				throw new IllegalArgumentException("Invalid quality level: " + quality);
-		}
-	}
 
 	/**
 	 * Computes the normal of the line {@code target -> source} which
@@ -99,39 +68,47 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 			throw new IllegalArgumentException(
 					"This generator can only be used for interpolated datasets.");
 		}
-		
+
 		ChunkPosition pos = chunk.getPosition();
-		int width = getPos(chunk.getQualityLevel(), pos.getWidth()) + 1;
-		int height = getPos(chunk.getQualityLevel(), pos.getHeight()) + 1;
-		PointIndex[][] points = new PointIndex[width][height];
+		GridTransform transform = GridTransform.createTransformFor(
+				chunk.getQualityLevel(),
+				pos.getX(),
+				pos.getY());
+		PointIndexStore store = new ArrayPointIndexStore(
+				transform.toGridX(pos.getX() + pos.getWidth()) + 1,
+				transform.toGridZ(pos.getY() + pos.getHeight()) + 1
+		);
 		
 		// Sort the data.
-		for (Point point : chunk.getData().getPointIterator()) {
-			int x = getPos(chunk.getQualityLevel(), point.getX() - pos.getX());
-			int y = getPos(chunk.getQualityLevel(), point.getY() - pos.getY());
-			if (points[x][y] != null) {
-//				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][y] + ". Ignoring that former.");
+		for (Vector3d point : chunk.getData().getVector3D()) {
+			point = filter.filter(point);
+			if (point == null) continue;
+			int x = transform.toGridX(point.x());
+			int z = transform.toGridZ(point.z());
+			if (store.hasPoint(x, z)) {
+//				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][z] + ". Ignoring the former.");
+				continue;
 			}
-			points[x][y] = new PointIndex(point.asVec3d());
+			store.set(x, z, new PointIndex(point));
 		}
+
+		PreProcessing.fillNullPoints(store, transform);
 		
 		// Create vertex buffer.
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
-				VERTEX_TYPE, chunk.getData().size());
+				Settings.VERTEX_TYPE, chunk.getData().size());
 		
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				if (points[x][y] == null) continue;
+		for (int z = 0; z < store.getHeight(); z++) {
+			for (int x = 0; x < store.getWidth(); x++) {
+				if (!store.hasPoint(x, z)) continue;
 				Vector3d normal = new Vector3d();
-				for (int dy = -DIST; dy <= DIST; dy++) {
+				for (int dz = -DIST; dz <= DIST; dz++) {
 					for (int dx = -DIST; dx <= DIST; dx++) {
-						if (dx == 0 && dy == 0) continue;
+						if (dx == 0 && dz == 0) continue;
 						int x2 = x + dx;
-						int y2 = y + dy;
-						if (x2 < 0 || x2 >= width) continue;
-						if (y2 < 0 || y2 >= height) continue;
-						if (points[x2][y2] == null) continue;
-						normal.add(upProjection(points[x][y].getPoint(), points[x2][y2].getPoint()));
+						int z2 = z + dz;
+						if (!store.hasPoint(x2, z2)) continue;
+						normal.add(upProjection(store.getPoint(x, z), store.getPoint(x2, z2)));
 					}
 				}
 				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
@@ -139,70 +116,123 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 				} else {
 					normal.normalize();
 				}
-				points[x][y].setIndex(vertexManager.addVertex(points[x][y].getPoint(), normal));
+				store.get(x, z).setIndex(vertexManager.addVertex(store.getPoint(x, z), normal));
 			}
 		}
 		
-		// Create mesh buffer.
-		MeshBufferManager meshManager = MeshBufferManager.createManagerFor(
-				chunk.getQualityLevel(),
-				MESH_TYPE,
-				width, height,
-				chunk.getData().size());
-
-		for (int y = 0; y < height - 1; y++) {
-			for (int x = 0; x < width - 1; x++) {
-				PointIndex v00 = points[x  ][y  ];
-				PointIndex v10 = points[x+1][y  ];
-				PointIndex v01 = points[x  ][y+1];
-				PointIndex v11 = points[x+1][y+1];
-				
-				switch (MESH_TYPE) {
-					case TRIANGLES_CLOCKWISE_3_INT:
-					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
-						if (v00 != null && v01 != null && v11 != null) {
-							meshManager.add(
-									v00.getIndex(),
-									v01.getIndex(),
-									v11.getIndex());
-						}
-						if (v00 != null && v11 != null && v10 != null) {
-							meshManager.add(
-									v00.getIndex(),
-									v11.getIndex(),
-									v10.getIndex());
-						}
-						if ((v00 == null ^ v11 == null) && v01 != null && v10 != null) {
-							if (v00 == null) {
-								meshManager.add(
-										v01.getIndex(),
-										v10.getIndex(),
-										v11.getIndex());
-							} else {
-								meshManager.add(
-										v01.getIndex(),
-										v00.getIndex(),
-										v10.getIndex());
-							}
-						}
-						break;
-						
-					case QUADS_CLOCKWISE_4_INT:
-					case QUADS_COUNTER_CLOCKWISE_4_INT:
-						meshManager.add(
-								points[x  ][y  ].getIndex(),
-								points[x+1][y  ].getIndex(),
-								points[x+1][y+1].getIndex(),
-								points[x+1][y  ].getIndex());
-						break;
-				}
-			}
-		}
+//		// Create mesh buffer.
+//		MeshBufferManager meshManager = MeshBufferManager.createManagerFor(
+//				chunk.getQualityLevel(),
+//				Settings.MESH_TYPE,
+//				store.getWidth(), store.getHeight(),
+//				chunk.getData().size());
+//
+//		for (int z = 0; z < store.getHeight() - 1; z++) {
+//			// v_(dx,dz)
+//			int v00 = 0;
+//			boolean doBreak = false;
+//			while (!store.hasPoint(v00, z)) {
+//				if (++v00 >= store.getWidth()) {
+//					doBreak = true;
+//					break;
+//				}
+//				v00++;
+//			}
+//			if (doBreak) continue;
+//			int v10 = v00;
+//
+//			int v01 = 0;
+//			while (!store.hasPoint(v01, z+1)) {
+//				if (++v01 >= store.getWidth()) {
+//					doBreak = true;
+//					break;
+//				}
+//			}
+//			if (doBreak) continue;
+//			int v11 = v01;
+//
+//			while (true) {
+//				if (v10 < v11) {
+//					while (++v10 < store.getWidth() && !store.hasPoint(v10, z));
+//					if (v10 >= store.getWidth()) {
+//						if (v11 >= store.getWidth()) {
+//							break;
+//						} else {
+//							continue;
+//						}
+//					}
+//					meshManager.add(
+//							store.getIndex(v00, z  ),
+//							store.getIndex(v11, z+1),
+//							store.getIndex(v10, z  )
+//					);
+//					v00 = v10;
+//					
+//				} else {
+//					while (++v11 < store.getWidth() && !store.hasPoint(v11, z+1));
+//					if (v11 >= store.getWidth()) {
+//						if (v10 >= store.getWidth()) {
+//							break;
+//						} else {
+//							continue;
+//						}
+//					}
+//					meshManager.add(
+//							store.getIndex(v00, z  ),
+//							store.getIndex(v01, z+1),
+//							store.getIndex(v11, z+1)
+//					);
+//					v01 = v11;
+//				}
+//			}
+//		}
+//		return new MeshChunkData(
+//				vertexManager.finalizeBuffer(),
+//				meshManager.finalizeBuffer());
 		
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),
-				meshManager.finalizeBuffer());
+				FullMeshGenerator.generateMesh(store, chunk));
 	}
+		
+//	private static void finishMesh(
+//			MeshBufferManager manager,
+//			PointIndex[][] points,
+//			int width,
+//			int fixedX,
+//			int fixedZ,
+//			int curX,
+//			int prevX,
+//			int curZ,
+//			boolean reverse) {
+//		do {
+//			switch (Settings.MESH_TYPE) {
+//				case TRIANGLES_CLOCKWISE_3_INT:
+//				case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
+//					if (reverse) {
+//						manager.add(
+//								points[fixedX][fixedZ].getIndex(),
+//								points[prevX][curZ].getIndex(),
+//								points[curX][curZ].getIndex()
+//						);
+//					} else {
+//						manager.add(
+//								points[prevX][curZ].getIndex(),
+//								points[fixedX][fixedZ].getIndex(),
+//								points[curX][curZ].getIndex()
+//						);
+//					}
+//					break;
+//				case QUADS_CLOCKWISE_4_INT:
+//				case QUADS_COUNTER_CLOCKWISE_4_INT:
+//					throw new UnsupportedOperationException();
+//			}
+//			
+//			// Find next binding.
+//			prevX = curX;
+//			while (++curX < width && points[curX][curZ] == null);
+//		} while (curX < width);
+//	}
 
 	/**
 	 * TODO: to be removed.

@@ -8,6 +8,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
  * @param <T> The type of point data container.
  */
 public abstract class Generator<ID extends ChunkId, T extends PointData> {
+	public static final double HEIGHT_THRESHOLD = 10_000;
 
 	/**
 	 * Generates the mesh data chunk.
