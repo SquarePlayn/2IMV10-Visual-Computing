@@ -86,7 +86,6 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 			int x = transform.toGridX(point.x());
 			int z = transform.toGridZ(point.z());
 			if (store.hasPoint(x, z)) {
-//				LOGGER.warn("The point " + point.asVec3d() + " clashes with " + points[x][z] + ". Ignoring the former.");
 				continue;
 			}
 			store.set(x, z, new PointIndex(point));
@@ -120,140 +119,9 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 			}
 		}
 		
-//		// Create mesh buffer.
-//		MeshBufferManager meshManager = MeshBufferManager.createManagerFor(
-//				chunk.getQualityLevel(),
-//				Settings.MESH_TYPE,
-//				store.getWidth(), store.getHeight(),
-//				chunk.getData().size());
-//
-//		for (int z = 0; z < store.getHeight() - 1; z++) {
-//			// v_(dx,dz)
-//			int v00 = 0;
-//			boolean doBreak = false;
-//			while (!store.hasPoint(v00, z)) {
-//				if (++v00 >= store.getWidth()) {
-//					doBreak = true;
-//					break;
-//				}
-//				v00++;
-//			}
-//			if (doBreak) continue;
-//			int v10 = v00;
-//
-//			int v01 = 0;
-//			while (!store.hasPoint(v01, z+1)) {
-//				if (++v01 >= store.getWidth()) {
-//					doBreak = true;
-//					break;
-//				}
-//			}
-//			if (doBreak) continue;
-//			int v11 = v01;
-//
-//			while (true) {
-//				if (v10 < v11) {
-//					while (++v10 < store.getWidth() && !store.hasPoint(v10, z));
-//					if (v10 >= store.getWidth()) {
-//						if (v11 >= store.getWidth()) {
-//							break;
-//						} else {
-//							continue;
-//						}
-//					}
-//					meshManager.add(
-//							store.getIndex(v00, z  ),
-//							store.getIndex(v11, z+1),
-//							store.getIndex(v10, z  )
-//					);
-//					v00 = v10;
-//					
-//				} else {
-//					while (++v11 < store.getWidth() && !store.hasPoint(v11, z+1));
-//					if (v11 >= store.getWidth()) {
-//						if (v10 >= store.getWidth()) {
-//							break;
-//						} else {
-//							continue;
-//						}
-//					}
-//					meshManager.add(
-//							store.getIndex(v00, z  ),
-//							store.getIndex(v01, z+1),
-//							store.getIndex(v11, z+1)
-//					);
-//					v01 = v11;
-//				}
-//			}
-//		}
-//		return new MeshChunkData(
-//				vertexManager.finalizeBuffer(),
-//				meshManager.finalizeBuffer());
-		
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),
 				FullMeshGenerator.generateMesh(store, chunk));
-	}
-		
-//	private static void finishMesh(
-//			MeshBufferManager manager,
-//			PointIndex[][] points,
-//			int width,
-//			int fixedX,
-//			int fixedZ,
-//			int curX,
-//			int prevX,
-//			int curZ,
-//			boolean reverse) {
-//		do {
-//			switch (Settings.MESH_TYPE) {
-//				case TRIANGLES_CLOCKWISE_3_INT:
-//				case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
-//					if (reverse) {
-//						manager.add(
-//								points[fixedX][fixedZ].getIndex(),
-//								points[prevX][curZ].getIndex(),
-//								points[curX][curZ].getIndex()
-//						);
-//					} else {
-//						manager.add(
-//								points[prevX][curZ].getIndex(),
-//								points[fixedX][fixedZ].getIndex(),
-//								points[curX][curZ].getIndex()
-//						);
-//					}
-//					break;
-//				case QUADS_CLOCKWISE_4_INT:
-//				case QUADS_COUNTER_CLOCKWISE_4_INT:
-//					throw new UnsupportedOperationException();
-//			}
-//			
-//			// Find next binding.
-//			prevX = curX;
-//			while (++curX < width && points[curX][curZ] == null);
-//		} while (curX < width);
-//	}
-
-	/**
-	 * TODO: to be removed.
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		PointCloudChunkData data = new PointCloudChunkData();
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				data.addPoint(5*i, 5*j, 5*Math.floorMod(i + j, 2));
-			}
-		}
-		Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(
-				new ChunkId(
-						new ChunkPosition(-5, -5, 15, 15),
-						QualityLevel.FIVE_BY_FIVE),
-				data
-		);
-		Generator
-				.createGeneratorFor(chunk.getQualityLevel())
-				.generateChunkData(chunk);
 	}
 	
 }
