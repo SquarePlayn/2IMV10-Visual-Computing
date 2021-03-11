@@ -125,6 +125,7 @@ public class RendererModule extends Thread implements Module {
 
 	@Override
 	public void run() {
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		// Here is your thread
 		LOGGER.info("Render thread started");
 		initialize();
