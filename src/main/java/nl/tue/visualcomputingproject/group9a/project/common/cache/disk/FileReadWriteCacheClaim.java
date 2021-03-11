@@ -46,7 +46,9 @@ public class FileReadWriteCacheClaim
 					new FileOutputStream(tmpFile, false),
 					() -> {
 						try {
-							Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+							if (!Thread.currentThread().isInterrupted()) {
+									Files.move(tmpFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+							}
 						} finally {
 							lock.unlock();
 						}

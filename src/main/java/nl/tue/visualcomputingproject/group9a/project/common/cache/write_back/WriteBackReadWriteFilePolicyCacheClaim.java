@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-@AllArgsConstructor
 public class WriteBackReadWriteFilePolicyCacheClaim<T extends CacheableObject>
 		implements WriteBackReadWriteCacheClaim<T> {
 	private final Lock lock = new ReentrantLock();
@@ -69,6 +68,7 @@ public class WriteBackReadWriteFilePolicyCacheClaim<T extends CacheableObject>
 			}
 			//noinspection ResultOfMethodCallIgnored
 			file.delete();
+			
 		} finally {
 			lock.unlock();
 		}

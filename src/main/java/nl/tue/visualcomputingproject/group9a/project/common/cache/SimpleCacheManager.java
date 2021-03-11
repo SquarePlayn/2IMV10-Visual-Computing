@@ -29,8 +29,6 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 	protected final CachePolicy policy;
 	/** Storage of all tracked and externally claimed claims. */
 	protected final Map<FileId, ClaimElem> claimMap;
-//	/** The lock of this cache manager. */
-//	protected final Lock lock;
 
 	/**
 	 * Creates a new cache manager using the given cache policy.
@@ -40,8 +38,6 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 	public SimpleCacheManager(CachePolicy policy) {
 		this.policy = policy;
 		claimMap = new ConcurrentHashMap<>();
-//		claimMap = new HashMap<>();
-//		lock = new ReentrantLock();
 	}
 
 	/**
@@ -49,6 +45,8 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 	 */
 	@Getter
 	protected class ClaimElem {
+		/** The lock used for this element. */
+		private final Lock lock = new ReentrantLock();
 		/** The set of all read claims. */
 		private final Set<Read> readClaims = new HashSet<>();
 		/** The current write claim. */
@@ -57,8 +55,6 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		/** Whether this claim is tracked in {@link #policy}. */
 		@Setter
 		private boolean tracked = false;
-		/** The lock used for this element. */
-		private Lock lock = new ReentrantLock();
 		/** Whether this element is valid. */
 		@Setter
 		private boolean valid = true;
@@ -86,9 +82,11 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		public boolean hasClaim() {
 			return writeClaim != null || !readClaims.isEmpty();
 		}
+		
 	}
 	
-	public ClaimElem getOrPutDefaultAndLockClaimElem(
+	
+	public ClaimElem getOrPutDefaultAndLock(
 			FileId id,
 			Function<? super FileId, ? extends ClaimElem> defFunction) {
 		ClaimElem old = null;
@@ -120,17 +118,20 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		}
 	}
 	
-	
 	@Override
 	public Read requestReadClaim(FileId id) {
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, null);
+		ClaimElem elem = getOrPutDefaultAndLock(id, null);
 		if (elem == null) {
 			return null;
 		}
+		ReadWrite trackClaim = null;
 		try {
-			if ((!elem.isTracked() && elem.hasWriteClaim()) ||
-					(elem.isTracked() && !untrack(id, elem))) {
+			if (!elem.isTracked() && elem.hasWriteClaim()) {
 				return null;
+			}
+			if (elem.isTracked()) {
+				trackClaim = elem.writeClaim;
+				elem.writeClaim = null;
 			}
 			
 			Read claim = createReadClaim(id, elem);
@@ -138,22 +139,34 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 			return claim;
 			
 		} finally {
+			elem.tracked = false;
 			elem.unlock();
+			if (trackClaim != null) {
+				untrack(id, elem, trackClaim);
+			}
 		}
 	}
 
 	@Override
 	public ReadWrite requestReadWriteClaim(FileId id) {
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, (v) -> createClaimElem());
+		ReadWrite trackElem = null;
+		ClaimElem elem = getOrPutDefaultAndLock(id, (v) -> createClaimElem());
 		try {
-			if ((!elem.isTracked() && elem.hasClaim()) ||
-					(elem.isTracked() && !untrack(id, elem))) {
+			if (!elem.isTracked() && elem.hasClaim()) {
 				return null;
+			}
+			if (elem.isTracked()) {
+				trackElem = elem.writeClaim;
+				elem.writeClaim = null;
 			}
 			return elem.writeClaim = createReadWriteClaim(id, elem);
 			
 		} finally {
+			elem.tracked = false;
 			elem.unlock();
+			if (trackElem != null) {
+				untrack(id, elem, trackElem);
+			}
 		}
 	}
 
@@ -162,7 +175,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		invalidateClaim(claim);
 		
 		final FileId id = claim.getId();
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, null);
+		ClaimElem elem = getOrPutDefaultAndLock(id, null);
 		if (elem == null) {
 			throw new IllegalArgumentException("Tried to release unclaimed claim!");
 		}
@@ -191,7 +204,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		invalidateClaim(claim);
 
 		final FileId id = claim.getId();
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, null);
+		ClaimElem elem = getOrPutDefaultAndLock(id, null);
 		if (elem == null) {
 			throw new IllegalArgumentException("Tried to release unclaimed claim!");
 		}
@@ -222,7 +235,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 		invalidateClaim(readWrite);
 		
 		final FileId id = readWrite.getId();
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, null);
+		ClaimElem elem = getOrPutDefaultAndLock(id, null);
 		if (elem == null) {
 			throw new IllegalArgumentException("Tried to release unclaimed claim!");
 		}
@@ -264,24 +277,12 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 	 * @return {@code true} if the the file was untracked successfully.
 	 *     {@code false} if the policy removed the file.
 	 */
-	private boolean untrack(FileId id, ClaimElem elem) {
-		if (!elem.isTracked()) return true;
+	private void untrack(FileId id, ClaimElem elem, ReadWrite claim) {
+		if (claim == null || !elem.isTracked()) return;
 		
 		if (policy.untrack(id)) {
-			try {
-				if (!elem.writeClaim.invalidate()) {
-					throw new IllegalStateException("Tracking claim was already invalid!");
-				}
-				
-			} finally {
-				elem.writeClaim = null;
-				elem.tracked = false;
-			}
-			
-		} else {
-			throw new IllegalStateException("Tracked element is not tracked!"); // TODO: return false
+			claim.invalidate();
 		}
-		return true;
 	}
 
 	/**
@@ -291,7 +292,7 @@ public abstract class SimpleCacheManager<Read extends ReadCacheClaim, ReadWrite 
 	 * @param id The ID of the file to track.
 	 */
 	protected void track(FileId id) {
-		ClaimElem elem = getOrPutDefaultAndLockClaimElem(id, (v) -> createClaimElem());
+		ClaimElem elem = getOrPutDefaultAndLock(id, (v) -> createClaimElem());
 		try {
 			if (elem.isTracked()) {
 				return;

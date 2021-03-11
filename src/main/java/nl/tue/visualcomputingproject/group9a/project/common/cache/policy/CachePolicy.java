@@ -42,7 +42,7 @@ public interface CachePolicy {
 			ReadWrite claim);
 
 	/**
-	 * Updates the size and freshness of the file with the given ID. <br>
+	 * Updates the size and freshness of the file with the given ID, if it exists. <br>
 	 * <br>
 	 * This action is atomic.
 	 * 

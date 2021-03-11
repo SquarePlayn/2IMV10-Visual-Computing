@@ -14,7 +14,7 @@ import java.util.Objects;
 @EqualsAndHashCode(callSuper = true)
 public class MeshChunkId
 		extends ChunkId {
-	private static final String PRE = "mesh_chunk_id";
+	private static final String PRE = "mesh-chunk-id";
 	private final VertexBufferType vertexType;
 	private final MeshBufferType meshType;
 	
@@ -56,18 +56,18 @@ public class MeshChunkId
 	public static FileIdFactory<MeshChunkId> createMeshChunkIdFactory() {
 		return (String path) -> {
 			String[] split = path.split(FileId.DELIM);
-			if (split.length != 7 || !Objects.equals(split[0], PRE)) {
+			if (split.length != 8 || !Objects.equals(split[0], PRE)) {
 				return null;
 			}
 			try {
 				ChunkPosition position = new ChunkPosition(
-						Integer.parseInt(split[1]),
-						Integer.parseInt(split[2]),
-						Integer.parseInt(split[3]),
-						Integer.parseInt(split[4]));
+						Double.parseDouble(split[1]),
+						Double.parseDouble(split[2]),
+						Double.parseDouble(split[3]),
+						Double.parseDouble(split[4]));
 				QualityLevel quality = QualityLevel.fromOrder(Integer.parseInt(split[5]));
-				VertexBufferType vertexType = VertexBufferType.fromId(Integer.parseInt(split[5]));
-				MeshBufferType meshType = MeshBufferType.fromId(Integer.parseInt(split[6]));
+				VertexBufferType vertexType = VertexBufferType.fromId(Integer.parseInt(split[6]));
+				MeshBufferType meshType = MeshBufferType.fromId(Integer.parseInt(split[7]));
 				return new MeshChunkId(position, quality, vertexType, meshType);
 				
 			} catch (NumberFormatException e) {
