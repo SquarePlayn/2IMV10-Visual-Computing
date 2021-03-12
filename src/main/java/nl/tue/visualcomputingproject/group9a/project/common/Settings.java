@@ -54,6 +54,6 @@ public final class Settings {
 	/** The type used in the vertex buffer. */
 	public static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
 	/** The type used in the mesh buffer. */
-	public static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_CLOCKWISE_3_INT;
+	public static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_COUNTER_CLOCKWISE_3_INT;
 	
 }

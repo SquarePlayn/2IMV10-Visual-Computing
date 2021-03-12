@@ -19,6 +19,8 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Rend
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,6 +162,13 @@ public class RendererModule extends Thread implements Module {
 		// TODO Remainder of this function is test territory
 
 		window.setBackgroundColor(new Vector3f(1.0f, 0.0f, 0.0f));
+
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_BACK);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LESS);
+		
 
 		light = new Light(new Vector3f(1, 1, 1), new Vector3f(1, 1, 1));
 
