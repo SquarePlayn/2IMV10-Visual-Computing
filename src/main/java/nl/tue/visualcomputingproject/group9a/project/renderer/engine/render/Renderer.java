@@ -51,7 +51,7 @@ public class Renderer {
 		GL20.glEnableVertexAttribArray(1); // Normals
 
 		// Load transformation matrix into the shader
-		// TODO Wrap model in entity or something to be able to move it without modifing VBOs
+		// TODO Wrap model in entity or something to be able to move it without modifying VBOs
 		Matrix4f transformationMatrix = Maths.createTransformationMatrix(
 				new Vector3f(0, 0, 0), 0, 0, 0, 1
 		);

@@ -42,7 +42,7 @@ public class MeshChunkId
 	}
 	
 	public ChunkId asChunkId() {
-		return new ChunkId(getPosition(), getQuality());
+		return new ChunkId(transformedPosition(), getQuality());
 	}
 	
 	public MeshChunkId withQuality(QualityLevel quality) {

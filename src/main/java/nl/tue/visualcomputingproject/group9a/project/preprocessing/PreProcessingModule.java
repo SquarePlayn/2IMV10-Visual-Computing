@@ -228,7 +228,7 @@ public class PreProcessingModule
 		lock.lock();
 		try {
 			final ChunkId eventId = e.getChunk().getChunkId();
-			MeshChunkId reqId = requesting.get(eventId.getPosition());
+			MeshChunkId reqId = requesting.get(eventId.transformedPosition());
 			if (reqId == null) {
 				// Ignore event since the chunk is not needed anymore.
 				LOGGER.info("Ignoring '" + e.getChunk().getChunkId() + "' since it is not needed anymore.");
@@ -282,7 +282,7 @@ public class PreProcessingModule
 			try {
 				data = Generator
 						.createGeneratorFor(id.getQuality())
-						.generateChunkData(e.getChunk());
+						.generateChunkData(new Chunk<>(id, e.getChunk().getData()));
 				
 			} catch (Exception ex) {
 				ex.printStackTrace();
