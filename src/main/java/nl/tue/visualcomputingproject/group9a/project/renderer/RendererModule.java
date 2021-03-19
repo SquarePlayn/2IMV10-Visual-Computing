@@ -8,7 +8,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePo
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.*;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.*;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
@@ -17,12 +17,10 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawMo
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Renderer;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;

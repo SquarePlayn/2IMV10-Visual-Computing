@@ -1,6 +1,9 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store;
 
+import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import org.joml.Vector3d;
+
+import java.util.Iterator;
 
 public interface PointIndexStore {
 	
@@ -12,22 +15,25 @@ public interface PointIndexStore {
 	
 	void set(int x, int z, PointIndex point);
 	
-	default Vector3d getPoint(int x, int z) {
+	default Iterator<Pair<Vector3d, Integer>> points(int x, int z) {
 		PointIndex vec = get(x, z);
 		if (vec == null) return null;
-		return vec.getPoint();
+		return vec.iterator();
 	}
 	
-	default Integer getIndex(int x, int z) {
+	default Pair<Vector3d, Integer> getClosest(int x, int z, Vector3d point) {
 		PointIndex vec = get(x, z);
 		if (vec == null) return null;
-		return vec.getIndex();
-	}
-	
-	default void setIndex(int x, int z, int index) {
-		PointIndex pi = get(x, z);
-		if (pi == null) throw new IllegalArgumentException();
-		pi.setIndex(index);
+		Pair<Vector3d, Integer> closest = null;
+		double curDist = 0;
+		for (Pair<Vector3d, Integer> pair : vec) {
+			double dist = pair.getFirst().distanceSquared(point);
+			if (closest == null || dist < curDist) {
+				closest = pair;
+				curDist = dist;
+			}
+		}
+		return closest;
 	}
 	
 	default boolean hasPoint(int x, int z) {

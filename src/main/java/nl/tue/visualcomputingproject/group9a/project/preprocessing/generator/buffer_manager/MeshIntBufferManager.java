@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager;
+package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager;
 
 import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Arrays;
 
 public class MeshIntBufferManager
 		implements MeshBufferManager {

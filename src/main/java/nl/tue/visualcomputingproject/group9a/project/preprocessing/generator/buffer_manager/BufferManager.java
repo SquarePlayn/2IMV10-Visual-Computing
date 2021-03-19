@@ -1,4 +1,4 @@
-package nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager;
+package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager;
 
 import java.nio.ByteBuffer;
 

@@ -2,8 +2,8 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.MeshBufferManager;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.buffer_manager.VertexBufferManager;
+import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.VertexBufferManager;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.mesh.FullMeshGenerator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.ArrayPointIndexStore;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndex;
@@ -100,23 +100,27 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 		for (int z = 0; z < store.getHeight(); z++) {
 			for (int x = 0; x < store.getWidth(); x++) {
 				if (!store.hasPoint(x, z)) continue;
-				Vector3d normal = new Vector3d();
-				for (int dz = -DIST; dz <= DIST; dz++) {
-					for (int dx = -DIST; dx <= DIST; dx++) {
-						if (dx == 0 && dz == 0) continue;
-						int x2 = x + dx;
-						int z2 = z + dz;
-						if (!store.hasPoint(x2, z2)) continue;
-						double dist = store.getPoint(x2, z2).distance(store.getPoint(x, z));
-						normal.add(upProjection(store.getPoint(x, z), store.getPoint(x2, z2)).mul(dist));
+				for (Pair<Vector3d, Integer> vec : store.get(x, z)) {
+					Vector3d normal = new Vector3d();
+					for (int dz = -DIST; dz <= DIST; dz++) {
+						for (int dx = -DIST; dx <= DIST; dx++) {
+							if (dx == 0 && dz == 0) continue;
+							int x2 = x + dx;
+							int z2 = z + dz;
+							if (!store.hasPoint(x2, z2)) continue;
+							for (Pair<Vector3d, Integer> vec2 : store.get(x2, z2)) {
+								double dist = vec2.getFirst().distance(vec.getFirst());
+								normal.add(upProjection(vec.getFirst(), vec2.getFirst()).mul(dist));
+							}
+						}
 					}
+					if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+						normal.y = 1;
+					} else {
+						normal.normalize();
+					}
+					vec.setSecond(vertexManager.addVertex(vec.getFirst(), normal));
 				}
-				if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
-					normal.y = 1;
-				} else {
-					normal.normalize();
-				}
-				store.get(x, z).setIndex(vertexManager.addVertex(store.getPoint(x, z), normal));
 			}
 		}
 		

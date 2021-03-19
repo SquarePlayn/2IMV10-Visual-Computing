@@ -1,5 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing;
 
+import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndex;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexStore;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Iterator;
 
 public class PreProcessing {
 	/** The logger of this class. */
@@ -18,20 +20,24 @@ public class PreProcessing {
 		for (int x = 0; x < points.getWidth(); x++) {
 			for (int z = 0; z < points.getHeight(); z++) {
 				if (!points.hasPoint(x, z)) continue;
-				if (points.getPoint(x, z).y() > Generator.HEIGHT_THRESHOLD ||
-						points.getPoint(x, z).y() < -Generator.HEIGHT_THRESHOLD) {
-					points.set(x, z, null);
+				Iterator<Pair<Vector3d, Integer>> it = points.get(x, z).iterator();
+				while (it.hasNext()) {
+					Pair<Vector3d, Integer> pair = it.next();
+					if (pair.getFirst().y() > Generator.HEIGHT_THRESHOLD ||
+							pair.getFirst().y() < -Generator.HEIGHT_THRESHOLD) {
+						it.remove();
+					}
 				}
 			}
 		}
 	}
 	
 	public static void fillNullPoints(
-			PointIndexStore points,
+			PointIndexStore store,
 			GridTransform transform) {
-		for (int x = 0; x < points.getWidth(); x++) {
-			for (int z = 0; z < points.getHeight(); z++) {
-				if (points.hasPoint(x, z)) continue;
+		for (int x = 0; x < store.getWidth(); x++) {
+			for (int z = 0; z < store.getHeight(); z++) {
+				if (store.hasPoint(x, z)) continue;
 				Vector3d vec = new Vector3d(transform.toCoordX(x), 0, transform.toCoordZ(z));
 
 				int num = 0;
@@ -43,12 +49,12 @@ public class PreProcessing {
 						if (i == 0 && j == 0) continue;
 						int otherX = x + i;
 						int otherZ = z + j;
-						if (points.hasPoint(otherX, otherZ)) {
-							Vector3d other = points.getPoint(otherX, otherZ);
+						if (!store.hasPoint(otherX, otherZ)) continue;
+						for (Pair<Vector3d, Integer> other : store.get(otherX, otherZ)) {
 							num++;
-							expDX += other.x() - transform.toCoordX(otherX);
-							height += other.y();
-							expDZ += other.z() - transform.toCoordZ(otherZ);
+							expDX += other.getFirst().x() - transform.toCoordX(otherX);
+							height += other.getFirst().y();
+							expDZ += other.getFirst().z() - transform.toCoordZ(otherZ);
 						}
 					}
 				}
@@ -61,7 +67,7 @@ public class PreProcessing {
 							expDZ / num
 					);
 				}
-				points.set(x, z, new PointIndex(vec));
+				store.set(x, z, new PointIndex(vec));
 			}
 		}
 	}
