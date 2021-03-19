@@ -19,7 +19,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class ChunkId
 		implements FileId {
-	private static final String PRE = "chunk_id";
+	private static final String PRE = "chunk-id";
 	
 	/** The position of the chunk. */
 	private final ChunkPosition position;
@@ -35,6 +35,15 @@ public class ChunkId
 				position.getWidth(),
 				position.getHeight(),
 				quality.getOrder());
+	}
+	
+	public ChunkPosition transformedPosition() {
+		return new ChunkPosition(
+				position.getX(),
+				-position.getY() - position.getHeight(),
+				position.getWidth(),
+				position.getHeight()
+		);
 	}
 	
 	public static FileIdFactory<ChunkId> createChunkIdFactory() {

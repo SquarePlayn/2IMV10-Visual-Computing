@@ -20,7 +20,7 @@ public class Camera {
 	 */
 	private final Window window;
 
-	Vector3f position = new Vector3f(0, 0, 0);
+	Vector3f position = new Vector3f(162000, 100, -384300); // TODO Move start pos to constants
 
 	// Rotational variables
 	private float pitch = 0;

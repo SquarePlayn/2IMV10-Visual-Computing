@@ -80,11 +80,6 @@ public class PreProcessingModule
 			List<MeshChunkId> request = new ArrayList<>();
 			List<Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>>> claims = new ArrayList<>();
 			for (ChunkPosition pos : e.getNewChunks()) {
-				MeshChunkId id = new MeshChunkId(
-						pos,
-						QualityLevel.getWorst(),
-						Settings.VERTEX_TYPE,
-						Settings.MESH_TYPE);
 				// Scan the cache for each quality level, starting from the best quality.
 				WriteBackReadCacheClaim<MeshChunkData> claim;
 				QualityLevel level = null;
@@ -92,6 +87,12 @@ public class PreProcessingModule
 				while (level != QualityLevel.getWorst()) {
 					if (level == null) level = QualityLevel.getBest();
 					else level = level.prev();
+					
+					MeshChunkId id = new MeshChunkId(
+							pos,
+							level,
+							Settings.VERTEX_TYPE,
+							Settings.MESH_TYPE);
 					
 					lock.lock();
 					try {
@@ -105,7 +106,9 @@ public class PreProcessingModule
 					}
 
 					claim = cache.requestReadClaim(id);
-					if (claim == null) continue; // Cache miss.
+					if (claim == null) {
+						continue; // Cache miss.
+					}
 					if (claim.isInMemory()) {
 						// Cache in memory.
 						// Simply post the data and release the claim.
@@ -125,7 +128,12 @@ public class PreProcessingModule
 					break;
 				}
 				if (!found) {
-					LOGGER.info("Cache miss: " + id.getPosition());
+					MeshChunkId id = new MeshChunkId(
+							pos,
+							QualityLevel.getWorst(),
+							Settings.VERTEX_TYPE,
+							Settings.MESH_TYPE);
+					LOGGER.info("Cache miss: " + pos);
 					// Request the lowest quality data from chart module later.
 					request.add(id);
 				}
@@ -150,11 +158,36 @@ public class PreProcessingModule
 			// Load the chunks from disk.
 			if (!claims.isEmpty()) {
 				ioThread.submit(() -> {
+					int reqAmt = 0;
 					for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+						MeshChunkId id = pair.getFirst();
 						LOGGER.info("Posting preprocessor loaded event!");
 						eventBus.post(new ProcessorChunkLoadedEvent(
-								new Chunk<>(pair.getFirst(), pair.getSecond().get())));
+								new Chunk<>(id, pair.getSecond().get())));
 						cache.releaseCacheClaim(pair.getSecond());
+						if (id.getQuality() != QualityLevel.getBest()) {
+							reqAmt++;
+						}
+					}
+					
+					List<ChunkId> req = new ArrayList<>(reqAmt);
+					lock.lock();
+					try {
+						for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+							MeshChunkId id = pair.getFirst();
+							if (id.getQuality() != QualityLevel.getBest()) {
+								MeshChunkId reqId = id.withQuality(id.getQuality().next());
+								requesting.put(reqId.getPosition(), reqId);
+								req.add(reqId.asChunkId());
+							}
+						}
+						
+					} finally {
+						lock.unlock();
+					}
+
+					if (!req.isEmpty()) {
+						eventBus.post(new ProcessorChunkRequestedEvent(req));
 					}
 				});
 			}
@@ -195,7 +228,7 @@ public class PreProcessingModule
 		lock.lock();
 		try {
 			final ChunkId eventId = e.getChunk().getChunkId();
-			MeshChunkId reqId = requesting.get(eventId.getPosition());
+			MeshChunkId reqId = requesting.get(eventId.transformedPosition());
 			if (reqId == null) {
 				// Ignore event since the chunk is not needed anymore.
 				LOGGER.info("Ignoring '" + e.getChunk().getChunkId() + "' since it is not needed anymore.");
@@ -249,7 +282,7 @@ public class PreProcessingModule
 			try {
 				data = Generator
 						.createGeneratorFor(id.getQuality())
-						.generateChunkData(e.getChunk());
+						.generateChunkData(new Chunk<>(id, e.getChunk().getData()));
 				
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -280,12 +313,12 @@ public class PreProcessingModule
 				// Delete old data.
 				MeshChunkId mcId = id;
 				while (mcId.getQuality() != QualityLevel.getWorst()) {
-					claim = cache.requestReadWriteClaim(id);
+					mcId = mcId.withQuality(mcId.getQuality().prev());
+					claim = cache.requestReadWriteClaim(mcId);
 					if (claim != null) {
 						claim.delete();
 						cache.releaseCacheClaim(claim);
 					}
-					mcId = mcId.withQuality(mcId.getQuality().prev());
 				}
 			}
 			

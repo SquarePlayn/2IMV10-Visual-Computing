@@ -51,7 +51,10 @@ public class PointCloudChunkData
 			
 			@Override
 			public Point next() {
-				Point p = new Point(interleavedPoints.get(counter), interleavedPoints.get(counter + 1), interleavedPoints.get(counter + 2));
+				Point p = new Point(
+						interleavedPoints.get(counter),
+						interleavedPoints.get(counter + 1),
+						interleavedPoints.get(counter + 2));
 				counter += 3;
 				return p;
 			}
@@ -70,7 +73,10 @@ public class PointCloudChunkData
 			
 			@Override
 			public Vector3d next() {
-				Vector3d p = new Vector3d(interleavedPoints.get(counter), interleavedPoints.get(counter + 2), interleavedPoints.get(counter + 1));
+				Vector3d p = new Vector3d(
+						interleavedPoints.get(counter),
+						interleavedPoints.get(counter + 2),
+						-interleavedPoints.get(counter + 1));
 				counter += 3;
 				return p;
 			}
@@ -89,7 +95,9 @@ public class PointCloudChunkData
 			
 			@Override
 			public Vector2d next() {
-				Vector2d p = new Vector2d(interleavedPoints.get(counter), interleavedPoints.get(counter + 1));
+				Vector2d p = new Vector2d(
+						interleavedPoints.get(counter),
+						-interleavedPoints.get(counter + 1));
 				counter += 3;
 				return p;
 			}

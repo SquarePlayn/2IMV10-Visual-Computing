@@ -102,7 +102,7 @@ public class LRUCachePolicy
 			QueueElem<Read, ReadWrite> elem = (QueueElem<Read, ReadWrite>) elemMap.get(id);
 			if (elem != null) {
 				queue.remove(elem);
-				curSize  += claim.size() - elem.size;
+				curSize += claim.size() - elem.size;
 				elem.size = claim.size();
 				elem.ordering = ordering++;
 				queue.add(elem);
@@ -110,6 +110,7 @@ public class LRUCachePolicy
 			} else {
 				elem = new QueueElem<>(id, manager, claim, ordering++, claim.size());
 				queue.add(elem);
+				curSize += claim.size();
 				elemMap.put(id, elem);
 			}
 			

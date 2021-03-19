@@ -67,7 +67,7 @@ public class WriteBackReadCacheClaim<T extends CacheableObject>
 		lock.lock();
 		store.lock();
 		try {
-			return store.isEmpty();
+			return !store.isEmpty();
 		} finally {
 			store.unlock();
 			lock.unlock();
