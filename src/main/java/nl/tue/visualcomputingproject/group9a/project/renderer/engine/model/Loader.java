@@ -1,5 +1,8 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.model;
 
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -26,17 +29,17 @@ public class Loader {
 	 */
 	public static RawModel loadToVAO(
 		float[] positions,
-		int[] indices
-	) {
+		int[] indices,
+		Vector2f offset) {
 		FloatBuffer positionsBuffer = storeDataInFloatBuffer(positions);
 		IntBuffer indicesBuffer = storeDataInIntBuffer(indices);
-		return loadToVAO(positionsBuffer, indicesBuffer);
+		return loadToVAO(positionsBuffer, indicesBuffer, offset);
 	}
 	
 	public static RawModel loadToVAO(
 		FloatBuffer vertices,
-		IntBuffer indices
-	) {
+		IntBuffer indices,
+		Vector2f offset) {
 		// Determine how many indices there are
 		int indicesCount = indices.remaining();
 		
@@ -51,13 +54,16 @@ public class Loader {
 		// Make a new VBO
 		int vbo = createVBO();
 		storeDataInAttributeList(vbo, 0, vertices, 3, 0);
-		storeDataInAttributeList(vbo, 1, (FloatBuffer)null, 3, 3);
+		storeDataInAttributeList(vbo, 1, (FloatBuffer) null, 3, 3); // TODO: fix this
 		// TODO Store more data such as normals
 		
 		// Unbind the VAO as we are no longer working on it
 		unbindVAO();
 		
-		return new RawModel(vaoID, indicesCount);
+		return new RawModel(
+				vaoID,
+				indicesCount,
+				Maths.createTransformationMatrix(new Vector3f(offset.x, 0, offset.y), 0, 0, 0, 1));
 	}
 	
 	/**

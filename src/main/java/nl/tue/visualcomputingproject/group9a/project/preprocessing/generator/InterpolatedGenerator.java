@@ -12,11 +12,14 @@ import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.PointFilter;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.PreProcessing;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.GridTransform;
+import org.joml.Random;
+import org.joml.Vector2f;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A trivial {@link Generator} implementation suitable for data interpolated on a grid.
@@ -70,17 +73,18 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 		}
 
 		ChunkPosition pos = chunk.getPosition();
+		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
 		GridTransform transform = GridTransform.createTransformFor(
 				chunk.getQualityLevel(),
-				pos.getX(),
-				pos.getY());
+				0, 0);
 		PointIndexStore store = new ArrayPointIndexStore(
-				transform.toGridX(pos.getX() + pos.getWidth()) + 1,
-				transform.toGridZ(pos.getY() + pos.getHeight()) + 1
+				transform.toGridX(pos.getWidth()) + 1,
+				transform.toGridZ(pos.getHeight()) + 1
 		);
 		
 		// Sort the data.
 		for (Vector3d point : chunk.getData().getVector3D()) {
+			point.sub(offset);
 			point = filter.filter(point);
 			if (point == null) continue;
 			int x = transform.toGridX(point.x());
@@ -123,10 +127,11 @@ public class InterpolatedGenerator<ID extends ChunkId, T extends PointData>
 				}
 			}
 		}
-		
+
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),
-				FullMeshGenerator.generateMesh(store, chunk));
+				FullMeshGenerator.generateMesh(store, chunk),
+				new Vector2f((float) offset.x(), (float) offset.z()));
 	}
 	
 }

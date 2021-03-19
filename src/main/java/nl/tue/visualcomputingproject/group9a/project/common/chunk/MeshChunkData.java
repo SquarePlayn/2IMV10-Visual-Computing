@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 import lombok.*;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.CacheableObject;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.ObjectSerializer;
+import org.joml.Vector2f;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -23,19 +24,24 @@ public class MeshChunkData
 	@NonNull
 	@Getter(AccessLevel.NONE)
 	ByteBuffer meshBuffer;
-
+	/** The offset of this chunk. */
+	@NonNull
+	Vector2f offset;
+	
 	/**
 	 * Creates a new data object.
 	 * 
-	 * @param vertexBuffer     The buffer storing the vertex data. Will only be used as a read-only buffer.
-	 * @param meshBuffer       The buffer storing the mesh data. WIll only be used as a read-only buffer.
+	 * @param vertexBuffer The buffer storing the vertex data. Will only be used as a read-only buffer.
+	 * @param meshBuffer   The buffer storing the mesh data. WIll only be used as a read-only buffer.
+	 * @param offset       The offset of this chunk.
 	 */
 	public MeshChunkData(
-			ByteBuffer vertexBuffer,
-			ByteBuffer meshBuffer) {
-
+			@NonNull ByteBuffer vertexBuffer,
+			@NonNull ByteBuffer meshBuffer,
+			@NonNull Vector2f offset) {
 		this.vertexBuffer = vertexBuffer;
 		this.meshBuffer = meshBuffer;
+		this.offset = offset;
 		// TODO Check if we want to make them readonly here
 	}
 
@@ -53,9 +59,16 @@ public class MeshChunkData
 		return meshBuffer.asIntBuffer();
 	}
 
+	/**
+	 * @return The offset of this chunk.
+	 */
+	public Vector2f getOffset() {
+		return offset;
+	}
+
 	@Override
 	public long memorySize() {
-		return vertexBuffer.capacity() + meshBuffer.capacity() + 2*8;
+		return vertexBuffer.capacity() + meshBuffer.capacity() + 2*Float.BYTES;
 	}
 
 	/**
@@ -69,6 +82,7 @@ public class MeshChunkData
 				throws IOException {
 			ObjectSerializer.writeByteBuffer(os, mcd.vertexBuffer);
 			ObjectSerializer.writeByteBuffer(os, mcd.meshBuffer);
+			ObjectSerializer.writeFloat(os, mcd.offset.x());
 		}
 
 		@Override
@@ -76,9 +90,16 @@ public class MeshChunkData
 				throws IOException {
 			ByteBuffer vertexBuffer = ObjectSerializer.readBuffer(is);
 			ByteBuffer meshBuffer = ObjectSerializer.readBuffer(is);
+			Vector2f offset = new Vector2f(
+					ObjectSerializer.readFloat(is),
+					ObjectSerializer.readFloat(is)
+			);
+					
 			return new MeshChunkData(
 					vertexBuffer,
-					meshBuffer);
+					meshBuffer,
+					offset
+			);
 		}
 		
 	}

@@ -9,6 +9,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkS
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,6 +136,7 @@ public class ChunkManager {
 			ChunkId chunkId = chunk.getChunkId();
 			ChunkPosition chunkPosition = chunk.getPosition();
 			QualityLevel qualityLevel = chunk.getQualityLevel();
+			Vector2f offset = chunk.getData().getOffset();
 
 			// Notify that the chunk was received
 			loaded.add(chunkId);
@@ -145,7 +147,8 @@ public class ChunkManager {
 				// Create the model
 				RawModel newModel = Loader.loadToVAO(
 						chunk.getData().getVertexBuffer(),
-						chunk.getData().getMeshBuffer()
+						chunk.getData().getMeshBuffer(),
+						offset
 				);
 
 				// Remove current chunk model if present

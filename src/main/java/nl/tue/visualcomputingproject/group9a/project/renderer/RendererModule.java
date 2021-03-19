@@ -14,6 +14,7 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loade
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Renderer;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
@@ -178,7 +179,7 @@ public class RendererModule extends Thread implements Module {
 					}, new int[]{
 							0, 1, 2,
 							0, 3, 2
-					}
+					}, new Vector2f(0, 0)
 			);
 			models.add(testModel);
 		} else {
@@ -236,7 +237,7 @@ public class RendererModule extends Thread implements Module {
 								// Z-1
 								1, 6, 2,
 								1, 6, 5,
-						}
+						}, new Vector2f(0, 0)
 				);
 				models.add(arrow);
 			}
@@ -291,16 +292,21 @@ public class RendererModule extends Thread implements Module {
 			MeshChunkData meshChunkData = chunk.getData();
 			IntBuffer indexBuffer = meshChunkData.getMeshBuffer();
 			FloatBuffer vertexBuffer = meshChunkData.getVertexBuffer();
+			Vector2f offset = meshChunkData.getOffset();
 
 			// Set the camera to the position of the model
 			// TODO: smarter camera handling
 			if (firstCameraRelocation) {
 				firstCameraRelocation = false;
-				camera.setPosition(new Vector3f(vertexBuffer.get(0), vertexBuffer.get(1) + 100, vertexBuffer.get(2)));
+				camera.setPosition(new Vector3f(
+						vertexBuffer.get(0),
+						vertexBuffer.get(1) + 100,
+						vertexBuffer.get(2)
+				));
 			}
 
 			// Load all to model so it can be rendered
-			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer);
+			RawModel model = Loader.loadToVAO(vertexBuffer, indexBuffer, offset);
 //			models.clear(); // TODO Smarter switching than just replacing
 			models.add(model);
 		}

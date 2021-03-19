@@ -52,9 +52,10 @@ public class Renderer {
 
 		// Load transformation matrix into the shader
 		// TODO Wrap model in entity or something to be able to move it without modifying VBOs
-		Matrix4f transformationMatrix = Maths.createTransformationMatrix(
-				new Vector3f(0, 0, 0), 0, 0, 0, 1
-		);
+//		Matrix4f transformationMatrix = Maths.createTransformationMatrix(
+//				new Vector3f(0, 0, 0), 0, 0, 0, 1
+//		);
+		Matrix4f transformationMatrix = model.getModelMatrix();
 		shader.loadTransformationMatrix(transformationMatrix);
 
 		// Load view matrix into the shader
