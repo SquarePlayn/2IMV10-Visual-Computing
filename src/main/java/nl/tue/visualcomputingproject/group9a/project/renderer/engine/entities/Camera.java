@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -20,7 +21,7 @@ public class Camera {
 	 */
 	private final Window window;
 
-	Vector3f position = new Vector3f(162000, 100, -384300); // TODO Move start pos to constants
+	Vector3f position = Settings.INITIAL_POSITION;
 
 	// Rotational variables
 	private float pitch = 0;

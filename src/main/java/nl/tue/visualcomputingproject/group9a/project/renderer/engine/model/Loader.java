@@ -65,6 +65,10 @@ public class Loader {
 				indicesCount,
 				Maths.createTransformationMatrix(new Vector3f(offset.x, 0, offset.y), 0, 0, 0, 1));
 	}
+
+	public static void unloadModel(RawModel model) {
+		// TODO Free VAO and VBOs of model
+	}
 	
 	/**
 	 * Delete all VAOs and VBOs
