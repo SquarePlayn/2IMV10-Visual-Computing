@@ -43,7 +43,7 @@ public class Camera {
 	 * Register all callbacks for input w.r.t. camera movement
 	 */
 	private void registerInputCallbacks() {
-		keyboardCallback = new GLFWKeyCallback() {
+		GLFW.glfwSetKeyCallback(window.getWindow(), new GLFWKeyCallback() {
 			@Override
 			public void invoke(long window, int key, int scancode, int action, int mods) {
 				if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
@@ -95,8 +95,7 @@ public class Camera {
 				}
 
 			}
-		};
-		GLFW.glfwSetKeyCallback(window.getWindow(), keyboardCallback);
+		});
 	}
 
 	/**

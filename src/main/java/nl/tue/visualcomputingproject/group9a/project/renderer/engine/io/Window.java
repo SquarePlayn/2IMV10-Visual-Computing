@@ -2,9 +2,11 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.GLFWWindowSizeCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL42;
@@ -12,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 
 public class Window {
 	/** The logger of this class. */
@@ -31,6 +35,10 @@ public class Window {
 
 	private double time;
 	private double processedTime = 0;
+
+	@Getter
+	@Setter
+	private boolean resized = false;
 
 
 	public Window(int width, int height, String title, double fps) {
@@ -56,7 +64,7 @@ public class Window {
 
 		// Set some window settings and create the window
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE); // Make window invisible until it's actually loaded
-		GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE); // Not resizable. TODO
+		GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE); // Resizable
 		window = GLFW.glfwCreateWindow(width, height, title, 0, 0); // Last 2 are for fullscreen and multi-monitor
 
 		if (window == 0) {
@@ -86,6 +94,27 @@ public class Window {
 
 		// Set the initial time
 		time = getTimeSeconds();
+
+		registerCallbacks();
+	}
+
+	/**
+	 * Creation of any GLFW listeners
+	 */
+	private void registerCallbacks() {
+		GLFW.glfwSetWindowSizeCallback(this.window, new GLFWWindowSizeCallback() {
+			@Override
+			public void invoke(long window, int w, int h) {
+				width = w;
+				height = h;
+
+				// Set the entire viewport for rendering
+				GL11.glViewport(0, 0, width, height);
+
+				// Mark that the window was resized
+				resized = true;
+			}
+		});
 	}
 
 	/**
@@ -130,6 +159,18 @@ public class Window {
 
 		// TODO Make frames continuous with frame skipping
 		processedTime %= timePerFrame;
+	}
+
+	/**
+	 * Calculate the projection matrix for this window
+	 */
+	public Matrix4f getProjectionMatrix() {
+		return new Matrix4f().perspective(
+				(float) Math.toRadians(FOV),
+				(float) width / (float) height,
+				NEAR_PLANE,
+				FAR_PLANE
+		);
 	}
 
 	/**

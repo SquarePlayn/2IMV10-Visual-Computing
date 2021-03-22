@@ -1,8 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.render;
 
-import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
 import org.joml.Matrix4f;
@@ -10,29 +8,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
-
 public class Renderer {
-	/**
-	 * The window the renderer is rendering on
-	 */
-	private final Window window;
-
-	@Getter
-	private Matrix4f projectionMatrix;
-
-	public Renderer(Window window, StaticShader shader) {
-		this.window = window;
-
-		// Create the projection matrix
-		createProjectionMatrix();
-
-		// Load the projection matrix into the shader
-		shader.start();
-		shader.loadProjectionMatrix(projectionMatrix);
-		shader.stop();
-	}
-
 	/**
 	 * Render a model to the screen
 	 *
@@ -62,19 +38,5 @@ public class Renderer {
 		// Deactivate the VAO & VBOs
 		GL20.glDisableVertexAttribArray(0);
 		GL30.glBindVertexArray(0);
-	}
-
-	/**
-	 * Create the projection matrix for this rendering
-	 */
-	private void createProjectionMatrix() {
-		float aspectRatio = (float) window.getWidth() / (float) window.getHeight();
-
-		projectionMatrix = new Matrix4f().perspective(
-				(float) Math.toRadians(FOV),
-				aspectRatio,
-				NEAR_PLANE,
-				FAR_PLANE
-		);
 	}
 }

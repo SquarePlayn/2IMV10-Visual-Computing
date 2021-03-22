@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
-import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
@@ -14,15 +13,11 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loade
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Renderer;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -90,7 +85,7 @@ public class RendererModule extends Thread implements Module {
 		// Create instances
 		window = new Window(INITIAL_WINDOW_SIZE.x, INITIAL_WINDOW_SIZE.y, WINDOW_NAME, FPS);
 		shader = new StaticShader();
-		renderer = new Renderer(window, shader);
+		renderer = new Renderer();
 		camera = new Camera(window);
 		chunkManager = new ChunkManager(eventBus);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
@@ -104,6 +99,14 @@ public class RendererModule extends Thread implements Module {
 
 		// Attack the light to the camera
 		light.setPosition(camera.getPosition());
+
+		// Recalculate the projection matrix if needed
+		if (window.isResized()) {
+			shader.start();
+			shader.loadProjectionMatrix(window);
+			shader.stop();
+			window.setResized(false);
+		}
 
 		// Rendering of models
 		shader.start();
