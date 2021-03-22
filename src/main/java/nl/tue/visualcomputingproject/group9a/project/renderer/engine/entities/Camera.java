@@ -8,6 +8,13 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 
+import java.util.Collection;
+import java.util.HashSet;
+
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.LOOK_SPEED;
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.MOVE_SPEED;
+import static org.lwjgl.glfw.GLFW.*;
+
 @Getter
 @Setter
 public class Camera {
@@ -30,8 +37,11 @@ public class Camera {
 
 	// Other settings
 	private boolean wireframe = false;
+	private boolean lockHeight = true;
 
 	private GLFWKeyCallback keyboardCallback;
+
+	private Collection<Integer> pressedKeys = new HashSet<>();
 
 	public Camera(Window window) {
 		this.window = window;
@@ -43,59 +53,39 @@ public class Camera {
 	 * Register all callbacks for input w.r.t. camera movement
 	 */
 	private void registerInputCallbacks() {
-		GLFW.glfwSetKeyCallback(window.getWindow(), new GLFWKeyCallback() {
+		keyboardCallback = new GLFWKeyCallback() {
 			@Override
 			public void invoke(long window, int key, int scancode, int action, int mods) {
-				if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
-					// TODO Move constants elsewhere
-					float dist = 10f;
-					float degr = 10f;
+				if (action == GLFW_PRESS) {
+					pressedKeys.add(key);
 
-					switch (key) {
-						case GLFW.GLFW_KEY_W:
-							moveForward(dist);
-							break;
-						case GLFW.GLFW_KEY_S:
-							moveForward(-dist);
-							break;
-						case GLFW.GLFW_KEY_D:
-							moveSideways(dist);
-							break;
-						case GLFW.GLFW_KEY_A:
-							moveSideways(-dist);
-							break;
-						case GLFW.GLFW_KEY_E:
-							moveUp(dist);
-							break;
-						case GLFW.GLFW_KEY_Q:
-							moveUp(-dist);
-							break;
-						case GLFW.GLFW_KEY_UP:
-							increasePitch(degr);
-							break;
-						case GLFW.GLFW_KEY_DOWN:
-							increasePitch(-degr);
-							break;
-						case GLFW.GLFW_KEY_RIGHT:
-							increaseYaw(degr);
-							break;
-						case GLFW.GLFW_KEY_LEFT:
-							increaseYaw(-degr);
-							break;
-						case GLFW.GLFW_KEY_RIGHT_BRACKET:
-							increaseRoll(degr);
-							break;
-						case GLFW.GLFW_KEY_LEFT_BRACKET:
-							increaseRoll(-degr);
-							break;
-						case GLFW.GLFW_KEY_T:
-							wireframe = !wireframe;
-							break;
+					if (key == GLFW_KEY_T) {
+						wireframe = !wireframe;
+					} else if (key == GLFW_KEY_R) {
+						lockHeight = !lockHeight;
 					}
+				} else if (action == GLFW_RELEASE) {
+					pressedKeys.remove(key);
 				}
-
 			}
-		});
+		};
+		GLFW.glfwSetKeyCallback(window.getWindow(), keyboardCallback);
+	}
+
+	/**
+	 * Update the camera position, to be called once per frame
+	 */
+	public void updatePosition() {
+		if (pressedKeys.contains(GLFW_KEY_W)) moveForward(MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_S)) moveForward(-MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_A)) moveSideways(-MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_D)) moveSideways(MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_Q)) moveUp(-MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_E)) moveUp(MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_UP)) increasePitch(LOOK_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_DOWN)) increasePitch(-LOOK_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_LEFT)) increaseYaw(-LOOK_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_RIGHT)) increaseYaw(LOOK_SPEED);
 	}
 
 	/**
@@ -122,7 +112,7 @@ public class Camera {
 	 * @return Right direction of the camera
 	 */
 	public Vector3f getRight() {
-		return getForward().cross(getUp()).normalize();
+		return getForward().cross(UP).normalize();
 	}
 
 	/**
@@ -132,7 +122,7 @@ public class Camera {
 	 */
 	public Vector3f getUp() {
 		// NB: Up always straight up disregarding camera rotations
-		return new Vector3f(UP);
+		return getForward().cross(getRight()).normalize();
 	}
 
 
@@ -142,7 +132,12 @@ public class Camera {
 	 * @param dist Distance to move the camera
 	 */
 	public void moveForward(float dist) {
-		position.add(getForward().mul(dist));
+		Vector3f forward = getForward();
+		if (lockHeight) {
+			forward.y = 0;
+			forward = forward.normalize();
+		}
+		position.add(forward.mul(dist));
 	}
 
 	/**
@@ -151,7 +146,12 @@ public class Camera {
 	 * @param dist Distance to move the camera
 	 */
 	public void moveSideways(float dist) {
-		position.add(getRight().mul(dist));
+		Vector3f sideways = getRight();
+		if (lockHeight) {
+			sideways.y = 0;
+			sideways = sideways.normalize();
+		}
+		position.add(sideways.mul(dist));
 	}
 
 	/**
@@ -160,7 +160,8 @@ public class Camera {
 	 * @param dist Distance to move the camera
 	 */
 	public void moveUp(float dist) {
-		position.add(getUp().mul(dist));
+		// NB: Always straight up
+		position.add(new Vector3f(UP).mul(dist));
 	}
 
 	/**

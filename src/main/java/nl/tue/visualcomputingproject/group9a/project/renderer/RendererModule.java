@@ -97,6 +97,9 @@ public class RendererModule extends Thread implements Module {
 		// Clear the frame
 		window.clearScreen();
 
+		// Update the camera position
+		camera.updatePosition();
+
 		// Attack the light to the camera
 		light.setPosition(camera.getPosition());
 

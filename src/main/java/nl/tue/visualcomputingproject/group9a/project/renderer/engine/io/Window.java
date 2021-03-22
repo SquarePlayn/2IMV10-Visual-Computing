@@ -40,6 +40,8 @@ public class Window {
 	@Setter
 	private boolean resized = false;
 
+	private GLFWWindowSizeCallback resizeCallback;
+
 
 	public Window(int width, int height, String title, double fps) {
 		this.width = width;
@@ -102,7 +104,7 @@ public class Window {
 	 * Creation of any GLFW listeners
 	 */
 	private void registerCallbacks() {
-		GLFW.glfwSetWindowSizeCallback(this.window, new GLFWWindowSizeCallback() {
+		resizeCallback = new GLFWWindowSizeCallback() {
 			@Override
 			public void invoke(long window, int w, int h) {
 				width = w;
@@ -114,7 +116,8 @@ public class Window {
 				// Mark that the window was resized
 				resized = true;
 			}
-		});
+		};
+		GLFW.glfwSetWindowSizeCallback(this.window, resizeCallback);
 	}
 
 	/**
@@ -195,6 +198,7 @@ public class Window {
 	 * Stop the window by force closing it
 	 */
 	public void stop() {
+		resizeCallback.free();
 		GLFW.glfwTerminate();
 	}
 }
