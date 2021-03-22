@@ -11,8 +11,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 import java.util.Collection;
 import java.util.HashSet;
 
-import static nl.tue.visualcomputingproject.group9a.project.common.Settings.LOOK_SPEED;
-import static nl.tue.visualcomputingproject.group9a.project.common.Settings.MOVE_SPEED;
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 @Getter
@@ -76,12 +75,12 @@ public class Camera {
 	 * Update the camera position, to be called once per frame
 	 */
 	public void updatePosition() {
-		if (pressedKeys.contains(GLFW_KEY_W)) moveForward(MOVE_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_S)) moveForward(-MOVE_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_A)) moveSideways(-MOVE_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_D)) moveSideways(MOVE_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_Q)) moveUp(-MOVE_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_E)) moveUp(MOVE_SPEED);
+		if (pressedKeys.contains(GLFW_KEY_W)) moveForward(getMoveSpeed());
+		if (pressedKeys.contains(GLFW_KEY_S)) moveForward(-getMoveSpeed());
+		if (pressedKeys.contains(GLFW_KEY_A)) moveSideways(-getMoveSpeed());
+		if (pressedKeys.contains(GLFW_KEY_D)) moveSideways(getMoveSpeed());
+		if (pressedKeys.contains(GLFW_KEY_Q)) moveUp(-getMoveSpeed());
+		if (pressedKeys.contains(GLFW_KEY_E)) moveUp(getMoveSpeed());
 		if (pressedKeys.contains(GLFW_KEY_UP)) increasePitch(LOOK_SPEED);
 		if (pressedKeys.contains(GLFW_KEY_DOWN)) increasePitch(-LOOK_SPEED);
 		if (pressedKeys.contains(GLFW_KEY_LEFT)) increaseYaw(-LOOK_SPEED);
@@ -121,7 +120,6 @@ public class Camera {
 	 * @return Upwards direction of the camera
 	 */
 	public Vector3f getUp() {
-		// NB: Up always straight up disregarding camera rotations
 		return getForward().cross(getRight()).normalize();
 	}
 
@@ -155,6 +153,23 @@ public class Camera {
 	}
 
 	/**
+	 * Get the speed the camera should go forwards/sideways at.
+	 */
+	private float getMoveSpeed() {
+		float height = position.y - getTerrainHeight();
+		float gmsp = GROUND_MOVE_SPEED_PERCENTAGE;
+		return (Math.max(0, height / 200) * (1 - gmsp) + gmsp) * MOVE_SPEED;
+	}
+
+	/**
+	 * Get the height of the terrain at the current position
+	 */
+	private float getTerrainHeight() {
+		// TODO
+		return 40;
+	}
+
+	/**
 	 * Move the camera in the upwards direction (not influenced by where the camera is looking)
 	 *
 	 * @param dist Distance to move the camera
@@ -165,12 +180,12 @@ public class Camera {
 	}
 
 	/**
-	 * Increase the pitch. Takes care of not being able to move over the bounds.
+	 * Increase the pitch. Takes care of not being able to move over the bounds, nor exactly on the bounds.
 	 *
 	 * @param degrees Angle in degrees to increase the pitch with
 	 */
 	public void increasePitch(float degrees) {
-		pitch = Math.max(-90, Math.min(90, pitch + degrees));
+		pitch = Math.max(-89.99f, Math.min(89.99f, pitch + degrees));
 	}
 
 	/**

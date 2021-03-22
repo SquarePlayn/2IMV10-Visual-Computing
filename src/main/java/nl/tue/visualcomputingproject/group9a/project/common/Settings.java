@@ -73,6 +73,7 @@ public final class Settings {
 	public static final float NEAR_PLANE = 0.1f;
 	public static final float FAR_PLANE = 40_000;
 	public static final float MOVE_SPEED = 3;
+	public static final float GROUND_MOVE_SPEED_PERCENTAGE = 0.2f;
 	public static final float LOOK_SPEED = 1;
 
 	/**
