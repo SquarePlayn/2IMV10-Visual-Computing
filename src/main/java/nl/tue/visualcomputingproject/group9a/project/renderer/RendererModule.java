@@ -63,64 +63,6 @@ public class RendererModule extends Thread implements Module {
 		this.eventBus = eventBus;
 		eventBus.register(this);
 		this.start();
-
-		// TODO Test territory
-/*
-		if (true) {
-			Collection<ChunkPosition> newChunks = new ArrayList<>();
-			final int DIST = 5;
-			for (int x = -DIST; x <= DIST; x++) {
-				for (int y = -DIST; y <= DIST; y++) {
-					if (Math.abs(x) + Math.abs(y) > DIST) continue;
-					ChunkPosition newChunk = new ChunkPosition(
-							162000 + Settings.CHUNK_WIDTH * x,  // Old: 150001
-							384300 + Settings.CHUNK_HEIGHT * y, // Old: 375001
-							Settings.CHUNK_WIDTH,
-							Settings.CHUNK_HEIGHT
-					);
-					newChunks.add(newChunk);
-				}
-			}
-			eventBus.post(new RendererChunkStatusEvent(
-					new ArrayList<>(),
-					new ArrayList<>(),
-					newChunks,
-					new ArrayList<>()
-			));
-
-		} else {
-			// Create a test event containing a simple square of 4 vertices / 6 indices
-
-			float dist = -1f;
-			float size = 0.5f;
-			Vector3f offset = new Vector3f(10, 10, 10);
-
-			MeshBufferManager meshManager = new MeshIntBufferManager(3, 2, false);
-			MeshBufferManager.createManagerFor(
-					MeshBufferType.TRIANGLES_CLOCKWISE_3_INT, 2);
-			meshManager.add(0, 1, 2);
-			meshManager.add(0, 3, 2);
-
-			VertexBufferManager vertexManager = new InterleavedVertexFloatBufferManager(4);
-			vertexManager.addVertex(new Vector3f(-size, size, dist).add(offset), new Vector3f());
-			vertexManager.addVertex(new Vector3f(size, size, dist).add(offset), new Vector3f()); // Top right has a point
-			vertexManager.addVertex(new Vector3f(size, -size, dist).add(offset), new Vector3f());
-			vertexManager.addVertex(new Vector3f(-size, -size, dist).add(offset), new Vector3f());
-
-			MeshChunkId meshChunkId = new MeshChunkId(
-					new ChunkPosition(1, 1, 10, 10),
-					QualityLevel.FIVE_BY_FIVE,
-					VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT,
-					MeshBufferType.TRIANGLES_CLOCKWISE_3_INT
-			);
-			eventBus.post(new ProcessorChunkLoadedEvent(new Chunk<>(
-					meshChunkId, new MeshChunkData(
-					vertexManager.finalizeBuffer(),
-					meshManager.finalizeBuffer()
-			)
-			)));
-		}
- */
 	}
 
 	@Override
@@ -153,15 +95,7 @@ public class RendererModule extends Thread implements Module {
 		chunkManager = new ChunkManager(eventBus);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
 
-		// TODO Remainder of this function is test territory
-
 		window.setBackgroundColor(new Vector3f(1.0f, 0.0f, 0.0f));
-
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_CULL_FACE);
-		GL11.glCullFace(GL11.GL_BACK);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glDepthFunc(GL11.GL_LESS);
 	}
 
 	private void runFrame() {
@@ -202,6 +136,7 @@ public class RendererModule extends Thread implements Module {
 		camera.cleanup();
 		shader.cleanup();
 		window.stop();
+		Loader.cleanup();
 	}
 
 	@Subscribe

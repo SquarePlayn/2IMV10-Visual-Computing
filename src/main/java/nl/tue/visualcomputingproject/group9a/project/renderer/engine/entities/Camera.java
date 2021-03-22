@@ -31,7 +31,7 @@ public class Camera {
 	// Other settings
 	private boolean wireframe = false;
 
-	GLFWKeyCallback keyboardCallback;
+	private GLFWKeyCallback keyboardCallback;
 
 	public Camera(Window window) {
 		this.window = window;

@@ -39,7 +39,7 @@ public class Window {
 		this.title = title;
 		this.fps = fps;
 
-		// TODO
+		// TODO Add sky-box
 		this.backgroundColor = new Vector3f(0.0f, 0.0f, 0.0f);
 
 		create();
@@ -70,6 +70,13 @@ public class Window {
 		// Give window capabilities to actually have something rendered on it
 		GL.createCapabilities();
 
+		// Set some rendering tactics
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_BACK);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LESS);
+
 		// Create window center on the main screen
 		GLFWVidMode videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
 		GLFW.glfwSetWindowPos(window, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2);
@@ -77,7 +84,8 @@ public class Window {
 		// Actually display / activate the window
 		GLFW.glfwShowWindow(window);
 
-		time = getTime();
+		// Set the initial time
+		time = getTimeSeconds();
 	}
 
 	/**
@@ -98,9 +106,12 @@ public class Window {
 		GLFW.glfwSwapBuffers(window);
 	}
 
+	/**
+	 * Hold execution until a new frame should be done.
+	 */
 	public void waitUntilUpdate() {
 		// Check how much time has passed since the last check
-		double nextTime = getTime();
+		double nextTime = getTimeSeconds();
 		double passedTime = nextTime - time;
 		time = nextTime;
 
@@ -116,42 +127,18 @@ public class Window {
 				e.printStackTrace();
 			}
 		}
+
+		// TODO Make frames continuous with frame skipping
 		processedTime %= timePerFrame;
 	}
-	
-	/**
-	 * @return Whether enough time has passed that the frame should be updated again
-	 * 
-	 * @deprecated This function is replaced by {@link #waitUntilUpdate()}.
-	 */
-	@Deprecated
-	public boolean shouldUpdate() {
-		// Check how much time has passed since the last check
-		double nextTime = getTime();
-		double passedTime = nextTime - time;
-		time = nextTime;
-
-		// Add this time to the total time waited
-		processedTime += passedTime;
-
-		// If waiting for longer than the frame time, subtract the time.
-		double timePerFrame = 1.0 / fps;
-		if (processedTime >= timePerFrame) {
-			processedTime -= timePerFrame;
-			return true;
-		} else {
-			return false;
-		}
-	}
 
 	/**
-	 * Get the current nano time in seconds
-	 * TODO Move this somewhere more logical than in the Window class
+	 * Get the current nano time in seconds.
 	 *
 	 * @return Current time in seconds
 	 */
-	private double getTime() {
-		return System.nanoTime() / 1000000000.0;
+	private static double getTimeSeconds() {
+		return System.nanoTime() / 1_000_000_000.0;
 	}
 
 	/**

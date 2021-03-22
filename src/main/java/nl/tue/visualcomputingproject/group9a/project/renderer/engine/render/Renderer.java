@@ -10,11 +10,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-public class Renderer {
-	private static final float FOV = 70;
-	private static final float NEAR_PLANE = 0.1f;
-	private static final float FAR_PLANE = 40000;
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 
+public class Renderer {
 	/**
 	 * The window the renderer is rendering on
 	 */
@@ -49,10 +47,6 @@ public class Renderer {
 		GL20.glEnableVertexAttribArray(1); // Normals
 
 		// Load transformation matrix into the shader
-		// TODO Wrap model in entity or something to be able to move it without modifying VBOs
-//		Matrix4f transformationMatrix = Maths.createTransformationMatrix(
-//				new Vector3f(0, 0, 0), 0, 0, 0, 1
-//		);
 		Matrix4f transformationMatrix = model.getModelMatrix();
 		shader.loadTransformationMatrix(transformationMatrix);
 

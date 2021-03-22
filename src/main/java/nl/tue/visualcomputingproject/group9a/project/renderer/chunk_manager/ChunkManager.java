@@ -73,6 +73,10 @@ public class ChunkManager {
 		}
 	}
 
+	/**
+	 * Send a Renderer chunk status event, informing other modules about which chunks are loaded, pending,
+	 * newly requested and recently removed.
+	 */
 	private void sendUpdate() {
 		for (ChunkPosition pos : request) {
 			LOGGER.info("Requesting " + pos);
@@ -97,6 +101,9 @@ public class ChunkManager {
 		loaded.clear();
 	}
 
+	/**
+	 * Update which chunks should be (un)loaded
+	 */
 	private void updateStatus(Camera camera, double time) {
 		// Check for chunks to load
 		Collection<ChunkPosition> loadChunks = getChunksInRadius(camera, Settings.CHUNK_LOAD_DISTANCE);
