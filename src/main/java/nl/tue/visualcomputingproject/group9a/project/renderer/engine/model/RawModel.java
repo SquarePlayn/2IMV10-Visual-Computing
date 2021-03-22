@@ -11,6 +11,6 @@ public class RawModel {
 	private final int vaoId;
 	private final int indicesCount;
 	private final Matrix4f modelMatrix;
-	private final Iterable<Integer> vboIds;
+	private final Collection<Integer> vboIds;
 
 }

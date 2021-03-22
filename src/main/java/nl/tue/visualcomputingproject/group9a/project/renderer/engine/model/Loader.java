@@ -79,8 +79,16 @@ public class Loader {
 		);
 	}
 
+	/**
+	 * Unload the GPU data (VAO and VBOs) of a model
+	 *
+	 * @param model Model to unload
+	 */
 	public static void unloadModel(RawModel model) {
-		// TODO Free VAO and VBOs of model
+		vbos.removeAll(model.getVboIds());
+		model.getVboIds().forEach(GL15::glDeleteBuffers);
+		vaos.remove(model.getVaoId());
+		GL30.glDeleteVertexArrays(model.getVaoId());
 	}
 
 	/**
