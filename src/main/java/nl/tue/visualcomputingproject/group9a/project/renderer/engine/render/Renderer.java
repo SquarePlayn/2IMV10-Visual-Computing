@@ -5,9 +5,7 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Ca
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
@@ -46,7 +44,7 @@ public class Renderer {
 	 */
 	public void render(RawModel model, StaticShader shader, Camera camera) {
 		// Activate the VAO and VBOs
-		GL30.glBindVertexArray(model.getVaoID());
+		GL30.glBindVertexArray(model.getVaoId());
 		GL20.glEnableVertexAttribArray(0); // Positions
 		GL20.glEnableVertexAttribArray(1); // Normals
 

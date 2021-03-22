@@ -63,7 +63,6 @@ public final class Settings {
 	 */
 	public static final String WINDOW_NAME = "3D terrain reconstruction";
 	public static final Vector2i INITIAL_WINDOW_SIZE = new Vector2i(1000, 800);
-	public static final Vector2i INITIAL_WINDOW_POSITION = new Vector2i(0, 0);
 	public static final int FPS = 30;
 
 	/**
