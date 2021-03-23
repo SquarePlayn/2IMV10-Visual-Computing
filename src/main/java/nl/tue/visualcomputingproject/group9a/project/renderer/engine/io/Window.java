@@ -2,9 +2,11 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
+import org.lwjgl.glfw.GLFWWindowSizeCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL42;
@@ -13,8 +15,12 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
 
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
+
 public class Window {
-	/** The logger of this class. */
+	/**
+	 * The logger of this class.
+	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Getter
@@ -32,6 +38,12 @@ public class Window {
 	private double time;
 	private double processedTime = 0;
 
+	@Getter
+	@Setter
+	private boolean resized = true;
+
+	private GLFWWindowSizeCallback resizeCallback;
+
 
 	public Window(int width, int height, String title, double fps) {
 		this.width = width;
@@ -39,7 +51,7 @@ public class Window {
 		this.title = title;
 		this.fps = fps;
 
-		// TODO
+		// TODO Add sky-box
 		this.backgroundColor = new Vector3f(0.0f, 0.0f, 0.0f);
 
 		create();
@@ -56,7 +68,7 @@ public class Window {
 
 		// Set some window settings and create the window
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE); // Make window invisible until it's actually loaded
-		GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE); // Not resizable. TODO
+		GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_TRUE); // Resizable
 		window = GLFW.glfwCreateWindow(width, height, title, 0, 0); // Last 2 are for fullscreen and multi-monitor
 
 		if (window == 0) {
@@ -70,6 +82,13 @@ public class Window {
 		// Give window capabilities to actually have something rendered on it
 		GL.createCapabilities();
 
+		// Set some rendering tactics
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_BACK);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glDepthFunc(GL11.GL_LESS);
+
 		// Create window center on the main screen
 		GLFWVidMode videoMode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
 		GLFW.glfwSetWindowPos(window, (videoMode.width() - width) / 2, (videoMode.height() - height) / 2);
@@ -77,7 +96,30 @@ public class Window {
 		// Actually display / activate the window
 		GLFW.glfwShowWindow(window);
 
-		time = getTime();
+		// Set the initial time
+		time = getTimeSeconds();
+
+		registerCallbacks();
+	}
+
+	/**
+	 * Creation of any GLFW listeners
+	 */
+	private void registerCallbacks() {
+		resizeCallback = new GLFWWindowSizeCallback() {
+			@Override
+			public void invoke(long window, int w, int h) {
+				width = w;
+				height = h;
+
+				// Set the entire viewport for rendering
+				GL11.glViewport(0, 0, width, height);
+
+				// Mark that the window was resized
+				resized = true;
+			}
+		};
+		GLFW.glfwSetWindowSizeCallback(this.window, resizeCallback);
 	}
 
 	/**
@@ -98,9 +140,12 @@ public class Window {
 		GLFW.glfwSwapBuffers(window);
 	}
 
+	/**
+	 * Hold execution until a new frame should be done.
+	 */
 	public void waitUntilUpdate() {
 		// Check how much time has passed since the last check
-		double nextTime = getTime();
+		double nextTime = getTimeSeconds();
 		double passedTime = nextTime - time;
 		time = nextTime;
 
@@ -116,42 +161,30 @@ public class Window {
 				e.printStackTrace();
 			}
 		}
+
+		// TODO Make frames continuous with frame skipping
 		processedTime %= timePerFrame;
 	}
-	
+
 	/**
-	 * @return Whether enough time has passed that the frame should be updated again
-	 * 
-	 * @deprecated This function is replaced by {@link #waitUntilUpdate()}.
+	 * Calculate the projection matrix for this window
 	 */
-	@Deprecated
-	public boolean shouldUpdate() {
-		// Check how much time has passed since the last check
-		double nextTime = getTime();
-		double passedTime = nextTime - time;
-		time = nextTime;
-
-		// Add this time to the total time waited
-		processedTime += passedTime;
-
-		// If waiting for longer than the frame time, subtract the time.
-		double timePerFrame = 1.0 / fps;
-		if (processedTime >= timePerFrame) {
-			processedTime -= timePerFrame;
-			return true;
-		} else {
-			return false;
-		}
+	public Matrix4f getProjectionMatrix() {
+		return new Matrix4f().perspective(
+				(float) Math.toRadians(FOV),
+				(float) width / (float) height,
+				NEAR_PLANE,
+				FAR_PLANE
+		);
 	}
 
 	/**
-	 * Get the current nano time in seconds
-	 * TODO Move this somewhere more logical than in the Window class
+	 * Get the current nano time in seconds.
 	 *
 	 * @return Current time in seconds
 	 */
-	private double getTime() {
-		return System.nanoTime() / 1000000000.0;
+	private static double getTimeSeconds() {
+		return System.nanoTime() / 1_000_000_000.0;
 	}
 
 	/**
@@ -167,6 +200,7 @@ public class Window {
 	 * Stop the window by force closing it
 	 */
 	public void stop() {
+		resizeCallback.free();
 		GLFW.glfwTerminate();
 	}
 }

@@ -1,42 +1,17 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.render;
 
-import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Skybox;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.SkyboxShader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 public class Renderer {
-	private static final float FOV = 70;
-	private static final float NEAR_PLANE = 0.1f;
-	private static final float FAR_PLANE = 40000;
-
-	/**
-	 * The window the renderer is rendering on
-	 */
-	private final Window window;
-
-	@Getter
-	private Matrix4f projectionMatrix;
-
-	public Renderer(Window window, StaticShader shader) {
-		this.window = window;
-
-		// Create the projection matrix
-		createProjectionMatrix();
-
-		// Load the projection matrix into the shader
-		shader.start();
-		shader.loadProjectionMatrix(projectionMatrix);
-		shader.stop();
-	}
-
 	/**
 	 * Render a model to the screen
 	 *
@@ -44,17 +19,13 @@ public class Renderer {
 	 * @param shader Shader to render the model with
 	 * @param camera Camera of the screen currently active
 	 */
-	public void render(RawModel model, StaticShader shader, Camera camera) {
+	public static void renderModel(RawModel model, StaticShader shader, Camera camera) {
 		// Activate the VAO and VBOs
-		GL30.glBindVertexArray(model.getVaoID());
+		GL30.glBindVertexArray(model.getVaoId());
 		GL20.glEnableVertexAttribArray(0); // Positions
 		GL20.glEnableVertexAttribArray(1); // Normals
 
 		// Load transformation matrix into the shader
-		// TODO Wrap model in entity or something to be able to move it without modifying VBOs
-//		Matrix4f transformationMatrix = Maths.createTransformationMatrix(
-//				new Vector3f(0, 0, 0), 0, 0, 0, 1
-//		);
 		Matrix4f transformationMatrix = model.getModelMatrix();
 		shader.loadTransformationMatrix(transformationMatrix);
 
@@ -73,16 +44,29 @@ public class Renderer {
 	}
 
 	/**
-	 * Create the projection matrix for this rendering
+	 * Render a skybox to the screen
+	 *
+	 * @param skybox Skybox to render
+	 * @param shader Shader to render the skybox with
+	 * @param camera Camera of the screen currently
 	 */
-	private void createProjectionMatrix() {
-		float aspectRatio = (float) window.getWidth() / (float) window.getHeight();
+	public static void renderSkybox(Skybox skybox, SkyboxShader shader, Camera camera) {
+		// Start and setup shader
+		shader.loadViewMatrix(camera);
 
-		projectionMatrix = new Matrix4f().perspective(
-				(float) Math.toRadians(FOV),
-				aspectRatio,
-				NEAR_PLANE,
-				FAR_PLANE
-		);
+		// Load the model
+		GL30.glBindVertexArray(skybox.getModel().getVaoId());
+		// Enable the positions attribute
+		GL20.glEnableVertexAttribArray(0);
+		// Activate the texture
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skybox.getTexture());
+
+		// Mark the vertices as triangles in order to draw
+		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, skybox.getModel().getIndicesCount());
+
+		// Unbind everything
+		GL20.glDisableVertexAttribArray(0);
+		GL30.glBindVertexArray(0);
 	}
 }

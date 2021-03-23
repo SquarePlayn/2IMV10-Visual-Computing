@@ -10,6 +10,7 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Ca
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ChunkManager {
@@ -43,9 +45,10 @@ public class ChunkManager {
 	private final HashMap<ChunkPosition, RawModel> positionModel = new HashMap<>();
 	private final HashMap<ChunkPosition, QualityLevel> positionQuality = new HashMap<>();
 
+	/**
+	 * The last time in seconds at which a chunk update was sent.
+	 */
 	private double prevUpdateTime = 0;
-
-	private static final double updateInterval = 10; // seconds TODO Move
 
 	public ChunkManager(EventBus eventBus) {
 		this.eventBus = eventBus;
@@ -64,12 +67,16 @@ public class ChunkManager {
 
 		updateStatus(camera, time);
 
-		if (time - prevUpdateTime >= updateInterval) {
+		if (time - prevUpdateTime >= Settings.CHUNK_UPDATE_INTERVAL) {
 			sendUpdate();
 			prevUpdateTime = time;
 		}
 	}
 
+	/**
+	 * Send a Renderer chunk status event, informing other modules about which chunks are loaded, pending,
+	 * newly requested and recently removed.
+	 */
 	private void sendUpdate() {
 		for (ChunkPosition pos : request) {
 			LOGGER.info("Requesting " + pos);
@@ -94,36 +101,76 @@ public class ChunkManager {
 		loaded.clear();
 	}
 
+	/**
+	 * Update which chunks should be (un)loaded
+	 */
 	private void updateStatus(Camera camera, double time) {
+		// Check for chunks to load
+		Collection<ChunkPosition> loadChunks = getChunksInRadius(camera, Settings.CHUNK_LOAD_DISTANCE);
+		Collection<ChunkPosition> toLoad = loadChunks.stream().filter(cp -> !(
+				request.contains(cp) || pending.contains(cp) || positionModel.containsKey(cp)
+		)).collect(Collectors.toCollection(ArrayList::new));
+		toLoad.forEach(cp -> LOGGER.info("Entering chunk " + cp));
+		request.addAll(toLoad);
+
+		// Check for chunks to unload
+		Vector2i currentChunkIndex = getChunkPosition(camera);
+		int chunkUnloadRangeX = (int) Math.ceil(Settings.CHUNK_UNLOAD_DISTANCE / Settings.CHUNK_WIDTH);
+		int chunkUnloadRangeY = (int) Math.ceil(Settings.CHUNK_UNLOAD_DISTANCE / Settings.CHUNK_HEIGHT);
+		Collection<ChunkPosition> toUnload = positionModel.keySet().stream()
+				.filter(cp -> {
+					int chunkIX = (int) Math.floor(cp.getX() / Settings.CHUNK_WIDTH);
+					int chunkIY = (int) Math.floor(cp.getY() / Settings.CHUNK_WIDTH);
+					return Math.abs(chunkIX - currentChunkIndex.x) >= chunkUnloadRangeX ||
+							Math.abs(chunkIY - currentChunkIndex.y) >= chunkUnloadRangeY;
+				}).collect(Collectors.toCollection(ArrayList::new));
+		toUnload.forEach(cp -> LOGGER.info("Leaving chunk " + cp));
+		toUnload.forEach(this::unload);
+	}
+
+	/**
+	 * Unload a chunk
+	 */
+	private void unload(ChunkPosition cp) {
+		RawModel model = positionModel.get(cp);
+		models.remove(model);
+		positionModel.remove(cp);
+		positionQuality.remove(cp);
+		Loader.unloadModel(model);
+		removed.add(cp);
+	}
+
+	/**
+	 * Check the chunk index of the chunk the camera is in
+	 */
+	private Vector2i getChunkPosition(Camera camera) {
 		Vector3f position = camera.getPosition();
+		int chunkIX = (int) Math.floor(position.x / Settings.CHUNK_WIDTH);
+		int chunkIY = (int) Math.floor(position.z / Settings.CHUNK_HEIGHT);
+		return new Vector2i(chunkIX, chunkIY);
+	}
 
-		// Chunk index of the current chunk we're in
-		int chunkX = (int) Math.floor(position.x / Settings.CHUNK_WIDTH);
-		int chunkY = (int) Math.floor(position.z / Settings.CHUNK_HEIGHT);
+	/**
+	 * Find all chunk positions in a certain radius around the camera
+	 */
+	private Collection<ChunkPosition> getChunksInRadius(Camera camera, double radius) {
+		Collection<ChunkPosition> chunks = new ArrayList<>();
 
-		// TODO Unload chunks that are too far away
-
-		double loadDistance = 1000; // Distance to load chunk in. TODO Move
-		int chunkRangeX = (int) Math.ceil(loadDistance / Settings.CHUNK_WIDTH);
-		int chunkRangeY = (int) Math.ceil(loadDistance / Settings.CHUNK_HEIGHT);
-
+		// Go over the grid, adding each chunk
+		Vector2i currentChunkIndex = getChunkPosition(camera);
+		int chunkRangeX = (int) Math.ceil(radius / Settings.CHUNK_WIDTH);
+		int chunkRangeY = (int) Math.ceil(radius / Settings.CHUNK_HEIGHT);
 		for (int cdx = -chunkRangeX; cdx <= chunkRangeX; cdx++) {
-			int cx = chunkX + cdx;
+			int cx = currentChunkIndex.x + cdx;
 			double x = cx * Settings.CHUNK_WIDTH;
 			for (int cdy = -chunkRangeY; cdy <= chunkRangeY; cdy++) {
-				int cy = chunkY + cdy;
+				int cy = currentChunkIndex.y + cdy;
 				double y = cy * Settings.CHUNK_HEIGHT;
-				ChunkPosition chunkPosition = new ChunkPosition(x, y, Settings.CHUNK_WIDTH, Settings.CHUNK_HEIGHT);
-				if (!(request.contains(chunkPosition) ||
-						pending.contains(chunkPosition) ||
-						positionModel.containsKey(chunkPosition))) {
-					// Chunk not requested / loaded yet, so request it
-					LOGGER.info("Entering chunk " + chunkPosition);
-					request.add(chunkPosition);
-				}
+				chunks.add(new ChunkPosition(x, y, Settings.CHUNK_WIDTH, Settings.CHUNK_HEIGHT));
 			}
 		}
 
+		return chunks;
 	}
 
 	/**
@@ -140,6 +187,7 @@ public class ChunkManager {
 
 			// Notify that the chunk was received
 			loaded.add(chunkId);
+			pending.remove(chunkId.getPosition());
 
 			// Only add the new chunk if it's not loaded yet or better than the currently loaded version
 			if (!positionQuality.containsKey(chunkPosition) ||
@@ -153,7 +201,9 @@ public class ChunkManager {
 
 				// Remove current chunk model if present
 				if (positionModel.containsKey(chunkPosition)) {
+					RawModel oldModel = positionModel.get(chunkPosition);
 					models.remove(positionModel.get(chunkPosition));
+					Loader.unloadModel(oldModel);
 				}
 
 				// Add the new model

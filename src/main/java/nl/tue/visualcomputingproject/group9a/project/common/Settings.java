@@ -3,6 +3,8 @@ package nl.tue.visualcomputingproject.group9a.project.common;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshBufferType;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.QualityLevel;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.VertexBufferType;
+import org.joml.Vector2i;
+import org.joml.Vector3f;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
@@ -55,5 +57,42 @@ public final class Settings {
 	public static final VertexBufferType VERTEX_TYPE = VertexBufferType.INTERLEAVED_VERTEX_3_FLOAT_NORMAL_3_FLOAT;
 	/** The type used in the mesh buffer. */
 	public static final MeshBufferType MESH_TYPE = MeshBufferType.TRIANGLES_COUNTER_CLOCKWISE_3_INT;
+
+	/**
+	 * Window settings
+	 */
+	public static final String WINDOW_NAME = "3D terrain reconstruction";
+	public static final Vector2i INITIAL_WINDOW_SIZE = new Vector2i(1000, 800);
+	public static final int FPS = 30;
+
+	/**
+	 * Camera settings
+	 */
+	public static final Vector3f INITIAL_POSITION = new Vector3f(162000, 100, -384300);
+	public static final float FOV = 70;
+	public static final float NEAR_PLANE = 0.1f;
+	public static final float FAR_PLANE = 40_000;
+	public static final float MOVE_SPEED = 3;
+	public static final float GROUND_MOVE_SPEED_PERCENTAGE = 0.2f;
+	public static final float LOOK_SPEED = 1;
+
+	/**
+	 * Chunk update settings
+	 */
+	public static final double CHUNK_UPDATE_INTERVAL = 10;
+	public static final double CHUNK_LOAD_DISTANCE = 1000;
+	public static final double CHUNK_UNLOAD_DISTANCE = 1500;
+
+	/**
+	 * Shader settings
+	 */
+	public static final Vector3f LIGHT_COLOR = new Vector3f(1, 1, 1);
+
+	/**
+	 * Skybox textures, in order left, right, top, bottom, back, front
+	 */
+	public static final String[] SKYBOX_TEXTURE_FILES = new String[]{
+		"left", "right", "top", "bottom", "back", "front"
+	};
 	
 }
