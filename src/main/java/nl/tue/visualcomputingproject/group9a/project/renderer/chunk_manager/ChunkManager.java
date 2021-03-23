@@ -214,10 +214,8 @@ public class ChunkManager {
 		int iz = (int) Math.floor((z - offset.y)  / space);
 
 		if (ix >= 0 && ix < numX && iz >= 0 && iz < numZ) {
-			System.out.println("Position " + ix + " " + iz + " = " + heights[ix][iz]);
 			return Optional.of(heights[ix][iz]);
 		} else {
-			System.out.println("Position " + ix + " " + iz + " unknown");
 			return Optional.empty();
 		}
 

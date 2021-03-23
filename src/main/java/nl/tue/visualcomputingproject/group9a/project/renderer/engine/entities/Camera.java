@@ -74,6 +74,8 @@ public class Camera {
 						lockHeight = !lockHeight;
 					} else if (key == GLFW_KEY_F) {
 						walking = !walking;
+					} else if (key == GLFW_KEY_P) {
+						System.out.println("Camera position: " + position);
 					}
 
 
