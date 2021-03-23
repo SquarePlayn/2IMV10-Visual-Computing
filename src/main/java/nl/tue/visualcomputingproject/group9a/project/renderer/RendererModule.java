@@ -87,11 +87,11 @@ public class RendererModule extends Thread implements Module {
 		LOGGER.info("Working directory: " + System.getProperty("user.dir"));
 
 		// Create instances
+		chunkManager = new ChunkManager(eventBus);
 		window = new Window(INITIAL_WINDOW_SIZE.x, INITIAL_WINDOW_SIZE.y, WINDOW_NAME, FPS);
 		shader = new StaticShader();
 		skyboxShader = new SkyboxShader();
-		camera = new Camera(window);
-		chunkManager = new ChunkManager(eventBus);
+		camera = new Camera(window, chunkManager);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
 		skybox = new Skybox(Settings.SKYBOX_TEXTURE_FILES);
 

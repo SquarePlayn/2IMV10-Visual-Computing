@@ -16,9 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
+import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
+
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ChunkManager {
@@ -44,6 +47,7 @@ public class ChunkManager {
 
 	private final HashMap<ChunkPosition, RawModel> positionModel = new HashMap<>();
 	private final HashMap<ChunkPosition, QualityLevel> positionQuality = new HashMap<>();
+	private final HashMap<ChunkPosition, MeshChunkData> positionData = new HashMap<>();
 
 	/**
 	 * The last time in seconds at which a chunk update was sent.
@@ -115,12 +119,12 @@ public class ChunkManager {
 
 		// Check for chunks to unload
 		Vector2i currentChunkIndex = getChunkPosition(camera);
-		int chunkUnloadRangeX = (int) Math.ceil(Settings.CHUNK_UNLOAD_DISTANCE / Settings.CHUNK_WIDTH);
-		int chunkUnloadRangeY = (int) Math.ceil(Settings.CHUNK_UNLOAD_DISTANCE / Settings.CHUNK_HEIGHT);
+		int chunkUnloadRangeX = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_WIDTH);
+		int chunkUnloadRangeY = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_HEIGHT);
 		Collection<ChunkPosition> toUnload = positionModel.keySet().stream()
 				.filter(cp -> {
-					int chunkIX = (int) Math.floor(cp.getX() / Settings.CHUNK_WIDTH);
-					int chunkIY = (int) Math.floor(cp.getY() / Settings.CHUNK_WIDTH);
+					int chunkIX = (int) Math.floor(cp.getX() / CHUNK_WIDTH);
+					int chunkIY = (int) Math.floor(cp.getY() / CHUNK_WIDTH);
 					return Math.abs(chunkIX - currentChunkIndex.x) >= chunkUnloadRangeX ||
 							Math.abs(chunkIY - currentChunkIndex.y) >= chunkUnloadRangeY;
 				}).collect(Collectors.toCollection(ArrayList::new));
@@ -136,6 +140,7 @@ public class ChunkManager {
 		models.remove(model);
 		positionModel.remove(cp);
 		positionQuality.remove(cp);
+		positionData.remove(cp);
 		Loader.unloadModel(model);
 		removed.add(cp);
 	}
@@ -145,8 +150,8 @@ public class ChunkManager {
 	 */
 	private Vector2i getChunkPosition(Camera camera) {
 		Vector3f position = camera.getPosition();
-		int chunkIX = (int) Math.floor(position.x / Settings.CHUNK_WIDTH);
-		int chunkIY = (int) Math.floor(position.z / Settings.CHUNK_HEIGHT);
+		int chunkIX = (int) Math.floor(position.x / CHUNK_WIDTH);
+		int chunkIY = (int) Math.floor(position.z / CHUNK_HEIGHT);
 		return new Vector2i(chunkIX, chunkIY);
 	}
 
@@ -158,19 +163,59 @@ public class ChunkManager {
 
 		// Go over the grid, adding each chunk
 		Vector2i currentChunkIndex = getChunkPosition(camera);
-		int chunkRangeX = (int) Math.ceil(radius / Settings.CHUNK_WIDTH);
-		int chunkRangeY = (int) Math.ceil(radius / Settings.CHUNK_HEIGHT);
+		int chunkRangeX = (int) Math.ceil(radius / CHUNK_WIDTH);
+		int chunkRangeY = (int) Math.ceil(radius / CHUNK_HEIGHT);
 		for (int cdx = -chunkRangeX; cdx <= chunkRangeX; cdx++) {
 			int cx = currentChunkIndex.x + cdx;
-			double x = cx * Settings.CHUNK_WIDTH;
+			double x = cx * CHUNK_WIDTH;
 			for (int cdy = -chunkRangeY; cdy <= chunkRangeY; cdy++) {
 				int cy = currentChunkIndex.y + cdy;
 				double y = cy * Settings.CHUNK_HEIGHT;
-				chunks.add(new ChunkPosition(x, y, Settings.CHUNK_WIDTH, Settings.CHUNK_HEIGHT));
+				chunks.add(new ChunkPosition(x, y, CHUNK_WIDTH, CHUNK_HEIGHT));
 			}
 		}
 
 		return chunks;
+	}
+
+	/**
+	 * Get the height at some position on the map, or null if unknown
+	 */
+	public Optional<Float> getHeight(float x, float z) {
+		int chunkIX = (int) Math.floor(x / CHUNK_WIDTH);
+		int chunkIY = (int) Math.floor(z / Settings.CHUNK_HEIGHT);
+		ChunkPosition chunk = new ChunkPosition(chunkIX * CHUNK_WIDTH, chunkIY * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT);
+
+		if (!positionData.containsKey(chunk)) {
+			return Optional.empty();
+		}
+
+		FloatBuffer data = positionData.get(chunk).getVertexBuffer();
+
+		double space = positionQuality.get(chunk) == QualityLevel.FIVE_BY_FIVE ? 5 : 0.5;
+		int numX = (int) (Math.ceil(CHUNK_WIDTH / space) + 1);
+		int numZ = (int) (Math.ceil(CHUNK_HEIGHT / space) + 1);
+		float[][] heights = new float[numX][numZ];
+		for (int i = 0; i < data.remaining(); i += 6) {
+			int ix = (int) Math.floor(data.get(i) / space);
+			int iz = (int) Math.floor(data.get(i + 2) / space);
+			if (ix > 0 && ix < numX && iz >= 0 && iz < numZ) {
+				heights[ix][iz] = data.get(i + 1);
+			}
+		}
+
+		Vector2f offset = positionData.get(chunk).getOffset();
+		int ix = (int) Math.floor((x - offset.x)  / space);
+		int iz = (int) Math.floor((z - offset.y)  / space);
+
+		if (ix >= 0 && ix < numX && iz >= 0 && iz < numZ) {
+			System.out.println("Position " + ix + " " + iz + " = " + heights[ix][iz]);
+			return Optional.of(heights[ix][iz]);
+		} else {
+			System.out.println("Position " + ix + " " + iz + " unknown");
+			return Optional.empty();
+		}
+
 	}
 
 	/**
@@ -211,6 +256,7 @@ public class ChunkManager {
 				models.add(newModel);
 				positionModel.put(chunkPosition, newModel);
 				positionQuality.put(chunkPosition, qualityLevel);
+				positionData.put(chunkPosition, chunk.getData());
 			}
 		}
 	}

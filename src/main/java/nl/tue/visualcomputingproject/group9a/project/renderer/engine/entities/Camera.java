@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities;
 import lombok.Getter;
 import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -10,6 +11,7 @@ import org.lwjgl.glfw.GLFWKeyCallback;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -27,6 +29,11 @@ public class Camera {
 	 */
 	private final Window window;
 
+	/**
+	 * The chunk manager used to fetch terrain heights
+	 */
+	private final ChunkManager chunkManager;
+
 	Vector3f position = Settings.INITIAL_POSITION;
 
 	// Rotational variables
@@ -37,14 +44,16 @@ public class Camera {
 	// Other settings
 	private boolean wireframe = false;
 	private boolean lockHeight = true;
+	private boolean walking = false;
 	private float fov = FOV;
 
 	private GLFWKeyCallback keyboardCallback;
 
 	private Collection<Integer> pressedKeys = new HashSet<>();
 
-	public Camera(Window window) {
+	public Camera(Window window, ChunkManager chunkManager) {
 		this.window = window;
+		this.chunkManager = chunkManager;
 
 		registerInputCallbacks();
 	}
@@ -63,6 +72,8 @@ public class Camera {
 						wireframe = !wireframe;
 					} else if (key == GLFW_KEY_R) {
 						lockHeight = !lockHeight;
+					} else if (key == GLFW_KEY_F) {
+						walking = !walking;
 					}
 
 
@@ -97,6 +108,11 @@ public class Camera {
 		if (pressedKeys.contains(GLFW_KEY_DOWN)) increasePitch(-LOOK_SPEED);
 		if (pressedKeys.contains(GLFW_KEY_LEFT)) increaseYaw(-LOOK_SPEED);
 		if (pressedKeys.contains(GLFW_KEY_RIGHT)) increaseYaw(LOOK_SPEED);
+
+		if (walking) {
+			Optional<Float> terrainHeight = chunkManager.getHeight(position.x, position.z);
+			terrainHeight.ifPresent(height -> position.y = height + WALK_HEIGHT);
+		}
 	}
 
 	/**
