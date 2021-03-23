@@ -18,7 +18,9 @@ import java.lang.invoke.MethodHandles;
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 
 public class Window {
-	/** The logger of this class. */
+	/**
+	 * The logger of this class.
+	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Getter
@@ -38,7 +40,7 @@ public class Window {
 
 	@Getter
 	@Setter
-	private boolean resized = false;
+	private boolean resized = true;
 
 	private GLFWWindowSizeCallback resizeCallback;
 

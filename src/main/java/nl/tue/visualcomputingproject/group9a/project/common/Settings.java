@@ -87,5 +87,12 @@ public final class Settings {
 	 * Shader settings
 	 */
 	public static final Vector3f LIGHT_COLOR = new Vector3f(1, 1, 1);
+
+	/**
+	 * Skybox textures, in order left, right, top, bottom, back, front
+	 */
+	public static final String[] SKYBOX_TEXTURE_FILES = new String[]{
+		"left", "right", "top", "bottom", "back", "front"
+	};
 	
 }

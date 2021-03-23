@@ -53,6 +53,8 @@ dependencies {
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 
+    implementation("im.bci:pngdecoder:0.13")
+
     implementation("org.lwjgl", "lwjgl")
     implementation("org.lwjgl", "lwjgl-assimp")
     implementation("org.lwjgl", "lwjgl-bgfx")

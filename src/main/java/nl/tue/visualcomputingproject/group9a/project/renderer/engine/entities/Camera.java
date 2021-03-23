@@ -108,6 +108,7 @@ public class Camera {
 
 	/**
 	 * Get the direction going right from the camera
+	 *
 	 * @return Right direction of the camera
 	 */
 	public Vector3f getRight() {
@@ -122,7 +123,6 @@ public class Camera {
 	public Vector3f getUp() {
 		return getForward().cross(getRight()).normalize();
 	}
-
 
 	/**
 	 * Move the camera in the viewed direction

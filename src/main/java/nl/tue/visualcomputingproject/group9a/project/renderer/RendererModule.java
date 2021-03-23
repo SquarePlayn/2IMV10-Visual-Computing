@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
@@ -11,7 +12,9 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Li
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Skybox;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.render.Renderer;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.SkyboxShader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders.StaticShader;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
@@ -42,10 +45,11 @@ public class RendererModule extends Thread implements Module {
 
 	private Window window;
 	private StaticShader shader;
-	private Renderer renderer;
+	private SkyboxShader skyboxShader;
 	private Camera camera;
 	private ChunkManager chunkManager;
 	private Light light;
+	private Skybox skybox;
 
 	/**
 	 * Models other than chunks that are to be rendered.
@@ -85,10 +89,11 @@ public class RendererModule extends Thread implements Module {
 		// Create instances
 		window = new Window(INITIAL_WINDOW_SIZE.x, INITIAL_WINDOW_SIZE.y, WINDOW_NAME, FPS);
 		shader = new StaticShader();
-		renderer = new Renderer();
+		skyboxShader = new SkyboxShader();
 		camera = new Camera(window);
 		chunkManager = new ChunkManager(eventBus);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
+		skybox = new Skybox(Settings.SKYBOX_TEXTURE_FILES);
 
 		window.setBackgroundColor(new Vector3f(1.0f, 0.0f, 0.0f));
 	}
@@ -108,6 +113,9 @@ public class RendererModule extends Thread implements Module {
 			shader.start();
 			shader.loadProjectionMatrix(window);
 			shader.stop();
+			skyboxShader.start();
+			skyboxShader.loadProjectionMatrix(window);
+			skyboxShader.stop();
 			window.setResized(false);
 		}
 
@@ -116,12 +124,17 @@ public class RendererModule extends Thread implements Module {
 		shader.loadLight(light);
 		shader.loadTime((float) (System.nanoTime() * 1000_000_000.0));
 		for (RawModel model : models) {
-			renderer.render(model, shader, camera);
+			Renderer.renderModel(model, shader, camera);
 		}
 		for (RawModel chunk : chunkManager.getModels()) {
-			renderer.render(chunk, shader, camera);
+			Renderer.renderModel(chunk, shader, camera);
 		}
 		shader.stop();
+
+		// Rendering of the skybox
+		skyboxShader.start();
+		Renderer.renderSkybox(skybox, skyboxShader, camera);
+		skyboxShader.stop();
 
 		// Put the new frame on the screen
 		window.swapBuffers();

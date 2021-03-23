@@ -1,19 +1,24 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.model;
 
+import de.matthiasmann.twl.utils.PNGDecoder;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.*;
 
+import javax.imageio.ImageIO;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Helper class for generating model object instances such as VAOs and VBOs
@@ -22,6 +27,7 @@ public class Loader {
 
 	private static final Collection<Integer> vaos = new HashSet<>();
 	private static final Collection<Integer> vbos = new HashSet<>();
+	private static final Collection<Integer> textures = new HashSet<>();
 
 	/**
 	 * Make a RawModel in a VAO from a set of positions and indices
@@ -100,6 +106,9 @@ public class Loader {
 		}
 		for (int vbo : vbos) {
 			GL15.glDeleteBuffers(vbo);
+		}
+		for (int texture : textures) {
+			GL11.glDeleteTextures(texture);
 		}
 	}
 
@@ -244,4 +253,97 @@ public class Loader {
 		return buffer;
 	}
 
+	/**
+	 * Load a skybox set of vertices into a renderable raw model
+	 */
+	public static RawModel loadSkyboxModel(float[] vertices) {
+		int vao = createVAO();
+		bindVAO(vao);
+		int vbo = createVBO();
+		storeBufferInVBO(vbo, storeDataInFloatBuffer(vertices));
+		setAttributePointer(vbo, 0, 3, 3, 0);
+		unbindVAO();
+		return new RawModel(
+				vao,
+				vertices.length / 3,
+				Maths.createTransformationMatrix(new Vector3f(), 0, 0, 0, 1),
+				Collections.singletonList(vbo)
+		);
+	}
+
+	/**
+	 * Load series of images (together forming the cubemap) into a texture
+	 *
+	 * @param textureFiles String array of the 6 texture files of the cubemap
+	 * @return int texture ID of CubeMap texture
+	 */
+	public static int loadCubeMapTextures(String[] textureFiles) {
+		int texID = GL11.glGenTextures(); // Generate empty texture
+		GL13.glActiveTexture(GL13.GL_TEXTURE0); // Activate texture unit 0
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, texID); // Bind texture to texture unit 0
+
+		for (int i = 0; i < textureFiles.length; i++) {
+			int faceNumber = GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i;
+			String fileName = "/skybox/" + textureFiles[i] + ".png";
+			InputStream is = null;
+
+			if (faceNumber == GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Y || faceNumber == GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y) {
+				try {
+					BufferedImage bi = ImageIO.read(Loader.class.getResourceAsStream(fileName)); // read to bufferImage
+
+					AffineTransform tx = AffineTransform.getScaleInstance(-1, -1); // Flip horizontally and vertically
+					tx.translate(-bi.getWidth(null), -bi.getHeight(null));
+					AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+					bi = op.filter(bi, null);
+
+					ByteArrayOutputStream os = new ByteArrayOutputStream(); // From bufferedImage to InputStream
+					ImageIO.write(bi, "png", os);
+					is = new ByteArrayInputStream(os.toByteArray());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				is = Loader.class.getResourceAsStream(fileName); // From path-location to InputStream
+			}
+			Texture data = decodeTextureFile(is); // decode InputStream
+
+			GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA,
+					data.getWidth(), data.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
+					data.getBuffer());
+		}
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+
+		textures.add(texID);
+		return texID;
+	}
+
+	/**
+	 * Decode an image from an InputStream into a byteBuffer and return it as a TextureData object
+	 *
+	 * @param in InputStream containing the image
+	 * @return TextureData containing decoded image
+	 */
+	public static Texture decodeTextureFile(InputStream in) {
+		int width = 0;
+		int height = 0;
+		ByteBuffer buffer = null;
+		try {
+			PNGDecoder decoder = new PNGDecoder(in);
+			width = decoder.getWidth();
+			height = decoder.getHeight();
+			buffer = ByteBuffer.allocateDirect(4 * width * height); // Allocate byte buffer of size (4 * width * height)
+			decoder.decode(buffer, width * 4, PNGDecoder.Format.RGBA); // decode image and load into buffer
+
+			buffer.flip(); // Flip from write to read
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println("Tried to load texture , didn't work");
+			System.exit(-1);
+		}
+		return new Texture(width, height, buffer);
+	}
 }
