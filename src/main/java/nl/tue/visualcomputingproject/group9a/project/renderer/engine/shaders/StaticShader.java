@@ -50,8 +50,8 @@ public class StaticShader extends ShaderProgram {
 		super.loadVector3f(locationCameraPosition, camera.getPosition());
 	}
 
-	public void loadProjectionMatrix(Window window) {
-		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix());
+	public void loadProjectionMatrix(Window window, Camera camera) {
+		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix(camera));
 	}
 
 
