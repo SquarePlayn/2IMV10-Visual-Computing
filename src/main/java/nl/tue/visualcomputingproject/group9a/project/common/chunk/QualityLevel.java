@@ -9,6 +9,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum QualityLevel {
+	FLAT(-1, true),
 	FIVE_BY_FIVE(0, true),
 	HALF_BY_HALF(1, true),
 	LAS(2, false);
@@ -28,7 +29,7 @@ public enum QualityLevel {
 	}
 	
 	public static QualityLevel getBest() {
-		return LAS;
+		return HALF_BY_HALF;
 	}
 	
 	public static QualityLevel getWorst() {
