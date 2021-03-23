@@ -84,7 +84,7 @@ public class PreProcessingModule
 				WriteBackReadCacheClaim<MeshChunkData> claim;
 				QualityLevel level = null;
 				boolean found = false;
-				while (level != QualityLevel.getWorst()) {
+				while (level == null || level.getOrder() >= 0) {
 					if (level == null) level = QualityLevel.getBest();
 					else level = level.prev();
 					
@@ -130,7 +130,7 @@ public class PreProcessingModule
 				if (!found) {
 					MeshChunkId id = new MeshChunkId(
 							pos,
-							QualityLevel.getWorst(),
+							QualityLevel.fromOrder(0),
 							Settings.VERTEX_TYPE,
 							Settings.MESH_TYPE);
 					LOGGER.info("Cache miss: " + pos);
@@ -312,7 +312,7 @@ public class PreProcessingModule
 				
 				// Delete old data.
 				MeshChunkId mcId = id;
-				while (mcId.getQuality() != QualityLevel.getWorst()) {
+				while (mcId.getQuality() != null && mcId.getQuality().getOrder() >= 0) {
 					mcId = mcId.withQuality(mcId.getQuality().prev());
 					claim = cache.requestReadWriteClaim(mcId);
 					if (claim != null) {
