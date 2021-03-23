@@ -8,7 +8,8 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
  * @param <T> The type of point data container.
  */
 public abstract class Generator<ID extends ChunkId, T extends PointData> {
-	public static final double HEIGHT_THRESHOLD = 10_000;
+	/** The height threshold for the points. */
+	public static final double HEIGHT_THRESHOLD = 1_000;
 
 	/**
 	 * Generates the mesh data chunk.
@@ -30,9 +31,9 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 	 */
 	public static <ID extends ChunkId, T extends PointData> Generator<ID, T> createGeneratorFor(QualityLevel quality) {
 		if (quality.isInterpolated()) {
-			return new InterpolatedGenerator<>();
+			return new RawGenerator<>();
 		} else {
-			return new MLSGenerator<>();
+			return new RIMLSGenerator<>();
 		}
 	}
 	

@@ -19,6 +19,7 @@ public interface GridTransform {
 			case HALF_BY_HALF:
 				return new HalfByHalfGridTransform(rootX, rootZ);
 			case LAS:
+				return new ScaleGridTransform(0.25, 0.25, rootX, rootZ);
 			default:
 				throw new UnsupportedOperationException("LAS not implemented!");
 		}

@@ -1,9 +1,9 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing;
 
-import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndex;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexStore;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexData;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.StoreElement;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.Store;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.GridTransform;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
@@ -11,20 +11,21 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
+import java.util.function.Function;
 
 public class PreProcessing {
 	/** The logger of this class. */
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	
-	public static void removeIllegalPoints(PointIndexStore points) {
+	public static <Data extends PointIndexData> void removeIllegalPoints(Store<Data> points) {
 		for (int x = 0; x < points.getWidth(); x++) {
 			for (int z = 0; z < points.getHeight(); z++) {
 				if (!points.hasPoint(x, z)) continue;
-				Iterator<Pair<Vector3d, Integer>> it = points.get(x, z).iterator();
+				Iterator<Data> it = points.iteratorOf(x, z);
 				while (it.hasNext()) {
-					Pair<Vector3d, Integer> pair = it.next();
-					if (pair.getFirst().y() > Generator.HEIGHT_THRESHOLD ||
-							pair.getFirst().y() < -Generator.HEIGHT_THRESHOLD) {
+					Data data = it.next();
+					if (data.getVec().y() > Generator.HEIGHT_THRESHOLD ||
+							data.getVec().y() < -Generator.HEIGHT_THRESHOLD) {
 						it.remove();
 					}
 				}
@@ -32,9 +33,10 @@ public class PreProcessing {
 		}
 	}
 	
-	public static void fillNullPoints(
-			PointIndexStore store,
-			GridTransform transform) {
+	public static <Data extends PointIndexData> void fillNullPoints(
+			Store<Data> store,
+			GridTransform transform,
+			Function<Vector3d, Data> generator) {
 		for (int x = 0; x < store.getWidth(); x++) {
 			for (int z = 0; z < store.getHeight(); z++) {
 				if (store.hasPoint(x, z)) continue;
@@ -50,11 +52,11 @@ public class PreProcessing {
 						int otherX = x + i;
 						int otherZ = z + j;
 						if (!store.hasPoint(otherX, otherZ)) continue;
-						for (Pair<Vector3d, Integer> other : store.get(otherX, otherZ)) {
+						for (Data other : store.get(otherX, otherZ)) {
 							num++;
-							expDX += other.getFirst().x() - transform.toCoordX(otherX);
-							height += other.getFirst().y();
-							expDZ += other.getFirst().z() - transform.toCoordZ(otherZ);
+							expDX += other.getVec().x() - transform.toCoordX(otherX);
+							height += other.getVec().y();
+							expDZ += other.getVec().z() - transform.toCoordZ(otherZ);
 						}
 					}
 				}
@@ -67,7 +69,7 @@ public class PreProcessing {
 							expDZ / num
 					);
 				}
-				store.set(x, z, new PointIndex(vec));
+				store.set(x, z, new StoreElement<>(generator.apply(vec)));
 			}
 		}
 	}
