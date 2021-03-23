@@ -83,6 +83,7 @@ public class MeshChunkData
 			ObjectSerializer.writeByteBuffer(os, mcd.vertexBuffer);
 			ObjectSerializer.writeByteBuffer(os, mcd.meshBuffer);
 			ObjectSerializer.writeFloat(os, mcd.offset.x());
+			ObjectSerializer.writeFloat(os, mcd.offset.y());
 		}
 
 		@Override
