@@ -118,7 +118,7 @@ public class ChunkManager {
 		request.addAll(toLoad);
 
 		// Check for chunks to unload
-		Vector2i currentChunkIndex = getChunkPosition(camera);
+		Vector2i currentChunkIndex = getChunkIndices(camera.getPosition().x, camera.getPosition().z);
 		int chunkUnloadRangeX = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_WIDTH);
 		int chunkUnloadRangeY = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_HEIGHT);
 		Collection<ChunkPosition> toUnload = positionModel.keySet().stream()
@@ -146,23 +146,13 @@ public class ChunkManager {
 	}
 
 	/**
-	 * Check the chunk index of the chunk the camera is in
-	 */
-	private Vector2i getChunkPosition(Camera camera) {
-		Vector3f position = camera.getPosition();
-		int chunkIX = (int) Math.floor(position.x / CHUNK_WIDTH);
-		int chunkIY = (int) Math.floor(position.z / CHUNK_HEIGHT);
-		return new Vector2i(chunkIX, chunkIY);
-	}
-
-	/**
 	 * Find all chunk positions in a certain radius around the camera
 	 */
 	private Collection<ChunkPosition> getChunksInRadius(Camera camera, double radius) {
 		Collection<ChunkPosition> chunks = new ArrayList<>();
 
 		// Go over the grid, adding each chunk
-		Vector2i currentChunkIndex = getChunkPosition(camera);
+		Vector2i currentChunkIndex = getChunkIndices(camera.getPosition().x, camera.getPosition().z);
 		int chunkRangeX = (int) Math.ceil(radius / CHUNK_WIDTH);
 		int chunkRangeY = (int) Math.ceil(radius / CHUNK_HEIGHT);
 		for (int cdx = -chunkRangeX; cdx <= chunkRangeX; cdx++) {
@@ -178,13 +168,28 @@ public class ChunkManager {
 		return chunks;
 	}
 
+	private Vector2i getChunkIndices(float x, float z) {
+		return new Vector2i(
+				(int) Math.floor(x / CHUNK_WIDTH),
+				(int) Math.floor(z / Settings.CHUNK_HEIGHT)
+		);
+	}
+
+	private ChunkPosition getChunkPosition(float x, float z) {
+		Vector2i chunkIndices = getChunkIndices(x, z);
+		return new ChunkPosition(
+				chunkIndices.x * CHUNK_WIDTH,
+				chunkIndices.y * CHUNK_HEIGHT,
+				CHUNK_WIDTH,
+				CHUNK_HEIGHT
+		);
+	}
+
 	/**
 	 * Get the height at some position on the map, or null if unknown
 	 */
 	public Optional<Float> getHeight(float x, float z) {
-		int chunkIX = (int) Math.floor(x / CHUNK_WIDTH);
-		int chunkIY = (int) Math.floor(z / Settings.CHUNK_HEIGHT);
-		ChunkPosition chunk = new ChunkPosition(chunkIX * CHUNK_WIDTH, chunkIY * CHUNK_HEIGHT, CHUNK_WIDTH, CHUNK_HEIGHT);
+		ChunkPosition chunk = getChunkPosition(x, z);
 
 		if (!positionData.containsKey(chunk)) {
 			return Optional.empty();
