@@ -37,6 +37,7 @@ public class Camera {
 	// Other settings
 	private boolean wireframe = false;
 	private boolean lockHeight = true;
+	private float fov = FOV;
 
 	private GLFWKeyCallback keyboardCallback;
 
@@ -54,7 +55,7 @@ public class Camera {
 	private void registerInputCallbacks() {
 		keyboardCallback = new GLFWKeyCallback() {
 			@Override
-			public void invoke(long window, int key, int scancode, int action, int mods) {
+			public void invoke(long w, int key, int scancode, int action, int mods) {
 				if (action == GLFW_PRESS) {
 					pressedKeys.add(key);
 
@@ -63,8 +64,19 @@ public class Camera {
 					} else if (key == GLFW_KEY_R) {
 						lockHeight = !lockHeight;
 					}
+
+
+					if (key == GLFW_KEY_TAB) {
+						fov = FOV / ZOOM_FACTOR;
+						window.setResized(true);
+					}
 				} else if (action == GLFW_RELEASE) {
 					pressedKeys.remove(key);
+
+					if (key == GLFW_KEY_TAB) {
+						fov = FOV;
+						window.setResized(true);
+					}
 				}
 			}
 		};

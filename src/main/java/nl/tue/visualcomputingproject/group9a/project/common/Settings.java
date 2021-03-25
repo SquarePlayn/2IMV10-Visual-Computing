@@ -70,6 +70,7 @@ public final class Settings {
 	 */
 	public static final Vector3f INITIAL_POSITION = new Vector3f(162000, 100, -384300);
 	public static final float FOV = 70;
+	public static final float ZOOM_FACTOR = 3;
 	public static final float NEAR_PLANE = 0.1f;
 	public static final float FAR_PLANE = 40_000;
 	public static final float MOVE_SPEED = 3;

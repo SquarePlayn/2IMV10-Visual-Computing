@@ -111,10 +111,10 @@ public class RendererModule extends Thread implements Module {
 		// Recalculate the projection matrix if needed
 		if (window.isResized()) {
 			shader.start();
-			shader.loadProjectionMatrix(window);
+			shader.loadProjectionMatrix(window, camera);
 			shader.stop();
 			skyboxShader.start();
-			skyboxShader.loadProjectionMatrix(window);
+			skyboxShader.loadProjectionMatrix(window, camera);
 			skyboxShader.stop();
 			window.setResized(false);
 		}
