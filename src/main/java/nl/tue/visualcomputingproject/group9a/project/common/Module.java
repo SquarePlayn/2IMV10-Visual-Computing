@@ -19,6 +19,6 @@ public interface Module {
 	 * @param memoryPolicy The policy used for the memory cache.
 	 */
 	void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy)
-			throws IOException;
+		throws IOException, ClassNotFoundException;
 	
 }

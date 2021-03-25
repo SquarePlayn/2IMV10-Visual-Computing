@@ -17,8 +17,10 @@ import java.lang.invoke.MethodHandles;
  */
 @SuppressWarnings("UnstableApiUsage")
 public class ChartingModule
-		implements Module {
-	/** The logger of this class. */
+	implements Module {
+	/**
+	 * The logger of this class.
+	 */
 	static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	private ChunkAssemblyManager assemblyManager;
 	private MapSheetCacheManager cacheManager;
@@ -28,10 +30,11 @@ public class ChartingModule
 	
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy)
-			throws IOException {
+		throws IOException, ClassNotFoundException {
 		logger.info("Charting starting up!");
+		LogUtil.setupGeotools();
 		this.cacheManager = new MapSheetCacheManager(diskPolicy);
-		assemblyManager = new ChunkAssemblyManager(eventBus); 
+		assemblyManager = new ChunkAssemblyManager(eventBus);
 		downloadManager = new DownloadManager(eventBus, this.cacheManager);
 		lookupManager = new LookupManager(eventBus, downloadManager, assemblyManager);
 		extractor = new Extractor(eventBus, this.cacheManager);
