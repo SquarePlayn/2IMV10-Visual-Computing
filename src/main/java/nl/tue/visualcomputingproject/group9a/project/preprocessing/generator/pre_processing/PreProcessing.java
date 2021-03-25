@@ -33,10 +33,11 @@ public class PreProcessing {
 		}
 	}
 	
-	public static <Data extends PointIndexData> void fillNullPoints(
+	public static <Data extends PointIndexData> int fillNullPoints(
 			Store<Data> store,
 			GridTransform transform,
 			Function<Vector3d, Data> generator) {
+		int count = 0;
 		for (int x = 0; x < store.getWidth(); x++) {
 			for (int z = 0; z < store.getHeight(); z++) {
 				if (store.hasPoint(x, z)) continue;
@@ -70,8 +71,10 @@ public class PreProcessing {
 					);
 				}
 				store.set(x, z, new StoreElement<>(generator.apply(vec)));
+				count++;
 			}
 		}
+		return count;
 	}
 	
 }

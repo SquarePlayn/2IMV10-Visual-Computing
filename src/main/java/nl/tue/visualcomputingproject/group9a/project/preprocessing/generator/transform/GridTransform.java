@@ -12,7 +12,7 @@ public interface GridTransform {
 	
 	int toGridZ(double coordZ);
 	
-	static GridTransform createTransformFor(QualityLevel quality, double rootX, double rootZ) {
+	static ScaleGridTransform createTransformFor(QualityLevel quality, double rootX, double rootZ) {
 		switch (quality) {
 			case FIVE_BY_FIVE:
 				return new FiveByFiveGridTransform(rootX, rootZ);

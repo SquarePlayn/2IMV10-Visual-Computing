@@ -62,12 +62,15 @@ public class FullMeshGenerator {
 		}
 	}
 	
-	public static <Data extends PointIndexData> void preprocess(Store<Data> store) {
-		for (int z = 0; z < store.getHeight() - 1; z++) {
-			for (int x = 0; x < store.getWidth() - 1; x++) {
+	public static <Data extends PointIndexData> int preprocess(Store<Data> store) {
+		int count = 0;
+		for (int z = 0; z < store.getHeight(); z++) {
+			for (int x = 0; x < store.getWidth(); x++) {
 				removeMultiClusterAndSort(store.get(x, z));
+				count += store.get(x, z).size();
 			}
 		}
+		return count;
 	}
 	
 	public static <ID extends ChunkId, T extends PointData, Data extends PointIndexData> ByteBuffer generateMesh(
