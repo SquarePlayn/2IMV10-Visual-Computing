@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
 public class WMTSTileProvider implements TileProvider {
@@ -18,14 +19,16 @@ public class WMTSTileProvider implements TileProvider {
 	
 	private final WebMapTileServer wmts;
 	private final WMTSCapabilities capabilities;
+	private final WMTSLayer layer;
 	
-	public WMTSTileProvider(URL url) throws IOException, ServiceException {
+	public WMTSTileProvider(URL url, String layerName) throws IOException, ServiceException {
 		logger.info("Enumerating WMTS server {}...", url.toString());
 
 		wmts = new WebMapTileServer(url);
 		capabilities = wmts.getCapabilities();
-		
+
 		List<WMTSLayer> layers = capabilities.getLayerList();
+		layer = layers.stream().filter(s -> s.getName().equalsIgnoreCase(layerName)).findFirst().get();
 		for (WMTSLayer layer : layers) {
 			logger.info("- Layer: " + layer.getName());
 			logger.info("         " + layer.getTitle());
@@ -55,8 +58,8 @@ public class WMTSTileProvider implements TileProvider {
 	@Override
 	public MapContent getMapContent() {
 		MapContent mapcontent = new MapContent();
-		mapcontent.addLayer(new WMTSMapLayer(wmts, capabilities.getLayerList().get(0)));
-		mapcontent.setTitle(capabilities.getLayerList().get(0).getTitle());
+		mapcontent.addLayer(new WMTSMapLayer(wmts, layer));
+		mapcontent.setTitle(layer.getTitle());
 		return mapcontent;
 	}
 }

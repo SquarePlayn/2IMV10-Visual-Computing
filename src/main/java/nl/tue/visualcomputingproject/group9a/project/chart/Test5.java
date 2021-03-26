@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.chart;
 
 import nl.tue.visualcomputingproject.group9a.project.chart.tile.OSMTileProvider;
 import nl.tue.visualcomputingproject.group9a.project.chart.tile.TileRenderer;
+import nl.tue.visualcomputingproject.group9a.project.chart.tile.WMSTileProvider;
 import nl.tue.visualcomputingproject.group9a.project.chart.tile.WMTSTileProvider;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.WFSApi;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -19,6 +20,8 @@ import java.net.URL;
 public class Test5 {
 	static final Logger logger = LoggerFactory.getLogger(Test5.class);
 	final WFSApi api = new WFSApi();
+	private final static String PDOKWMS = "https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0?&request=GetCapabilities&service=wms";
+	private final static String PDOKWMTS = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0?&request=GetCapabilities&service=wmts";
 	
 	public Test5() throws IOException {
 	}
@@ -42,10 +45,14 @@ public class Test5 {
 		//URL url = new URL("http://gis.sinica.edu.tw/worldmap/wmts?VERSION=1.0.0&Request=GetCapabilities");
 		URL url = new URL("https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml");
 		
-		TileRenderer wmtsTileRenderer = new TileRenderer(new WMTSTileProvider(url));
-		TileRenderer osmTileRenderer = new TileRenderer(new OSMTileProvider());
-		renderImage(wmtsTileRenderer, "test2.png");
-		renderImage(osmTileRenderer, "test3.png");
+		//TileRenderer wmtsTileRenderer = new TileRenderer(new WMTSTileProvider(url, "World_Imagery"));
+		//TileRenderer osmTileRenderer = new TileRenderer(new OSMTileProvider());
+		TileRenderer wmsTileRenderer = new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25"));
+		TileRenderer wmtsTileRenderer2 = new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS), "Actueel_ortho25"));
+		//renderImage(wmtsTileRenderer, "test2.png");
+		//renderImage(osmTileRenderer, "test3.png");
+		renderImage(wmsTileRenderer, "test4.png");
+		renderImage(wmtsTileRenderer2, "test5.png");
 	}
 	
 	public static void main(String[] args) {

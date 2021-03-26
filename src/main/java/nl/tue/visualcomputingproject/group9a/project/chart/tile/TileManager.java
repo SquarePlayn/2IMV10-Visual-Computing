@@ -42,6 +42,8 @@ public class TileManager {
 	private final CoordinateReferenceSystem crs;
 	private final FileCacheManager cacheManager;
 	private final static String AERIALURL = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/WMTS/1.0.0/WMTSCapabilities.xml";
+	private final static String PDOKWMS = "https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0?&request=GetCapabilities&service=wms";
+	private final static String PDOKWMTS = "https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0?&request=GetCapabilities&service=wmts";
 	
 	public TileManager(EventBus eventBus, CoordinateReferenceSystem crs, CachePolicy policy) throws IOException, ServiceException {
 		this.eventBus = eventBus;
@@ -50,7 +52,9 @@ public class TileManager {
 		eventBus.register(this);
 		
 		rendererMap = new HashMap<>();
-		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL))));
+		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL), "World_Imagery")));
+		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25")));
+		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS),"Actueel_ortho25")));
 		rendererMap.put(TextureType.OpenStreetMap, new TileRenderer(new OSMTileProvider()));
 		cacheManager = new FileCacheManager(policy, Settings.CACHE_DIR, "textures");
 		cacheManager.indexCache(TextureFileId.createFactory());

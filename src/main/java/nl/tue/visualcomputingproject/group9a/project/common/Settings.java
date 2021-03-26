@@ -82,7 +82,7 @@ public final class Settings {
 	 * Chunk update settings
 	 */
 	public static final double CHUNK_UPDATE_INTERVAL = 10;
-	public static final double CHUNK_LOAD_DISTANCE = 10;
+	public static final double CHUNK_LOAD_DISTANCE = 300;
 	public static final double CHUNK_UNLOAD_DISTANCE = 1500;
 
 	/**
