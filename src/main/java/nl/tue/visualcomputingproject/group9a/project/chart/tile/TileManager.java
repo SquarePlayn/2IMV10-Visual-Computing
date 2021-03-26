@@ -52,14 +52,14 @@ public class TileManager {
 		rendererMap = new HashMap<>();
 		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL))));
 		rendererMap.put(TextureType.OpenStreetMap, new TileRenderer(new OSMTileProvider()));
-		cacheManager = new FileCacheManager(policy, Settings.CACHE_DIR, "mapsheets");
+		cacheManager = new FileCacheManager(policy, Settings.CACHE_DIR, "textures");
 		cacheManager.indexCache(TextureFileId.createFactory());
 	}
 	
 	@Subscribe
 	public void onChunkStatus(RendererChunkStatusEvent event) {
 		for (ChunkPosition position : event.getNewChunks()) {
-			eventBus.post(new TextureRequestEvent(TextureType.OpenStreetMap, position));
+			//eventBus.post(new TextureRequestEvent(TextureType.OpenStreetMap, position));
 			eventBus.post(new TextureRequestEvent(TextureType.Aerial, position));
 		}
 	}
@@ -81,9 +81,9 @@ public class TileManager {
 			logger.info("Downloading...");
 			FileReadWriteCacheClaim writeClaim = cacheManager.requestReadWriteClaim(id);
 			if (writeClaim != null) {
-				ReferencedEnvelope envelope = event.getPosition().getReferencedEnvelope(crs);
-				int image_width = (int) envelope.getWidth();
-				int image_height = (int) envelope.getHeight();
+				ReferencedEnvelope envelope = event.getPosition().transformed().getReferencedEnvelope(crs);
+				int image_width = (int) envelope.getWidth()*2;
+				int image_height = (int) envelope.getHeight()*2;
 				BufferedImage image = rendererMap.get(event.getType()).render(envelope, image_width, image_height);
 				try (OutputStream stream = writeClaim.getOutputStream()) {
 					ImageIO.write(image, "png", stream);

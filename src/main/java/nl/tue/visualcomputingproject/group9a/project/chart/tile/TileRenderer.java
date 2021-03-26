@@ -36,7 +36,7 @@ public class TileRenderer {
 		gr.fill(imageBounds);
 		
 		mapContent.getViewport().setScreenArea(imageBounds);
-		mapContent.getViewport().setBounds(envelope);
+		mapContent.getViewport().setBounds(mapBounds);
 		
 		//Do the heavy lifting.
 		GTRenderer renderer = new StreamingRenderer();

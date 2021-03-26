@@ -7,6 +7,7 @@ in vec3 normal;
 out vec3 color;
 out vec3 surfaceNormal;
 out vec3 toLightVector;
+out vec2 flatPosition;
 
 uniform mat4 transformationMatrix;
 uniform mat4 projectionMatrix;
@@ -18,6 +19,7 @@ uniform float time;
 const float PI = 3.14159265359;
 
 void main(void) {
+    flatPosition = position.xz;
 
     // Transform the vertex position according to entity movement and rotation
     vec4 transPosition = transformationMatrix * vec4(position, 1.0);

@@ -21,4 +21,13 @@ public class ChunkPosition {
 	public Geometry getJtsGeometry(GeometryFactory factory, CoordinateReferenceSystem crs) {
 		return factory.toGeometry(getReferencedEnvelope(crs));
 	}
+	
+	public ChunkPosition transformed() {
+		return new ChunkPosition(
+			this.getX(),
+			-this.getY() - this.getHeight(),
+			this.getWidth(),
+			this.getHeight()
+		);
+	}
 }

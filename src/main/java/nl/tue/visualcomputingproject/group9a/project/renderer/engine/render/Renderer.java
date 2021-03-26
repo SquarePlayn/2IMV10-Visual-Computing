@@ -34,6 +34,16 @@ public class Renderer {
 
 		// Wireframe rendering if enabled
 		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, camera.isWireframe() ? GL11.GL_LINE : GL11.GL_FILL);
+		
+		// Activate the texture
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		if (model.getTexId() >= 0) {
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getTexId());
+			shader.setTextureUnit(0);
+			shader.setTextureAvailable(true);
+		} else {
+			shader.setTextureAvailable(false);
+		}
 
 		// Draw all vertices
 		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);

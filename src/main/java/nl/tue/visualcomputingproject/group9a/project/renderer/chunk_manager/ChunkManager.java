@@ -3,7 +3,9 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.common.TextureType;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
+import nl.tue.visualcomputingproject.group9a.project.common.event.ChartTextureAvailableEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
@@ -15,6 +17,7 @@ import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.image.BufferedImage;
 import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -32,6 +35,7 @@ public class ChunkManager {
 	 * Event queue received events are temporarily inserted in, to be extracted in this thread
 	 */
 	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
+	final ConcurrentLinkedQueue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
 
 	private final EventBus eventBus;
 
@@ -44,6 +48,7 @@ public class ChunkManager {
 
 	private final HashMap<ChunkPosition, RawModel> positionModel = new HashMap<>();
 	private final HashMap<ChunkPosition, QualityLevel> positionQuality = new HashMap<>();
+	private final HashMap<ChunkPosition, BufferedImage> pendingTextures = new HashMap<>();
 
 	/**
 	 * The last time in seconds at which a chunk update was sent.
@@ -192,24 +197,45 @@ public class ChunkManager {
 			// Only add the new chunk if it's not loaded yet or better than the currently loaded version
 			if (!positionQuality.containsKey(chunkPosition) ||
 					positionQuality.get(chunkPosition).getOrder() < qualityLevel.getOrder()) {
+				int texId = -1;
+				
+				// Remove current chunk model if present
+				if (positionModel.containsKey(chunkPosition)) {
+					RawModel oldModel = positionModel.get(chunkPosition);
+					texId = oldModel.getTexId();
+					models.remove(positionModel.get(chunkPosition));
+					Loader.unloadModel(oldModel, false);
+				}
+				
+				if (texId < 0 && pendingTextures.containsKey(chunkPosition)) {
+					texId = Loader.loadTexture(pendingTextures.remove(chunkPosition));
+				}
+
 				// Create the model
 				RawModel newModel = Loader.loadToVAO(
 						chunk.getData().getVertexBuffer(),
 						chunk.getData().getMeshBuffer(),
-						offset
+						offset,
+						texId
 				);
 
-				// Remove current chunk model if present
-				if (positionModel.containsKey(chunkPosition)) {
-					RawModel oldModel = positionModel.get(chunkPosition);
-					models.remove(positionModel.get(chunkPosition));
-					Loader.unloadModel(oldModel);
-				}
 
 				// Add the new model
 				models.add(newModel);
 				positionModel.put(chunkPosition, newModel);
 				positionQuality.put(chunkPosition, qualityLevel);
+			}
+		}
+		
+		while (!textureEventQueue.isEmpty()) {
+			ChartTextureAvailableEvent event = textureEventQueue.poll();
+			if (event.getType() == TextureType.Aerial) {
+				if (positionModel.containsKey(event.getPosition())) {
+					int texId = Loader.loadTexture(event.getImage());
+					positionModel.get(event.getPosition()).setTexId(texId);
+				} else {
+					pendingTextures.put(event.getPosition(), event.getImage());
+				}
 			}
 		}
 	}
@@ -230,6 +256,12 @@ public class ChunkManager {
 	public void receiveEvent(ProcessorChunkLoadedEvent event) {
 		LOGGER.info("Chunk load event received, added to queue");
 		eventQueue.add(event);
+	}
+	
+	@Subscribe
+	public void receiveTextureEvent(ChartTextureAvailableEvent event) {
+		LOGGER.info("Texture available event received, added to queue");
+		textureEventQueue.add(event);
 	}
 
 }

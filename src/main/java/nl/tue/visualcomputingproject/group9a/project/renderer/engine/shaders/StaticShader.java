@@ -18,6 +18,8 @@ public class StaticShader extends ShaderProgram {
 	private int locationLightColor;
 	private int locationCameraPosition;
 	private int locationTime;
+	private int textureLocation;
+	private int locationTextureAvailable;
 
 	public StaticShader() {
 		super(VERTEX_FILE, FRAGMENT_FILE);
@@ -39,6 +41,8 @@ public class StaticShader extends ShaderProgram {
 		locationLightColor = super.getUniformLocation("lightColor");
 		locationCameraPosition = super.getUniformLocation("cameraPosition");
 		locationTime = super.getUniformLocation("time");
+		textureLocation = super.getUniformLocation("textureSampler");
+		locationTextureAvailable = super.getUniformLocation("textureAvailable");
 	}
 
 	public void loadTransformationMatrix(Matrix4f matrix) {
@@ -62,5 +66,13 @@ public class StaticShader extends ShaderProgram {
 	public void loadLight(Light light) {
 		super.loadVector3f(locationLightPosition, light.getPosition());
 		super.loadVector3f(locationLightColor, light.getColor());
+	}
+	
+	public void setTextureUnit(int unit) {
+		super.loadInt(textureLocation, unit);
+	}
+	
+	public void setTextureAvailable(boolean avail) {
+		super.loadBoolean(locationTextureAvailable, avail);
 	}
 }
