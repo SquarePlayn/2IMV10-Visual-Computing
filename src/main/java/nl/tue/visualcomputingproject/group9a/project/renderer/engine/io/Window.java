@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
 import lombok.Getter;
 import lombok.Setter;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
@@ -169,9 +170,9 @@ public class Window {
 	/**
 	 * Calculate the projection matrix for this window
 	 */
-	public Matrix4f getProjectionMatrix() {
+	public Matrix4f getProjectionMatrix(Camera camera) {
 		return new Matrix4f().perspective(
-				(float) Math.toRadians(FOV),
+				(float) Math.toRadians(camera.getFov()),
 				(float) width / (float) height,
 				NEAR_PLANE,
 				FAR_PLANE

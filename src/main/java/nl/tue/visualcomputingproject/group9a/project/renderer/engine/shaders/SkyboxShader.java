@@ -42,7 +42,7 @@ public class SkyboxShader extends ShaderProgram {
 	/**
 	 * Load the projection matrix into the shader.
 	 */
-	public void loadProjectionMatrix(Window window) {
-		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix());
+	public void loadProjectionMatrix(Window window, Camera camera) {
+		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix(camera));
 	}
 }

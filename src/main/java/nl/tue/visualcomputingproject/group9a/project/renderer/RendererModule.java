@@ -87,11 +87,11 @@ public class RendererModule extends Thread implements Module {
 		LOGGER.info("Working directory: " + System.getProperty("user.dir"));
 
 		// Create instances
+		chunkManager = new ChunkManager(eventBus);
 		window = new Window(INITIAL_WINDOW_SIZE.x, INITIAL_WINDOW_SIZE.y, WINDOW_NAME, FPS);
 		shader = new StaticShader();
 		skyboxShader = new SkyboxShader();
-		camera = new Camera(window);
-		chunkManager = new ChunkManager(eventBus);
+		camera = new Camera(window, chunkManager);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
 		skybox = new Skybox(Settings.SKYBOX_TEXTURE_FILES);
 
@@ -111,10 +111,10 @@ public class RendererModule extends Thread implements Module {
 		// Recalculate the projection matrix if needed
 		if (window.isResized()) {
 			shader.start();
-			shader.loadProjectionMatrix(window);
+			shader.loadProjectionMatrix(window, camera);
 			shader.stop();
 			skyboxShader.start();
-			skyboxShader.loadProjectionMatrix(window);
+			skyboxShader.loadProjectionMatrix(window, camera);
 			skyboxShader.stop();
 			window.setResized(false);
 		}
