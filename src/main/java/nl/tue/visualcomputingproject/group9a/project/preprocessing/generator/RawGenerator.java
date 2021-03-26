@@ -48,11 +48,11 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		);
 
 		FullMeshGenerator.preprocess(store);
-		PreProcessing.fillNullPoints(store, transform, PointIndexData::new);
+		int count = PreProcessing.fillNullPoints(store, transform, PointIndexData::new);
 		
 		// Create vertex buffer.
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
-				Settings.VERTEX_TYPE, chunk.getData().size()
+				Settings.VERTEX_TYPE, count
 		);
 		
 		for (int z = 0; z < store.getHeight(); z++) {

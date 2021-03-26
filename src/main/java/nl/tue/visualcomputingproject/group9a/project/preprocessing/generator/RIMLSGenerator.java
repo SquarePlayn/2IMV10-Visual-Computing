@@ -127,17 +127,16 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 							
 							double alpha = 1;
 							if (iter > 0) {
-								double exp1 = (fx - f) / sigmaR;
-								double exp2 = pNormal.distanceSquared(gradF) / (sigmaN*sigmaN);
-								alpha = Math.exp(-exp1*exp1 - exp2);
+								double v1 = (fx - f) / sigmaR;
+								double v2 = pNormal.distanceSquared(gradF) / (sigmaN*sigmaN);
+								alpha = Math.exp(-v1*v1 - v2);
 							}
 							
-//							double w = alpha * phi.apply(px);
-//							Vector3d gradW = dPhi.apply(px).mul(alpha);
-//							
-							double pxLengthSquared = px.lengthSquared();
-							double w = alpha * phiD2.apply(pxLengthSquared);
-							Vector3d gradW = px.mul(dPhiD2.apply(pxLengthSquared)).mul(2 * alpha);
+							double w = alpha * phi.apply(px);
+							Vector3d gradW = dPhi.apply(px).mul(alpha);
+//							double pxLengthSquared = px.lengthSquared();
+//							double w = alpha * phiD2.apply(pxLengthSquared);
+//							Vector3d gradW = px.mul(dPhiD2.apply(pxLengthSquared)).mul(2 * alpha);
 							
 							sumW += w;
 							sumGw.add(gradW);
@@ -160,13 +159,6 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		);
 		
 		Store.addToVertexManager(store, vertexManager);
-//		for (int z = 0; z < store.getHeight(); z++) {
-//			for (int x = 0; x < store.getWidth(); x++) {
-//				for (PointNormalIndexData point : store.get(x, z)) {
-//					point.setIndex(vertexManager.addVertex(point.getVec(), point.getNormal()));
-//				}
-//			}
-//		}
 		
 		// Generate mesh and return.
 		return new MeshChunkData(
