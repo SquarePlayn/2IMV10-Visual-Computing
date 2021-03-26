@@ -206,7 +206,7 @@ public class ChunkManager {
 		int numX = (int) (Math.ceil(CHUNK_WIDTH / space) + 1);
 		int numZ = (int) (Math.ceil(CHUNK_HEIGHT / space) + 1);
 		float[][] heights = new float[numX][numZ];
-		for (int i = 0; i < data.remaining(); i += 6) {
+		for (int i = 0; i + 2 < data.remaining(); i += 6) {
 			int ix = (int) Math.floor(data.get(i) / space);
 			int iz = (int) Math.floor(data.get(i + 2) / space);
 			if (ix > 0 && ix < numX && iz >= 0 && iz < numZ) {
