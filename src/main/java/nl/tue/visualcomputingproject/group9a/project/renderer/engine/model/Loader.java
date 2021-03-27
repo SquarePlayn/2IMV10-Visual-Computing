@@ -79,20 +79,20 @@ public class Loader {
 
 		// Unbind the VAO as we are no longer working on it
 		unbindVAO();
-		
+
 		return new RawModel(
 				vaoID,
 				indicesCount,
 				Maths.createTransformationMatrix(new Vector3f(offset.x, 0, offset.y), 0, 0, 0, 1),
 				modelVBOs,
-			texId
+				texId
 		);
 	}
 
 	/**
 	 * Unload the GPU data (VAO and VBOs) of a model
 	 *
-	 * @param model Model to unload
+	 * @param model         Model to unload
 	 * @param unloadTexture Whether to unload the texture
 	 */
 	public static void unloadModel(RawModel model, boolean unloadTexture) {
@@ -105,7 +105,7 @@ public class Loader {
 			GL11.glDeleteTextures(model.getTexId());
 		}
 	}
-	
+
 	/**
 	 * Unload the GPU data (VAO and VBOs) of a model
 	 *
@@ -115,7 +115,7 @@ public class Loader {
 		unloadModel(model, true);
 	}
 
-	
+
 	/**
 	 * Delete all VAOs and VBOs
 	 */
@@ -287,7 +287,7 @@ public class Loader {
 				vertices.length / 3,
 				Maths.createTransformationMatrix(new Vector3f(), 0, 0, 0, 1),
 				Collections.singletonList(vbo),
-			-1
+				-1
 		);
 	}
 
@@ -366,24 +366,24 @@ public class Loader {
 		}
 		return new Texture(width, height, buffer);
 	}
-	
+
 	public static int loadTexture(BufferedImage image) {
 		int texID = GL11.glGenTextures(); // Generate empty texture
-		GL13.glActiveTexture(GL13.GL_TEXTURE1); // Activate texture unit 0
+		GL13.glActiveTexture(GL13.GL_TEXTURE1); // Activate texture unit 1
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
 		ByteBuffer buffer = convertImageData(image);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL13.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL13.GL_CLAMP_TO_EDGE);
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA,
-			image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
-			buffer);
+				image.getWidth(), image.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE,
+				buffer);
 		GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, GL11.GL_REPLACE);
 		GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
-		
+
 		textures.add(texID);
 		return texID;
 	}
-	
+
 	/**
 	 * Convert the buffered image to a texture
 	 */
@@ -391,33 +391,35 @@ public class Loader {
 		ByteBuffer imageBuffer;
 		WritableRaster raster;
 		BufferedImage texImage;
-		
+
 		ColorModel glAlphaColorModel = new ComponentColorModel(ColorSpace
-			.getInstance(ColorSpace.CS_sRGB), new int[] { 8, 8, 8, 8 },
-			true, false, Transparency.TRANSLUCENT, DataBuffer.TYPE_BYTE);
-		
-		raster = Raster.createInterleavedRaster(DataBuffer.TYPE_BYTE,
-			bufferedImage.getWidth(), bufferedImage.getHeight(), 4, null);
-		texImage = new BufferedImage(glAlphaColorModel, raster, true,
-			new Hashtable());
-		
+				.getInstance(ColorSpace.CS_sRGB), new int[]{8, 8, 8, 8},
+				true, false, Transparency.TRANSLUCENT, DataBuffer.TYPE_BYTE);
+
+		raster = Raster.createInterleavedRaster(
+				DataBuffer.TYPE_BYTE,
+				bufferedImage.getWidth(),
+				bufferedImage.getHeight(),
+				4,
+				null
+		);
+		texImage = new BufferedImage(glAlphaColorModel, raster, true, new Hashtable());
+
 		// copy the source image into the produced image
 		Graphics g = texImage.getGraphics();
 		Color color = new Color(0f, 1f, 0f, 0f);
 		g.setColor(color);
 		g.fillRect(0, 0, 256, 256);
 		g.drawImage(bufferedImage, 0, 0, null);
-		
-		// build a byte buffer from the temporary image
-		// that be used by OpenGL to produce a texture.
-		byte[] data = ((DataBufferByte) texImage.getRaster().getDataBuffer())
-			.getData();
-		
+
+		// build a byte buffer from the temporary image that be used by OpenGL to produce a texture.
+		byte[] data = ((DataBufferByte) texImage.getRaster().getDataBuffer()).getData();
+
 		imageBuffer = ByteBuffer.allocateDirect(data.length);
 		imageBuffer.order(ByteOrder.nativeOrder());
 		imageBuffer.put(data, 0, data.length);
 		imageBuffer.flip();
-		
+
 		return imageBuffer;
 	}
 }

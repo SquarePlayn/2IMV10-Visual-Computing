@@ -215,8 +215,8 @@ public class ChunkManager {
 		}
 
 		Vector2f offset = positionData.get(chunk).getOffset();
-		int ix = (int) Math.floor((x - offset.x)  / space);
-		int iz = (int) Math.floor((z - offset.y)  / space);
+		int ix = (int) Math.floor((x - offset.x) / space);
+		int iz = (int) Math.floor((z - offset.y) / space);
 
 		if (ix >= 0 && ix < numX && iz >= 0 && iz < numZ) {
 			return Optional.of(heights[ix][iz]);
@@ -247,7 +247,7 @@ public class ChunkManager {
 			if (!positionQuality.containsKey(chunkPosition) ||
 					positionQuality.get(chunkPosition).getOrder() < qualityLevel.getOrder()) {
 				int texId = -1;
-				
+
 				// Remove current chunk model if present
 				if (positionModel.containsKey(chunkPosition)) {
 					RawModel oldModel = positionModel.get(chunkPosition);
@@ -255,7 +255,7 @@ public class ChunkManager {
 					models.remove(positionModel.get(chunkPosition));
 					Loader.unloadModel(oldModel, false);
 				}
-				
+
 				if (texId < 0 && pendingTextures.containsKey(chunkPosition)) {
 					texId = Loader.loadTexture(pendingTextures.remove(chunkPosition));
 				}
@@ -276,7 +276,7 @@ public class ChunkManager {
 				positionData.put(chunkPosition, chunk.getData());
 			}
 		}
-		
+
 		while (!textureEventQueue.isEmpty()) {
 			ChartTextureAvailableEvent event = textureEventQueue.poll();
 			if (event.getType() == TextureType.Aerial) {
@@ -307,7 +307,7 @@ public class ChunkManager {
 		LOGGER.info("Chunk load event received, added to queue");
 		eventQueue.add(event);
 	}
-	
+
 	@Subscribe
 	public void receiveTextureEvent(ChartTextureAvailableEvent event) {
 		LOGGER.info("Texture available event received, added to queue");
