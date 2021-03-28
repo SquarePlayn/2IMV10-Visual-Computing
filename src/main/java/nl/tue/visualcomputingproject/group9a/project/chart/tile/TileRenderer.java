@@ -43,6 +43,8 @@ public class TileRenderer {
 		renderer.setMapContent(mapContent);
 		renderer.paint(gr, imageBounds, mapBounds);
 		
+		mapContent.dispose();
+		
 		return image;
 	}
 }
