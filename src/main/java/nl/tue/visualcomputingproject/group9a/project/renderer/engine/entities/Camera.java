@@ -8,7 +8,10 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -20,12 +23,16 @@ import static org.lwjgl.glfw.GLFW.*;
 @Setter
 public class Camera {
 
+	/**
+	 * The logger object of this class.
+	 */
+	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
 	private static final Vector3f UP = new Vector3f(0, 1, 0);
 	private static final Vector3f FORWARD = new Vector3f(0, 0, -1);
 
 	/**
 	 * The window the camera should render on
-	 * TODO Use window to get keys and move the camera
 	 */
 	private final Window window;
 
@@ -50,6 +57,7 @@ public class Camera {
 	private GLFWKeyCallback keyboardCallback;
 
 	private Collection<Integer> pressedKeys = new HashSet<>();
+	private float lastTerrainHeight = 40;
 
 	public Camera(Window window, ChunkManager chunkManager) {
 		this.window = window;
@@ -155,6 +163,18 @@ public class Camera {
 	}
 
 	/**
+	 * Move the camera 3-dimensionally
+	 * @param translation Distance to move the camera
+	 */
+	public void addToPosition(Vector3f translation) {
+		if (translation.isFinite()) {
+			position.add(translation);
+		} else {
+			LOGGER.info("Prevented adding invalid translation to camera position.");
+		}
+	}
+
+	/**
 	 * Move the camera in the viewed direction
 	 *
 	 * @param dist Distance to move the camera
@@ -163,9 +183,9 @@ public class Camera {
 		Vector3f forward = getForward();
 		if (lockHeight) {
 			forward.y = 0;
-			forward = forward.normalize();
+			forward.normalize();
 		}
-		position.add(forward.mul(dist));
+		addToPosition(forward.mul(dist));
 	}
 
 	/**
@@ -179,24 +199,7 @@ public class Camera {
 			sideways.y = 0;
 			sideways = sideways.normalize();
 		}
-		position.add(sideways.mul(dist));
-	}
-
-	/**
-	 * Get the speed the camera should go forwards/sideways at.
-	 */
-	private float getMoveSpeed() {
-		float height = position.y - getTerrainHeight();
-		float gmsp = GROUND_MOVE_SPEED_PERCENTAGE;
-		return (Math.max(0, height / 200) * (1 - gmsp) + gmsp) * MOVE_SPEED;
-	}
-
-	/**
-	 * Get the height of the terrain at the current position
-	 */
-	private float getTerrainHeight() {
-		// TODO
-		return 40;
+		addToPosition(sideways.mul(dist));
 	}
 
 	/**
@@ -206,7 +209,18 @@ public class Camera {
 	 */
 	public void moveUp(float dist) {
 		// NB: Always straight up
-		position.add(new Vector3f(UP).mul(dist));
+		addToPosition(new Vector3f(UP).mul(dist));
+	}
+
+	/**
+	 * Get the speed the camera should go forwards/sideways at.
+	 */
+	private float getMoveSpeed() {
+		Optional<Float> curHeight = chunkManager.getHeight(position.x, position.z);
+		curHeight.ifPresent(height -> lastTerrainHeight = height);
+		float height = position.y - lastTerrainHeight;
+		float gmsp = GROUND_MOVE_SPEED_PERCENTAGE;
+		return (Math.max(0, height / 200) * (1 - gmsp) + gmsp) * MOVE_SPEED;
 	}
 
 	/**
@@ -215,7 +229,7 @@ public class Camera {
 	 * @param degrees Angle in degrees to increase the pitch with
 	 */
 	public void increasePitch(float degrees) {
-		pitch = Math.max(-89.99f, Math.min(89.99f, pitch + degrees));
+		pitch = Math.max(-89.9f, Math.min(89.9f, pitch + degrees));
 	}
 
 	/**

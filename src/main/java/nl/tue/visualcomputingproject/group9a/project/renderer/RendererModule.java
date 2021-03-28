@@ -69,6 +69,7 @@ public class RendererModule extends Thread implements Module {
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 		// Here is your thread
 		LOGGER.info("Render thread started");
+
 		initialize();
 		while (!window.closed()) {
 			window.waitUntilUpdate();
