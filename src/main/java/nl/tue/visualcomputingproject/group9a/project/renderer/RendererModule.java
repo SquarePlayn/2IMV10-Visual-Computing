@@ -31,15 +31,11 @@ import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
  * Class for the rendering module.
  */
 @SuppressWarnings("UnstableApiUsage")
-public class RendererModule extends Thread implements Module {
-	/**
-	 * The logger object of this class.
-	 */
+public class RendererModule
+		extends Thread
+		implements Module {
+	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-	/**
-	 * Message queue from the event queue.
-	 */
-	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
 
 	private EventBus eventBus;
 
@@ -51,16 +47,13 @@ public class RendererModule extends Thread implements Module {
 	private Light light;
 	private Skybox skybox;
 
-	/**
-	 * Models other than chunks that are to be rendered.
-	 */
+	/** Models other than chunks that are to be rendered. */
 	private final Collection<RawModel> models = new ArrayList<>();
 
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
 		LOGGER.info("Rendering starting up!");
 		this.eventBus = eventBus;
-		eventBus.register(this);
 		this.start();
 	}
 
@@ -158,10 +151,5 @@ public class RendererModule extends Thread implements Module {
 		window.stop();
 		Loader.cleanup();
 	}
-
-	@Subscribe
-	public void receiveEvent(ProcessorChunkLoadedEvent event) {
-		LOGGER.info("RECEIVED EVENT =======================");
-		eventQueue.add(event);
-	}
+	
 }

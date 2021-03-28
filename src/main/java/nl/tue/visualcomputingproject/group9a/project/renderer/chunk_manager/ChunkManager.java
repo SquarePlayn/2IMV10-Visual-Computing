@@ -29,14 +29,10 @@ import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 @SuppressWarnings("UnstableApiUsage")
 public class ChunkManager {
 
-	/**
-	 * The logger object of this class.
-	 */
+	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-	/**
-	 * Event queue received events are temporarily inserted in, to be extracted in this thread
-	 */
+	/** Event queue received events are temporarily inserted in, to be extracted in this thread. */
 	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
 	final ConcurrentLinkedQueue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
 
