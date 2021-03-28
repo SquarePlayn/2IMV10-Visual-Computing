@@ -49,7 +49,8 @@ public class Main {
 			CachePolicy diskPolicy = new LRUCachePolicy(5 * CachePolicy.SIZE_GiB);
 			CachePolicy memoryPolicy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
 			logger.info("Starting up modules...");
-			EventBus bus = new AsyncEventBus(Settings.executorService);
+			EventBus bus = new EventBus();
+//			EventBus bus = new AsyncEventBus(Settings.executorService);
 			for (Module mod : modules) {
 				mod.startup(bus, diskPolicy, memoryPolicy);
 			}

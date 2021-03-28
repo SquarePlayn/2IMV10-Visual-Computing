@@ -6,6 +6,7 @@ import nl.tue.visualcomputingproject.group9a.project.chart.MapSheetCacheManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.ExtractionRequestEvent;
 import nl.tue.visualcomputingproject.group9a.project.chart.events.PartialChunkAvailableEvent;
 import nl.tue.visualcomputingproject.group9a.project.common.Point;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
@@ -98,23 +99,30 @@ public class Extractor {
 	}
 	
 	@Subscribe
-	public void request(ExtractionRequestEvent event) throws IOException, TransformException {
-		logger.info("Extracting {}...", event);
-		
-		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
-		switch (event.getLevel()) {
-			case FIVE_BY_FIVE:
-			case HALF_BY_HALF:
-				chunks = handleGeotiffFile(event);
-				break;
-			case LAS:
-				throw new UnsupportedOperationException("Unimplemented: LAZ");
-		}
-		
-		for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
-			eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
-		}
-		
-		cacheManager.releaseClaim(event.getClaim());
+	public void request(ExtractionRequestEvent event) {
+		Settings.executorService.submit(() -> {
+			try {
+				logger.info("Extracting {}...", event);
+
+				List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
+				switch (event.getLevel()) {
+					case FIVE_BY_FIVE:
+					case HALF_BY_HALF:
+						chunks = handleGeotiffFile(event);
+						break;
+					case LAS:
+						throw new UnsupportedOperationException("Unimplemented: LAZ");
+				}
+
+				for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
+					eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
+				}
+
+				cacheManager.releaseClaim(event.getClaim());
+
+			} catch (IOException | TransformException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 }

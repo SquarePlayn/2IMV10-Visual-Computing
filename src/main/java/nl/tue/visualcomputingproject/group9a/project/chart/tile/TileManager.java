@@ -70,33 +70,39 @@ public class TileManager {
 	
 	@Subscribe
 	public void onRequest(TextureRequestEvent event) throws TransformException, FactoryException, IOException {
-		logger.info("Loading texture of type {} for chunk {}...", event.getType(), event.getPosition());
-		TextureFileId id = new TextureFileId(event.getType(), event.getPosition());
-		FileReadCacheClaim readClaim = cacheManager.requestReadClaim(id);
-		if (readClaim != null) {
-			logger.info("Found in cache!");
-			//File available for reading!
-			try (InputStream stream = readClaim.getInputStream()) {
-				BufferedImage image = ImageIO.read(stream);
-				eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
-			}
-			cacheManager.releaseCacheClaim(readClaim);
-		} else {
-			logger.info("Downloading...");
-			FileReadWriteCacheClaim writeClaim = cacheManager.requestReadWriteClaim(id);
-			if (writeClaim != null) {
-				ReferencedEnvelope envelope = event.getPosition().transformed().getReferencedEnvelope(crs);
-				int image_width = (int) envelope.getWidth()*2;
-				int image_height = (int) envelope.getHeight()*2;
-				BufferedImage image = rendererMap.get(event.getType()).render(envelope, image_width, image_height);
-				try (OutputStream stream = writeClaim.getOutputStream()) {
-					ImageIO.write(image, "png", stream);
+		Settings.executorService.submit(() -> {
+			try {
+				logger.info("Loading texture of type {} for chunk {}...", event.getType(), event.getPosition());
+				TextureFileId id = new TextureFileId(event.getType(), event.getPosition());
+				FileReadCacheClaim readClaim = cacheManager.requestReadClaim(id);
+				if (readClaim != null) {
+					logger.info("Found in cache!");
+					//File available for reading!
+					try (InputStream stream = readClaim.getInputStream()) {
+						BufferedImage image = ImageIO.read(stream);
+						eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
+					}
+					cacheManager.releaseCacheClaim(readClaim);
+				} else {
+					logger.info("Downloading...");
+					FileReadWriteCacheClaim writeClaim = cacheManager.requestReadWriteClaim(id);
+					if (writeClaim != null) {
+						ReferencedEnvelope envelope = event.getPosition().transformed().getReferencedEnvelope(crs);
+						int image_width = (int) envelope.getWidth() * 2;
+						int image_height = (int) envelope.getHeight() * 2;
+						BufferedImage image = rendererMap.get(event.getType()).render(envelope, image_width, image_height);
+						try (OutputStream stream = writeClaim.getOutputStream()) {
+							ImageIO.write(image, "png", stream);
+						}
+						eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
+					} else {
+						throw new RuntimeException("Unable to get cache worked out for texture event!");
+					}
 				}
-				eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
-			} else {
-				throw new RuntimeException("Unable to get cache worked out for texture event!");
+			} catch (TransformException | FactoryException | IOException e) {
+				e.printStackTrace();
 			}
-		}
+		});
 	}
 	
 	@ToString

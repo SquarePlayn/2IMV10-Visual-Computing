@@ -33,7 +33,7 @@ public class ChartingModule
 	
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy)
-		throws IOException, ClassNotFoundException, ServiceException {
+			throws IOException, ClassNotFoundException, ServiceException {
 		logger.info("Charting starting up!");
 		LogUtil.setupGeotools();
 		this.cacheManager = new MapSheetCacheManager(diskPolicy);
