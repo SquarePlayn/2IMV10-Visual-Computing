@@ -41,7 +41,6 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
 		Store<PointIndexData> store = new ArrayStore<>(pos, transform);
 		store.addPoints(
-				store,
 				offset,
 				chunk.getData().getVector3D(),
 				PointIndexData::new

@@ -69,8 +69,8 @@ public class PreProcessing {
 					for (int dirZ = -1; dirZ <= 1; dirZ++) {
 						int d = findInDirection(store, x, z, dirX, dirZ);
 						if (d <= 0) continue;
-						int otherX = x+d*dirX;
-						int otherZ = z+d*dirZ;
+						int otherX = x + d*dirX;
+						int otherZ = z + d*dirZ;
 						StoreElement<Data> elem = store.get(otherX, otherZ);
 						if (elem == null) {
 							LOGGER.error("Should not occur!");
@@ -86,7 +86,7 @@ public class PreProcessing {
 				}
 				
 				if (num == 0) {
-					LOGGER.warn("No point in the star formation found! Using 0 instead.");
+					LOGGER.warn("No point in the star formation found! Using 0 instead for (" + x + ", " + z + ")");
 				} else {
 					vec.add(
 							expDX / num,

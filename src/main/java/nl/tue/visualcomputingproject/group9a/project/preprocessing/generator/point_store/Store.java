@@ -56,7 +56,6 @@ public interface Store<Data extends PointIndexData>
 	}
 	
 	default int addPoints(
-			Store<Data> store,
 			Vector3d offset,
 			Iterable<Vector3d> data,
 			Function<Vector3d, Data> generator) {
@@ -68,10 +67,10 @@ public interface Store<Data extends PointIndexData>
 			int x = getTransform().toGridX(point.x());
 			int z = getTransform().toGridZ(point.z());
 			count++;
-			if (store.hasPoint(x, z)) {
-				store.get(x, z).add(generator.apply(point));
+			if (hasPoint(x, z)) {
+				get(x, z).add(generator.apply(point));
 			} else {
-				store.set(x, z, new StoreElement<>(generator.apply(point)));
+				set(x, z, new StoreElement<>(generator.apply(point)));
 			}
 		}
 		return count;

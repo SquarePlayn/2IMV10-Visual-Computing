@@ -54,8 +54,8 @@ public class NeighborIterator<Data extends PointIndexData>
 			for (; curZ <= maxZ; curZ++) {
 				while (dataIt != null && dataIt.hasNext()) {
 					Data data = dataIt.next();
-					double curDistSquare = data.getVec().distanceSquared(center);
-//					double curDistSquare = calcDist2(data.getVec(), center);
+//					double curDistSquare = data.getVec().distanceSquared(center);
+					double curDistSquare = calcDist2(data.getVec(), center);
 					if (curDistSquare != 0 && curDistSquare <= distSquare) {
 						return data;
 					}
