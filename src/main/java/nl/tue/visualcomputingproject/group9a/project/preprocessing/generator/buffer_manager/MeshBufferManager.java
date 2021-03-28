@@ -72,13 +72,13 @@ public interface MeshBufferManager
 					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
 						return new MeshIntBufferManager(
 								3,
-								width * height * 2,
+								(width-1) * (height-1) * 2,
 								type.isClockwise());
 					case QUADS_CLOCKWISE_4_INT:
 					case QUADS_COUNTER_CLOCKWISE_4_INT:
 						return new MeshIntBufferManager(
 								4,
-								width * height,
+								(width-1) * (height-1),
 								type.isClockwise());
 					default:
 						throw new IllegalArgumentException("Invalid vertex buffer type: " + type);

@@ -18,7 +18,7 @@ import java.util.function.Function;
 public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		extends Generator<ID, T> {
 	
-	private static final int MAX_ITERATIONS = 1;
+	private static final int MAX_ITERATIONS = 10;
 	
 	// TODO: begin
 	static final double sigmaR = 2;
@@ -83,13 +83,13 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		);
 		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
 		Store<PointNormalIndexData> store = new ArrayStore<>(pos, transform);
-		int numPoints = store.addPoints(
+		store.addPoints(
 				store,
 				offset,
 				chunk.getData().getVector3D(),
 				(vec) -> new PointNormalIndexData(vec, null)
 		);
-		numPoints += PreProcessing.fillNullPoints(
+		PreProcessing.fillNullPoints(
 				store,
 				transform,
 				PointNormalIndexData::new
@@ -132,11 +132,11 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 								alpha = Math.exp(-v1*v1 - v2);
 							}
 							
-							double w = alpha * phi.apply(px);
-							Vector3d gradW = dPhi.apply(px).mul(alpha);
-//							double pxLengthSquared = px.lengthSquared();
-//							double w = alpha * phiD2.apply(pxLengthSquared);
-//							Vector3d gradW = px.mul(dPhiD2.apply(pxLengthSquared)).mul(2 * alpha);
+//							double w = alpha * phi.apply(px);
+//							Vector3d gradW = dPhi.apply(px).mul(alpha);
+							double pxLengthSquared = px.lengthSquared();
+							double w = alpha * phiD2.apply(pxLengthSquared);
+							Vector3d gradW = px.mul(dPhiD2.apply(pxLengthSquared)).mul(2 * alpha);
 							
 							sumW += w;
 							sumGw.add(gradW);

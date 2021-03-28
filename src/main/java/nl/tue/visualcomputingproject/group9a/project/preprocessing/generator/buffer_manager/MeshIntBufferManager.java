@@ -23,7 +23,7 @@ public class MeshIntBufferManager
 	private final boolean reversed;
 
 	/** The current amount of faces in the buffer. */
-	private int size;
+	private int size = 0;
 
 	/**
 	 * Creates a new mesh buffer.

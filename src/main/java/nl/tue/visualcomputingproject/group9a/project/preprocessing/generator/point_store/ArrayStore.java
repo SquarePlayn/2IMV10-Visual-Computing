@@ -18,17 +18,11 @@ public class ArrayStore<Data extends PointIndexData>
 	private final int height;
 	private final ScaleGridTransform transform;
 	
-//	public ArrayStore(int width, int height) {
-//		this.width = width;
-//		this.height = height;
-//		//noinspection unchecked
-//		points = (StoreElement<Data>[][]) new StoreElement[width][height];
-//	}
 	
 	public ArrayStore(ChunkPosition pos, ScaleGridTransform transform) {
 		this.transform = transform;
 		width = (int) (pos.getWidth() / transform.getScaleX()) + 1;
-		height = (int) (pos.getHeight() / transform.getScaleY()) + 1;
+		height = (int) (pos.getHeight() / transform.getScaleZ()) + 1;
 		//noinspection unchecked
 		points = (StoreElement<Data>[][]) new StoreElement[width][height];
 	}
@@ -63,7 +57,13 @@ public class ArrayStore<Data extends PointIndexData>
 			return points[x][z] != null;
 		}
 	}
-	
+
+	@Override
+	public boolean isInBounds(int x, int z) {
+		return 0 <= x && x < width &&
+				0 <= z && z < height;
+	}
+
 	public Iterator<StoreElement<Data>> iterator() {
 		return new GeneratorIterator<StoreElement<Data>>() {
 			int x = 0;

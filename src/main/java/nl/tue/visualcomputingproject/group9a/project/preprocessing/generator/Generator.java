@@ -33,12 +33,8 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 	 * @return A generator suitable for the given quality.
 	 */
 	public static <ID extends ChunkId, T extends PointData> Generator<ID, T> createGeneratorFor(QualityLevel quality) {
-		return new RIMLSGenerator<>();
-//		if (quality.isInterpolated()) {
-//			return new RawGenerator<>();
-//		} else {
-//			return new RIMLSGenerator<>();
-//		}
+//		return new RIMLSGenerator<>();
+		return new RawGenerator<>();
 	}
 
 
@@ -81,7 +77,11 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 			double dist = neighbor.distance(point);
 			normal.add(upProjection(point, neighbor).mul(dist));
 		}
-		normal.normalize();
+		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+			normal.y = 1;
+		} else {
+			normal.normalize();
+		}
 		return normal;
 	}
 	

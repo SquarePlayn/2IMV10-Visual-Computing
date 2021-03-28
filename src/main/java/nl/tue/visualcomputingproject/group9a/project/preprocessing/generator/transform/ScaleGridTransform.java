@@ -8,9 +8,9 @@ import lombok.Getter;
 public class ScaleGridTransform
 		implements GridTransform {
 	private final double scaleX;
-	private final double scaleY;
+	private final double scaleZ;
 	private final double rootX;
-	private final double rootY;
+	private final double rootZ;
 
 	@Override
 	public double toCoordX(int indexX) {
@@ -19,7 +19,7 @@ public class ScaleGridTransform
 
 	@Override
 	public double toCoordZ(int indexZ) {
-		return rootY + scaleY*indexZ;
+		return rootZ + scaleZ *indexZ;
 	}
 
 	@Override
@@ -29,7 +29,7 @@ public class ScaleGridTransform
 
 	@Override
 	public int toGridZ(double coordZ) {
-		return (int) ((coordZ - rootY) / scaleY);
+		return (int) ((coordZ - rootZ) / scaleZ);
 	}
 	
 }

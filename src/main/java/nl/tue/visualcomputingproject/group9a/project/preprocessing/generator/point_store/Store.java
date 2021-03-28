@@ -36,6 +36,11 @@ public interface Store<Data extends PointIndexData>
 		return get(x, z) != null;
 	}
 	
+	default boolean isInBounds(int x, int z) {
+		return 0 <= x && x < getWidth() &&
+				0 <= z && z < getHeight();
+	}
+	
 	default Iterator<Data> neighborIteratorOf(
 			Vector3d point,
 			int x,

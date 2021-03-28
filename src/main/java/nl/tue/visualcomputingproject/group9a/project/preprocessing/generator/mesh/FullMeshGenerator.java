@@ -17,35 +17,57 @@ import java.util.Iterator;
 
 public class FullMeshGenerator {
 	
-	private static void addSide(MeshBufferManager meshManager, StoreElement pi1, StoreElement pi2) {
-		if (pi1.size() == 2 && pi2.size() == 2) {
-			switch (Settings.MESH_TYPE) {
-				case TRIANGLES_CLOCKWISE_3_INT:
-				case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
+	private static <Data extends PointIndexData> void addSide(
+			MeshBufferManager meshManager,
+			StoreElement<Data> pi1,
+			StoreElement<Data> pi2) {
+		if (pi1.size() <= 1 && pi2.size() <= 1) return;
+		
+		switch (Settings.MESH_TYPE) {
+			case TRIANGLES_CLOCKWISE_3_INT:
+			case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
+				if (pi1.size() >= 2) {
 					meshManager.add(
-							pi1.get(1).getIndex(),
+							pi1.back().getIndex(),
+							pi2.get(0).getIndex(),
+							pi1.get(0).getIndex()
+					);
+				}
+				if (pi2.size() >= 2) {
+					meshManager.add(
+							pi1.back().getIndex(),
+							pi2.back().getIndex(),
+							pi2.get(0).getIndex()
+					);
+				}
+				if (pi1.size() >= 2 && pi2.size() >= 2) {
+					meshManager.add(
+							pi1.back().getIndex(),
 							pi2.get(0).getIndex(),
 							pi1.get(0).getIndex()
 					);
 					meshManager.add(
-							pi1.get(1).getIndex(),
-							pi2.get(1).getIndex(),
+							pi1.back().getIndex(),
+							pi2.back().getIndex(),
 							pi2.get(0).getIndex()
 					);
-					break;
+				}
+				break;
 
-				case QUADS_CLOCKWISE_4_INT:
-				case QUADS_COUNTER_CLOCKWISE_4_INT:
+			case QUADS_CLOCKWISE_4_INT:
+			case QUADS_COUNTER_CLOCKWISE_4_INT:
+				if (pi1.size() == 2 && pi2.size() == 2) {
 					meshManager.add(
-							pi1.get(1).getIndex(),
+							pi1.back().getIndex(),
 							pi1.get(0).getIndex(),
 							pi2.get(0).getIndex(),
-							pi2.get(1).getIndex()
+							pi2.back().getIndex()
 					);
-					break;
-				default:
-					throw new IllegalStateException();
-			}
+				}
+				break;
+				
+			default:
+				throw new IllegalStateException();
 		}
 	}
 	
@@ -66,6 +88,7 @@ public class FullMeshGenerator {
 		int count = 0;
 		for (int z = 0; z < store.getHeight(); z++) {
 			for (int x = 0; x < store.getWidth(); x++) {
+				if (!store.hasPoint(x, z)) continue;
 				removeMultiClusterAndSort(store.get(x, z));
 				count += store.get(x, z).size();
 			}
@@ -90,9 +113,9 @@ public class FullMeshGenerator {
 		
 		for (int z = 0; z < store.getHeight() - 1; z++) {
 			for (int x = 0; x < store.getWidth() - 1; x++) {
-				StoreElement<Data> pi00 = store.get(x, z);
-				StoreElement<Data> pi01 = store.get(x    , z + 1);
+				StoreElement<Data> pi00 = store.get(x    , z    );
 				StoreElement<Data> pi10 = store.get(x + 1, z    );
+				StoreElement<Data> pi01 = store.get(x    , z + 1);
 				StoreElement<Data> pi11 = store.get(x + 1, z + 1);
 				
 				addSide(meshManager, pi00, pi10);

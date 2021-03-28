@@ -4,7 +4,7 @@ import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Gen
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexData;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.StoreElement;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.Store;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.GridTransform;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.ScaleGridTransform;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,36 +33,60 @@ public class PreProcessing {
 		}
 	}
 	
+	private static <Data extends PointIndexData> int findInDirection(
+			Store<Data> store,
+			int srcX, int srcZ,
+			int dirX, int dirZ) {
+		if (dirX == 0 && dirZ == 0) return -1;
+		int x = srcX;
+		int z = srcZ;
+		for (int d = 1; store.isInBounds(x += dirX, z += dirZ); d++) {
+			if (store.hasPoint(x, z)) {
+				return d;
+			}
+		}
+		return -1;
+	}
+	
 	public static <Data extends PointIndexData> int fillNullPoints(
 			Store<Data> store,
-			GridTransform transform,
+			ScaleGridTransform transform,
 			Function<Vector3d, Data> generator) {
 		int count = 0;
 		for (int x = 0; x < store.getWidth(); x++) {
 			for (int z = 0; z < store.getHeight(); z++) {
-				if (store.hasPoint(x, z)) continue;
+				if (store.hasPoint(x, z)) {
+					count += store.get(x, z).size();
+					continue;
+				}
 				Vector3d vec = new Vector3d(transform.toCoordX(x), 0, transform.toCoordZ(z));
 
 				int num = 0;
 				double height = 0;
 				double expDX = 0;
 				double expDZ = 0;
-				for (int i = -1; i <= 1; i++) {
-					for (int j = -1; j <= 1; j++) {
-						if (i == 0 && j == 0) continue;
-						int otherX = x + i;
-						int otherZ = z + j;
-						if (!store.hasPoint(otherX, otherZ)) continue;
-						for (Data other : store.get(otherX, otherZ)) {
+				for (int dirX = -1; dirX <= 1; dirX++) {
+					for (int dirZ = -1; dirZ <= 1; dirZ++) {
+						int d = findInDirection(store, x, z, dirX, dirZ);
+						if (d <= 0) continue;
+						int otherX = x+d*dirX;
+						int otherZ = z+d*dirZ;
+						StoreElement<Data> elem = store.get(otherX, otherZ);
+						if (elem == null) {
+							LOGGER.error("Should not occur!");
+							continue;
+						}
+						for (Data other : elem) {
 							num++;
-							expDX += other.getVec().x() - transform.toCoordX(otherX);
+							expDX += (other.getVec().x() - transform.toCoordX(otherX)) / d;
 							height += other.getVec().y();
-							expDZ += other.getVec().z() - transform.toCoordZ(otherZ);
+							expDZ += (other.getVec().z() - transform.toCoordZ(otherZ)) / d;
 						}
 					}
 				}
+				
 				if (num == 0) {
-					LOGGER.error("TODO: edge case missing point!");
+					LOGGER.warn("No point in the star formation found! Using 0 instead.");
 				} else {
 					vec.add(
 							expDX / num,
