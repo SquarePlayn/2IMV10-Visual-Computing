@@ -1,10 +1,11 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing;
 
+import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.NeighborIterator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.PointIndexData;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.StoreElement;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.Store;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.ScaleGridTransform;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,8 @@ import java.util.function.Function;
 public class PreProcessing {
 	/** The logger of this class. */
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	/** The maximum height difference for the tree-smoothing algorithm. */
+	private final static double MAX_HEIGHT_DIFF = 0.25;
 	
 	public static <Data extends PointIndexData> void removeIllegalPoints(Store<Data> points) {
 		for (int x = 0; x < points.getWidth(); x++) {
@@ -48,9 +51,92 @@ public class PreProcessing {
 		return -1;
 	}
 	
+	private static <Data extends PointIndexData> void smoothTreeWLS(
+			Store<Data> srcStore,
+			Store<Data> trgStore,
+			IntervalList il,
+			Function<Vector3d, Data> generator,
+			int x, int z,
+			double dist) {
+		StoreElement<Data> elem = srcStore.get(x, z);
+		Vector3d vec = new Vector3d(elem.get(0).getVec());
+		Iterator<Data> neighbors = new NeighborIterator<>(
+				vec,
+				srcStore,
+				x, z,
+				srcStore.getTransform().getScaleX() * dist,
+				srcStore.getTransform().getScaleX(),
+				true
+		);
+			
+		Pair<Double, Double> pair = il.getTopInterval();
+		vec.y = (pair.getFirst() + pair.getSecond()) / 2;
+
+		double sumHW = vec.y;
+		double sumW = 1;
+		while (neighbors.hasNext()) {
+			Vector3d neighborV = neighbors.next().getVec();
+			if (neighborV.y < pair.getFirst()) continue;
+			double w = 1.0 / neighborV.distanceSquared(vec);
+			sumW += w;
+			sumHW += neighborV.y * w;
+		}
+		
+		vec.y = sumHW / sumW;
+		trgStore.set(x, z, new StoreElement<>(generator.apply(vec)));
+	}
+	
+	public static <Data extends PointIndexData> int treeSmoothing(
+			Store<Data> srcStore,
+			Store<Data> trgStore,
+			Function<Vector3d, Data> generator) {
+		int numVertices = 0;
+		for (int z = 0; z < srcStore.getHeight(); z++) {
+			for (int x = 0; x < srcStore.getWidth(); x++) {
+				if (!srcStore.hasPoint(x, z)) {
+					continue;
+				}
+				
+				StoreElement<Data> elem = srcStore.get(x, z);
+				Data data = elem.get(0);
+				Iterator<Data> neighbors = new NeighborIterator<>(
+						data.getVec(),
+						srcStore,
+						x, z,
+						srcStore.getTransform().getScaleX() * 2.5,
+						srcStore.getTransform().getScaleX(),
+						true
+				);
+				
+				IntervalList il = new IntervalList();
+				il.addInterval(data.getVec().y - MAX_HEIGHT_DIFF / 2, data.getVec().y + MAX_HEIGHT_DIFF / 2);
+				while (neighbors.hasNext()) {
+					Data neighbor = neighbors.next();
+					double height = neighbor.getVec().y();
+					il.addInterval(height - MAX_HEIGHT_DIFF / 2, height + MAX_HEIGHT_DIFF / 2);
+				}
+				if (il.size() <= 2) {
+					continue;
+				}
+				int numGaps = il.countGaps();
+				
+				if (numGaps > il.size() / 2.0) {
+					// Classified as tree
+					smoothTreeWLS(srcStore, trgStore, il, generator, x, z, 2.5);
+					numVertices++;
+					
+				} else {
+					// Classified as non-tree.
+					numVertices += elem.size();
+					trgStore.set(x, z, elem);
+				}
+			}
+		}
+		return numVertices;
+	}
+	
 	public static <Data extends PointIndexData> int fillNullPoints(
 			Store<Data> store,
-			ScaleGridTransform transform,
 			Function<Vector3d, Data> generator) {
 		int count = 0;
 		for (int x = 0; x < store.getWidth(); x++) {
@@ -59,7 +145,11 @@ public class PreProcessing {
 					count += store.get(x, z).size();
 					continue;
 				}
-				Vector3d vec = new Vector3d(transform.toCoordX(x), 0, transform.toCoordZ(z));
+				Vector3d vec = new Vector3d(
+						store.getTransform().toCoordX(x),
+						0,
+						store.getTransform().toCoordZ(z)
+				);
 
 				int num = 0;
 				double height = 0;
@@ -78,9 +168,9 @@ public class PreProcessing {
 						}
 						for (Data other : elem) {
 							num++;
-							expDX += (other.getVec().x() - transform.toCoordX(otherX)) / d;
+							expDX += (other.getVec().x() - store.getTransform().toCoordX(otherX)) / d;
 							height += other.getVec().y();
-							expDZ += (other.getVec().z() - transform.toCoordZ(otherZ)) / d;
+							expDZ += (other.getVec().z() - store.getTransform().toCoordZ(otherZ)) / d;
 						}
 					}
 				}

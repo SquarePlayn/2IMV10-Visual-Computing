@@ -4,6 +4,7 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.po
 import nl.tue.visualcomputingproject.group9a.project.common.util.FunctionIterator;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -128,6 +129,5 @@ public class StoreElement<Data extends PointIndexData>
 	public <T> Iterator<T> iterator(Function<Data, T> function) {
 		return new FunctionIterator<>(iterator(), function);
 	}
-	
-	
+
 }

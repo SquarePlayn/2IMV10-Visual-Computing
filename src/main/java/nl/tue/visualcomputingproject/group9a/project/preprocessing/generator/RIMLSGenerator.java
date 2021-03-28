@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
+import nl.tue.visualcomputingproject.group9a.project.common.util.FunctionIterator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.VertexBufferManager;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.mesh.FullMeshGenerator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.*;
@@ -91,18 +92,28 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		int numLoaded = store.addPoints(
 				offset,
 				chunk.getData().getVector3D(),
-				(vec) -> new PointNormalIndexData(vec, null)
+				PointNormalIndexData::new
 		);
 		LOGGER.info("Loaded " + numLoaded + " points.");
 		PreProcessing.fillNullPoints(
 				store,
-				transform,
 				PointNormalIndexData::new
 		);
-		Store.genWLSNormals(store, transform.getScaleX() * 1.5);
 		
 		final double scaleDist = store.getTransform().getScaleX();
 		final double dist = scaleDist * 1.5;
+		
+		if (chunk.getQualityLevel().getOrder() >= QualityLevel.HALF_BY_HALF.getOrder()) {
+			Store<PointNormalIndexData> newStore = new ArrayStore<>(pos, transform);
+			PreProcessing.treeSmoothing(
+					store,
+					newStore,
+					PointNormalIndexData::new
+			);
+			store = newStore;
+		}
+
+		Store.genWLSNormals(store, dist);
 
 		for (int zCoord = 0; zCoord < store.getHeight(); zCoord++) {
 			for (int xCoord = 0; xCoord < store.getWidth(); xCoord++) {
@@ -162,6 +173,11 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 						diff.x = Math.max(-0.1, Math.min(diff.x, 0.1));
 						diff.z = Math.max(-0.1, Math.min(diff.z, 0.1));
 						x.sub(diff);
+						Iterator<Vector3d> neighbors = new FunctionIterator<>(
+								new NeighborIterator<>(x, store, xCoord, zCoord, dist, scaleDist, true),
+								PointIndexData::getVec
+						);
+						pni.setNormal(Generator.generateWLSNormalFor(x, neighbors));
 					} while (diff.lengthSquared() > 0.1 && --diffIterRem > 0);
 				}
 			}

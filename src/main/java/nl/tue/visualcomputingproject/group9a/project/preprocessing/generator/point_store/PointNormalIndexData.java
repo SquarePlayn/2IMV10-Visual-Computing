@@ -21,7 +21,7 @@ public class PointNormalIndexData
 	}
 
 	public PointNormalIndexData(Vector3d vec) {
-		this(vec, new Vector3d());
+		this(vec, null);
 	}
 	
 }

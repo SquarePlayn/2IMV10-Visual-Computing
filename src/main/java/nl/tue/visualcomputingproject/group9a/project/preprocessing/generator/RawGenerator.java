@@ -47,7 +47,13 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		);
 
 		FullMeshGenerator.preprocess(store);
-		int count = PreProcessing.fillNullPoints(store, transform, PointIndexData::new);
+		int count = PreProcessing.fillNullPoints(store, PointIndexData::new);
+		
+		if (chunk.getQualityLevel().getOrder() >= QualityLevel.HALF_BY_HALF.getOrder()) {
+			Store<PointIndexData> newStore = new ArrayStore<>(pos, transform);
+			count = PreProcessing.treeSmoothing(store, newStore, PointIndexData::new);
+			store = newStore;
+		}
 		
 		// Create vertex buffer.
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
@@ -71,26 +77,6 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 						}
 					}
 					Vector3d normal = generateWLSNormalFor(point.getVec(), neighbors.iterator());
-
-
-//					Vector3d normal = new Vector3d();
-//					for (int dz = -DIST; dz <= DIST; dz++) {
-//						for (int dx = -DIST; dx <= DIST; dx++) {
-//							if (dx == 0 && dz == 0) continue;
-//							int x2 = x + dx;
-//							int z2 = z + dz;
-//							if (!store.hasPoint(x2, z2)) continue;
-//							for (PointIndexData point2 : store.get(x2, z2)) {
-//								double dist = point2.getVec().distance(point.getVec());
-//								normal.add(upProjection(point.getVec(), point2.getVec()).mul(dist));
-//							}
-//						}
-//					}
-//					if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
-//						normal.y = 1;
-//					} else {
-//						normal.normalize();
-//					}
 					point.setIndex(vertexManager.addVertex(point.getVec(), normal));
 				}
 			}

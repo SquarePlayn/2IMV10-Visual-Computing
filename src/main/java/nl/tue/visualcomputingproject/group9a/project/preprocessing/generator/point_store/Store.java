@@ -51,7 +51,8 @@ public interface Store<Data extends PointIndexData>
 				this,
 				x, z,
 				dist,
-				getTransform().getScaleX()
+				getTransform().getScaleX(),
+				true
 		);
 	}
 	
