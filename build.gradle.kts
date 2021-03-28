@@ -42,6 +42,7 @@ dependencies {
 
     implementation("org.slf4j:slf4j-api:1.7.30")
     implementation("org.slf4j:slf4j-simple:1.7.30")
+    implementation("org.slf4j:jcl-over-slf4j:1.7.30")
 
     implementation("org.liquidengine:legui:3.2.3")
 
@@ -50,6 +51,7 @@ dependencies {
     implementation("org.geotools:gt-epsg-hsql:24.2")
     implementation("org.geotools:gt-coverage:24.2")
     implementation("org.geotools:gt-geotiff:24.2")
+    implementation("org.geotools:gt-wmts:24.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
 

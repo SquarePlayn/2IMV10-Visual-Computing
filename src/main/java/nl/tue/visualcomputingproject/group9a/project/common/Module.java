@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.common;
 
 import com.google.common.eventbus.EventBus;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
+import org.geotools.ows.ServiceException;
 
 import java.io.IOException;
 
@@ -19,6 +20,6 @@ public interface Module {
 	 * @param memoryPolicy The policy used for the memory cache.
 	 */
 	void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy)
-			throws IOException;
+		throws IOException, ClassNotFoundException, ServiceException;
 	
 }

@@ -38,12 +38,7 @@ public class ChunkId
 	}
 	
 	public ChunkPosition transformedPosition() {
-		return new ChunkPosition(
-				position.getX(),
-				-position.getY() - position.getHeight(),
-				position.getWidth(),
-				position.getHeight()
-		);
+		return position.transformed();
 	}
 	
 	public static FileIdFactory<ChunkId> createChunkIdFactory() {

@@ -76,6 +76,7 @@ public final class Settings {
 	public static final float MOVE_SPEED = 3;
 	public static final float GROUND_MOVE_SPEED_PERCENTAGE = 0.2f;
 	public static final float LOOK_SPEED = 1;
+	public static final float WALK_HEIGHT = 5;
 
 	/**
 	 * Chunk update settings

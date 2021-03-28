@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.chart;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.Getter;
 import nl.tue.visualcomputingproject.group9a.project.chart.assembly.ChunkAssemblyManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.download.DownloadManager;
 import nl.tue.visualcomputingproject.group9a.project.chart.wfs.MapSheet;
@@ -31,6 +32,7 @@ public class LookupManager {
 	private final EventBus eventBus;
 	private final DownloadManager downloadManager;
 	private final ChunkAssemblyManager assemblyManager;
+	@Getter
 	private final WFSApi api = new WFSApi();
 	
 	public LookupManager(EventBus eventBus, DownloadManager downloadManager, ChunkAssemblyManager assemblyManager) throws IOException {
