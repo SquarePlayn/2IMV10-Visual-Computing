@@ -74,6 +74,9 @@ public class Camera implements KeyListener {
 		float dt = (curTime - lastUpdateTime) / 1_000f;
 		lastUpdateTime = curTime;
 
+		// If the time since last update is too big, it's a lag spike: don't move uncontrollably
+		if (dt > 1) return;
+
 		// Update
 		if (pressedKeys.contains(KeyEvent.VK_W)) moveForward(dt * getMoveSpeed());
 		if (pressedKeys.contains(KeyEvent.VK_S)) moveForward(-dt * getMoveSpeed());
