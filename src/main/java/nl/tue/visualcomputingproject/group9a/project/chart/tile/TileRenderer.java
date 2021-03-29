@@ -28,12 +28,12 @@ public class TileRenderer {
 		ReferencedEnvelope mapBounds = envelope.transform(mapContent.getCoordinateReferenceSystem(), true);
 		
 		
-		Rectangle imageBounds = new Rectangle(
-			0, 0, (int) image_width, (int) image_height);
+		Rectangle imageBounds = new Rectangle(0, 0, image_width, image_height);
 		BufferedImage image = new BufferedImage(imageBounds.width, imageBounds.height, BufferedImage.TYPE_INT_RGB);
-		Graphics2D gr = image.createGraphics();
-		gr.setPaint(Color.WHITE);
-		gr.fill(imageBounds);
+		Graphics2D g2d = image.createGraphics();
+		g2d.setBackground(Color.WHITE);
+		g2d.setPaint(Color.WHITE);
+//		g2d.fill(imageBounds);
 		
 		mapContent.getViewport().setScreenArea(imageBounds);
 		mapContent.getViewport().setBounds(mapBounds);
@@ -41,7 +41,7 @@ public class TileRenderer {
 		//Do the heavy lifting.
 		GTRenderer renderer = new StreamingRenderer();
 		renderer.setMapContent(mapContent);
-		renderer.paint(gr, imageBounds, mapBounds);
+		renderer.paint(g2d, imageBounds, mapBounds);
 		
 		mapContent.dispose();
 		

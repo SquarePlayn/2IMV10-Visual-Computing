@@ -115,8 +115,8 @@ public interface Store<Data extends PointIndexData>
 		int endX = Math.min(getWidth(), getTransform().toGridX(crop.getX() + crop.getWidth()));
 		int beginZ = Math.max(0, getTransform().toGridZ(crop.getY()));
 		int endZ = Math.min(getHeight(), getTransform().toGridZ(crop.getY() + crop.getHeight()));
-		for (int z = beginZ; z < endZ; z++) {
-			for (int x = beginX; x < endX; x++) {
+		for (int z = beginZ; z <= endZ; z++) {
+			for (int x = beginX; x <= endX; x++) {
 				if (!hasPoint(x, z)) continue;
 				function.consume(x, z, get(x, z));
 			}
