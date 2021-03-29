@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.image.BufferedImage;
 import java.lang.invoke.MethodHandles;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -33,8 +34,8 @@ public class ChunkManager {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	/** Event queue received events are temporarily inserted in, to be extracted in this thread. */
-	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
-	final ConcurrentLinkedQueue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
 
 	private final EventBus eventBus;
 
@@ -47,7 +48,7 @@ public class ChunkManager {
 
 	private final HashMap<ChunkPosition, RawModel> positionModel = new HashMap<>();
 	private final HashMap<ChunkPosition, QualityLevel> positionQuality = new HashMap<>();
-	private final HashMap<ChunkPosition, BufferedImage> pendingTextures = new HashMap<>();
+	private final HashMap<ChunkPosition, ChartTextureAvailableEvent> pendingTextures = new HashMap<>();
 	private final HashMap<ChunkPosition, MeshChunkData> positionData = new HashMap<>();
 
 	/**
@@ -219,14 +220,14 @@ public class ChunkManager {
 		} else {
 			return Optional.empty();
 		}
-
 	}
 
 	/**
 	 * Process chunk loaded events
 	 */
 	private void handleEvents() {
-		while (!eventQueue.isEmpty()) { // TODO: here
+		int actionCounter = 20;
+		while (actionCounter-- > 0 && !eventQueue.isEmpty()) {
 			// Extract event
 			ProcessorChunkLoadedEvent event = eventQueue.poll();
 			Chunk<MeshChunkId, MeshChunkData> chunk = event.getChunk();
@@ -253,7 +254,8 @@ public class ChunkManager {
 				}
 
 				if (texId < 0 && pendingTextures.containsKey(chunkPosition)) {
-					texId = Loader.loadTexture(pendingTextures.remove(chunkPosition));
+					ChartTextureAvailableEvent e = pendingTextures.remove(chunkPosition);
+					texId = Loader.loadTexture(e.getImage(), e.getWidth(), e.getHeight());
 				}
 
 				// Create the model
@@ -264,7 +266,6 @@ public class ChunkManager {
 						texId
 				);
 
-
 				// Add the new model
 				models.add(newModel);
 				positionModel.put(chunkPosition, newModel);
@@ -273,14 +274,14 @@ public class ChunkManager {
 			}
 		}
 
-		while (!textureEventQueue.isEmpty()) {
+		while (actionCounter-- > 0 && !textureEventQueue.isEmpty()) {
 			ChartTextureAvailableEvent event = textureEventQueue.poll();
 			if (event.getType() == TextureType.Aerial) {
 				if (positionModel.containsKey(event.getPosition())) {
-					int texId = Loader.loadTexture(event.getImage());
+					int texId = Loader.loadTexture(event.getImage(), event.getWidth(), event.getHeight());
 					positionModel.get(event.getPosition()).setTexId(texId);
 				} else {
-					pendingTextures.put(event.getPosition(), event.getImage());
+					pendingTextures.put(event.getPosition(), event);
 				}
 			}
 		}
