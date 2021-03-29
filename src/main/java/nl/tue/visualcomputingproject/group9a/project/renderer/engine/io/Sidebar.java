@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.awt.geom.Point2D;
 import java.lang.invoke.MethodHandles;
 
@@ -40,9 +41,36 @@ public class Sidebar extends JPanel {
 	Sidebar(Camera camera) throws FactoryException {
 		super(new BorderLayout());
 		this.camera = camera;
+		this.initialize();
 	}
 
 	public void initialize() throws FactoryException {
+		// Create layout
+		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+		// Wireframe button
+		JToggleButton buttonWireframe = new JToggleButton("Wireframe");
+		buttonWireframe.addItemListener(e -> camera.setWireframe(e.getStateChange() == ItemEvent.SELECTED));
+		add(buttonWireframe);
+
+		// Camera type selector
+		JComboBox<String> dropdownCameraType = new JComboBox<>(new String[]{"Hovering", "Flying", "Walking"});
+		dropdownCameraType.addItemListener(e -> {
+			LOGGER.info("Setting camera type to: " + e.getItem());
+			if (e.getItem() == "Walking") {
+				camera.setWalking(true);
+				camera.setLockHeight(false);
+			} else if (e.getItem() == "Flying") {
+				camera.setWalking(false);
+				camera.setLockHeight(false);
+			} else {
+				camera.setWalking(false);
+				camera.setLockHeight(true);
+			}
+		});
+		add(dropdownCameraType);
+
+		// Map pane
 		String baseURL = "http://tile.openstreetmap.org/";
 		TileService service = new OSMService("OSM", baseURL);
 		MapContent map = new MapContent();
@@ -50,7 +78,7 @@ public class Sidebar extends JPanel {
 		mapPane = new JMapPane(map);
 		mapPane.setVisible(true);
 		mapPane.addMouseListener(new MiniMapMouseAdapter(mapPane));
-		this.add(mapPane, BorderLayout.CENTER);
+		add(mapPane);
 
 		transformFromCRSToPane = (MathTransform2D) CRS.findMathTransform(crs, mapPane.getDisplayArea().getCoordinateReferenceSystem());
 
@@ -94,5 +122,4 @@ public class Sidebar extends JPanel {
 		newMapArea.setFrameFromCenter(mapPos2, corner2);
 		mapPane.setDisplayArea(newMapArea);
 	}
-
 }

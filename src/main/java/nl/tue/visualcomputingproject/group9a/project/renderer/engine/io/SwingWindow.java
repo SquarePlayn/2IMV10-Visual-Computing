@@ -39,7 +39,6 @@ public class SwingWindow {
 		sidebar = new Sidebar(canvas.getCamera());
 		canvas.setVisible(true);
 		sidebar.setMinimumSize(new Dimension(100, 100));
-		sidebar.initialize();
 		sidebar.setVisible(true);
 
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, canvas, sidebar);
