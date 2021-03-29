@@ -23,6 +23,8 @@ import org.lwjgl.opengl.awt.GLData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +40,7 @@ public class SwingCanvas extends AWTGLCanvas {
 	
 	private StaticShader shader;
 	private SkyboxShader skyboxShader;
+	@Getter
 	private Camera camera;
 	private ChunkManager chunkManager;
 	private Light light;
@@ -56,6 +59,12 @@ public class SwingCanvas extends AWTGLCanvas {
 		LOGGER.info("Working directory: " + System.getProperty("user.dir"));
 		
 		this.eventBus = eventBus;
+		this.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent componentEvent) {
+				SwingCanvas.this.render();
+			}
+		});
 	}
 	
 	@Override
@@ -129,11 +138,11 @@ public class SwingCanvas extends AWTGLCanvas {
 		Renderer.renderSkybox(skybox, skyboxShader, camera);
 		skyboxShader.stop();
 		
-		// Update chunks
-		chunkManager.update(camera);
-		
 		this.swapBuffers();
 		this.repaint();
+
+		// Update chunks
+		chunkManager.update(camera);
 	}
 	
 	/**

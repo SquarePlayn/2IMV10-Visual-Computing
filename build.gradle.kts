@@ -52,6 +52,7 @@ dependencies {
     implementation("org.geotools:gt-coverage:24.2")
     implementation("org.geotools:gt-geotiff:24.2")
     implementation("org.geotools:gt-wmts:24.2")
+    implementation("org.geotools:gt-swing:24.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
     implementation("org.lwjglx:lwjgl3-awt:0.1.8")

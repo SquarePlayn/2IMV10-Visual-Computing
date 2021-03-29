@@ -2,6 +2,7 @@ package nl.tue.visualcomputingproject.group9a.project.renderer;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.SneakyThrows;
 import nl.tue.visualcomputingproject.group9a.project.common.Module;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.policy.CachePolicy;
@@ -41,6 +42,7 @@ public class RendererModule
 	private EventBus eventBus;
 	private SwingWindow window;
 	
+	@SneakyThrows
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {
 		LOGGER.info("Rendering starting up!");
