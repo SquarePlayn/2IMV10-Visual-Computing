@@ -39,8 +39,7 @@ public class Loader {
 			float[] positions,
 			int[] indices,
 			Vector2f offset,
-			int texId
-	) {
+			int texId) {
 		FloatBuffer positionsBuffer = storeDataInFloatBuffer(positions);
 		IntBuffer indicesBuffer = storeDataInIntBuffer(indices);
 		return loadToVAO(positionsBuffer, indicesBuffer, offset, texId);
@@ -226,8 +225,7 @@ public class Loader {
 			int attributeNumber,
 			int floatsPerVertex,
 			int totalFloatsPerVertex,
-			int floatsOffset
-	) {
+			int floatsOffset) {
 
 		// Enable the VBO so we can work on it here
 		bindVBO(vbo);
@@ -392,9 +390,11 @@ public class Loader {
 		WritableRaster raster;
 		BufferedImage texImage;
 
-		ColorModel glAlphaColorModel = new ComponentColorModel(ColorSpace
-				.getInstance(ColorSpace.CS_sRGB), new int[]{8, 8, 8, 8},
-				true, false, Transparency.TRANSLUCENT, DataBuffer.TYPE_BYTE);
+		ColorModel glAlphaColorModel = new ComponentColorModel(
+				ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] {8, 8, 8, 8},
+				true, false,
+				Transparency.TRANSLUCENT,
+				DataBuffer.TYPE_BYTE);
 
 		raster = Raster.createInterleavedRaster(
 				DataBuffer.TYPE_BYTE,
@@ -403,7 +403,7 @@ public class Loader {
 				4,
 				null
 		);
-		texImage = new BufferedImage(glAlphaColorModel, raster, true, new Hashtable());
+		texImage = new BufferedImage(glAlphaColorModel, raster, true, null);
 
 		// copy the source image into the produced image
 		Graphics g = texImage.getGraphics();

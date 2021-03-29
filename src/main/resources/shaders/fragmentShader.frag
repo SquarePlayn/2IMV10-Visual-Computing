@@ -10,13 +10,12 @@ out vec4 out_Color;
 uniform vec3 lightColor;
 uniform sampler2D textureSampler;
 uniform bool textureAvailable;
+uniform vec2 chunkSize;
+uniform vec2 border;
 
 const float MIN_BRIGHTNESS = 0.3;
 
 void main(void) {
-    //TODO: Pass in chunk size for the division.
-    vec4 texColor = texture2D(textureSampler, clamp((flatPosition-0.5)/100.0, 0.0, 1.0));
-
     vec3 unitNormal = normalize(surfaceNormal);
     vec3 unitLightVector = normalize(toLightVector);
 
@@ -26,7 +25,18 @@ void main(void) {
     vec3 diffuse = brightness * lightColor;
 
     if (textureAvailable) {
-        out_Color = vec4(diffuse, 1.0) * texColor;
+        //TODO: Pass in chunk size for the division.
+//        vec2 texPos = (flatPosition-0.5) / 100.0;
+        vec2 texPos = ((flatPosition - 2*border) / 100) - border;
+        if (texPos.x < 0.0 || texPos.y < 0.0) { // TODO: tmp
+            out_Color = vec4(0, 1, 1, 1);
+        } else if (texPos.x > 1.0 || texPos.y > 1.0) {
+            out_Color = vec4(0, 0, 1, 1);
+        } else {
+            out_Color = vec4(texPos, 0, 1);
+//            vec4 texColor = texture2D(textureSampler, clamp(texPos, 0.0, 1.0));
+//            out_Color = vec4(diffuse, 1.0) * texColor;
+        }
     } else {
         out_Color = vec4(diffuse, 1.0) * vec4(color, 1.0);
     }

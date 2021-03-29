@@ -226,7 +226,7 @@ public class ChunkManager {
 	 * Process chunk loaded events
 	 */
 	private void handleEvents() {
-		while (!eventQueue.isEmpty()) {
+		while (!eventQueue.isEmpty()) { // TODO: here
 			// Extract event
 			ProcessorChunkLoadedEvent event = eventQueue.poll();
 			Chunk<MeshChunkId, MeshChunkData> chunk = event.getChunk();

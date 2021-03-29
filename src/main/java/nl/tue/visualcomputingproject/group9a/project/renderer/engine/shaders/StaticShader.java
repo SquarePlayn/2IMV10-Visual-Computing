@@ -1,5 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders;
 
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
@@ -20,6 +21,7 @@ public class StaticShader extends ShaderProgram {
 	private int locationTime;
 	private int locationTextureSampler;
 	private int locationTextureAvailable;
+	private int locationBorder;
 
 	public StaticShader() {
 		super(VERTEX_FILE, FRAGMENT_FILE);
@@ -35,14 +37,16 @@ public class StaticShader extends ShaderProgram {
 	@Override
 	protected void getAllUniformLocations() {
 		locationTransformationMatrix = super.getUniformLocation("transformationMatrix");
-		locationProjectionMatrix = super.getUniformLocation("projectionMatrix");
 		locationViewMatrix = super.getUniformLocation("viewMatrix");
+		locationProjectionMatrix = super.getUniformLocation("projectionMatrix");
 		locationLightPosition = super.getUniformLocation("lightPosition");
 		locationLightColor = super.getUniformLocation("lightColor");
 		locationCameraPosition = super.getUniformLocation("cameraPosition");
 		locationTime = super.getUniformLocation("time");
 		locationTextureSampler = super.getUniformLocation("textureSampler");
 		locationTextureAvailable = super.getUniformLocation("textureAvailable");
+		locationBorder = super.getUniformLocation("locationBorder");
+		super.loadFloat(locationBorder, Settings.CHUNK_TILE_BORDER);
 	}
 
 	public void loadTransformationMatrix(Matrix4f matrix) {

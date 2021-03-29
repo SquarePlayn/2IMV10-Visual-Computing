@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("UnstableApiUsage")
 public class TileManager {
 	private static final Logger logger = LoggerFactory.getLogger(TileManager.class);
 	private final EventBus eventBus;
@@ -69,7 +70,7 @@ public class TileManager {
 	}
 	
 	@Subscribe
-	public void onRequest(TextureRequestEvent event) throws TransformException, FactoryException, IOException {
+	public void onRequest(TextureRequestEvent event) {
 		Settings.executorService.submit(() -> {
 			try {
 				logger.info("Loading texture of type {} for chunk {}...", event.getType(), event.getPosition());
@@ -87,7 +88,9 @@ public class TileManager {
 					logger.info("Downloading...");
 					FileReadWriteCacheClaim writeClaim = cacheManager.requestReadWriteClaim(id);
 					if (writeClaim != null) {
-						ReferencedEnvelope envelope = event.getPosition().transformed().getReferencedEnvelope(crs);
+						ReferencedEnvelope envelope = event.getPosition()
+								.transformedAddBorder(Settings.CHUNK_TILE_BORDER)
+								.getReferencedEnvelope(crs);
 						int image_width = (int) envelope.getWidth() * 2;
 						int image_height = (int) envelope.getHeight() * 2;
 						BufferedImage image = rendererMap.get(event.getType()).render(envelope, image_width, image_height);
