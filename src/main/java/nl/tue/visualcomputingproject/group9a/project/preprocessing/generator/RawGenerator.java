@@ -51,7 +51,7 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		
 		if (chunk.getQualityLevel().getOrder() >= QualityLevel.HALF_BY_HALF.getOrder()) {
 			Store<PointIndexData> newStore = new ArrayStore<>(pos, transform);
-			count = PreProcessing.treeSmoothing(store, newStore, PointIndexData::new);
+			count = PreProcessing.treeSmoothing2(store, newStore, PointIndexData::new);
 			store = newStore;
 		}
 		

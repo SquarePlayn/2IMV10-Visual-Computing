@@ -19,6 +19,12 @@ public class PreProcessing {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The maximum height difference for the tree-smoothing algorithm. */
 	private final static double MAX_HEIGHT_DIFF = 0.25;
+	/** Half of the delta coordinates of a circle of size 2 around the center point.
+	 *  The other half can be found by negating the values. */
+	private static final int[][] DX_DZ_LOCAL_NEIGHBORHOOD = new int[][] {
+			{1, 0}, {1, 1}, {0, 1}, {-1, 1},
+			{2, -1}, {2, 0}, {2, 1}, {1, 2}, {0, 2}, {-1, 2}
+	};
 	
 	public static <Data extends PointIndexData> void removeIllegalPoints(Store<Data> points) {
 		for (int x = 0; x < points.getWidth(); x++) {
@@ -77,7 +83,7 @@ public class PreProcessing {
 		while (neighbors.hasNext()) {
 			Vector3d neighborV = neighbors.next().getVec();
 			if (neighborV.y < pair.getFirst()) continue;
-			double w = 1.0 / neighborV.distanceSquared(vec);
+			double w = 1.0 / neighborV.distance(vec);
 			sumW += w;
 			sumHW += neighborV.y * w;
 		}
@@ -122,7 +128,7 @@ public class PreProcessing {
 				
 				if (numGaps > il.size() / 2.0) {
 					// Classified as tree
-					smoothTreeWLS(srcStore, trgStore, il, generator, x, z, 2.5);
+					smoothTreeWLS(srcStore, trgStore, il, generator, x, z, 3.5);
 					numVertices++;
 					
 				} else {
@@ -132,6 +138,168 @@ public class PreProcessing {
 				}
 			}
 		}
+		return numVertices;
+	}
+	
+	private static <Data extends PointIndexData> void checkIsTree(
+			Store<Data> store,
+			boolean[][] isTree,
+			int x,
+			int z) {
+		int trees = 0;
+		int nonTrees = 0;
+		int neutral = 0;
+		for (int[] dxdz : DX_DZ_LOCAL_NEIGHBORHOOD) {
+			int x1 = x + dxdz[0];
+			int z1 = z + dxdz[1];
+			int x2 = x - dxdz[0];
+			int z2 = z - dxdz[1];
+			
+			boolean has1 = store.hasPoint(x1, z1);
+			boolean has2 = store.hasPoint(x2, z2);
+			if (has1 && has2) {
+				if (isTree[x1][z1] == isTree[x2][z2]) {
+					if (isTree[x1][z1]) trees += 3;
+					else nonTrees += 3;
+				} else neutral += 2;
+				
+			} else if (has1) {
+				if (isTree[x1][z1]) trees++;
+				else nonTrees++;
+				
+			} else if (has2) {
+				if (isTree[x2][z2]) trees++;
+				else nonTrees++;
+			}
+		}
+		
+		if (isTree[x][z]) {
+			if (nonTrees > 1.5 * (trees + neutral)) {
+				isTree[x][z] = false;
+			}
+		} else {
+			if (trees > 1.5 * (nonTrees + neutral)) {
+				isTree[x][z] = true;
+			}
+		}
+	}
+
+	public static <Data extends PointIndexData> int treeSmoothing2(
+			Store<Data> srcStore,
+			Store<Data> trgStore,
+			Function<Vector3d, Data> generator) {
+		boolean[][] isTree = new boolean[srcStore.getWidth()][srcStore.getHeight()];
+		double[][] low = new double[srcStore.getWidth()][srcStore.getHeight()];
+		double[][] max = new double[srcStore.getWidth()][srcStore.getHeight()];
+		// Fill initial values.
+		for (int z = 0; z < srcStore.getHeight(); z++) {
+			for (int x = 0; x < srcStore.getWidth(); x++) {
+				if (!srcStore.hasPoint(x, z)) {
+					continue;
+				}
+
+				StoreElement<Data> elem = srcStore.get(x, z);
+				Data data = elem.get(0);
+				Iterator<Data> neighbors = new NeighborIterator<>(
+						data.getVec(),
+						srcStore,
+						x, z,
+						srcStore.getTransform().getScaleX() * 2.5,
+						srcStore.getTransform().getScaleX(),
+						true
+				);
+
+				IntervalList il = new IntervalList();
+				il.addInterval(data.getVec().y - MAX_HEIGHT_DIFF / 2, data.getVec().y + MAX_HEIGHT_DIFF / 2);
+				while (neighbors.hasNext()) {
+					Data neighbor = neighbors.next();
+					double height = neighbor.getVec().y();
+					il.addInterval(height - MAX_HEIGHT_DIFF / 2, height + MAX_HEIGHT_DIFF / 2);
+				}
+				Pair<Double, Double> pair = il.getTopInterval();
+				low[x][z] = pair.getFirst();
+				max[x][z] = pair.getSecond();
+				if (il.size() <= 2) {
+					continue;
+				}
+				int numGaps = il.countGaps();
+
+				if (numGaps > il.size() / 2.0) {
+					// Classified as tree
+					isTree[x][z] = true;
+				}
+			}
+		}
+
+		// Improve tree classification by looking at group formation.
+		for (int z = 0; z < srcStore.getHeight(); z++) {
+			for (int x = 0; x < srcStore.getWidth(); x++) {
+				checkIsTree(srcStore, isTree, x, z);
+			}
+		}
+
+		int numVertices = 0;
+		for (int z = 0; z < srcStore.getHeight(); z++) {
+			for (int x = 0; x < srcStore.getWidth(); x++) {
+				StoreElement<Data> elem = srcStore.get(x, z);
+				if (!isTree[x][z]) {
+					trgStore.set(x, z, elem);
+					numVertices += elem.size();
+					continue;
+				}
+				Data data = elem.get(0);
+				Vector3d vec = new Vector3d(elem.get(0).getVec());
+				double minH, maxH;
+				{ // Approximate initial height value.
+					double sumMinW = low[x][z];
+					double sumMaxW = max[x][z];
+					double sumW = 1;
+					for (int[] dxdz : DX_DZ_LOCAL_NEIGHBORHOOD) {
+						int x1 = x + dxdz[0];
+						int z1 = z + dxdz[1];
+						int x2 = x - dxdz[0];
+						int z2 = z - dxdz[1];
+						double w = 1.0 / (dxdz[0] * dxdz[0] + dxdz[1] * dxdz[1]);
+						if (srcStore.hasPoint(x1, z1)) {
+							sumMinW += low[x1][z1] * w;
+							sumMaxW += max[x1][z1] * w;
+							sumW += w;
+						}
+						if (srcStore.hasPoint(x2, z2)) {
+							sumMinW += low[x2][z2] * w;
+							sumMaxW += max[x2][z2] * w;
+							sumW += w;
+						}
+					}
+					minH = sumMinW / sumW;
+					maxH = sumMaxW / sumW;
+					vec.y = (minH + maxH) / 2.0;
+				}
+				{ // Move value to stable position.
+					Iterator<Data> neighbors = new NeighborIterator<>(
+							data.getVec(),
+							srcStore,
+							x, z,
+							srcStore.getTransform().getScaleX() * 2.5,
+							srcStore.getTransform().getScaleX(),
+							true
+					);
+					double sumHW = vec.y;
+					double sumW = 1;
+					while (neighbors.hasNext()) {
+						Vector3d neighborV = neighbors.next().getVec();
+						if (neighborV.y < minH) continue;
+						double w = 1.0 / neighborV.distance(vec);
+						sumW += w;
+						sumHW += neighborV.y * w;
+					}
+					vec.y = sumHW / sumW;
+				}
+				numVertices++;
+				trgStore.set(x, z, new StoreElement<>(generator.apply(vec)));
+			}
+		}
+		
 		return numVertices;
 	}
 	
