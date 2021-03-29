@@ -19,7 +19,7 @@ public class PreProcessing {
 	/** The logger of this class. */
 	private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 	/** The maximum height difference for the tree-smoothing algorithm. */
-	private final static double MAX_HEIGHT_DIFF = 0.25;
+	private final static double MAX_HEIGHT_DIFF = 0.1;
 	/** Half of the delta coordinates of a circle of size 2 around the center point.
 	 *  The other half can be found by negating the values. */
 	private static final int[][] DX_DZ_LOCAL_NEIGHBORHOOD = new int[][] {
