@@ -52,6 +52,9 @@ public class Camera implements KeyListener {
 	private boolean walking = false;
 	private float fov = FOV;
 
+	// Last time at which the position was updated (ms)
+	long lastUpdateTime = 0;
+
 	private GLFWKeyCallback keyboardCallback;
 
 	private Collection<Integer> pressedKeys = new HashSet<>();
@@ -65,17 +68,25 @@ public class Camera implements KeyListener {
 	 * Update the camera position, to be called once per frame
 	 */
 	public void updatePosition() {
-		if (pressedKeys.contains(KeyEvent.VK_W)) moveForward(getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_S)) moveForward(-getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_A)) moveSideways(-getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_D)) moveSideways(getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_Q)) moveUp(-getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_E)) moveUp(getMoveSpeed());
-		if (pressedKeys.contains(KeyEvent.VK_UP)) increasePitch(LOOK_SPEED);
-		if (pressedKeys.contains(KeyEvent.VK_DOWN)) increasePitch(-LOOK_SPEED);
-		if (pressedKeys.contains(KeyEvent.VK_LEFT)) increaseYaw(-LOOK_SPEED);
-		if (pressedKeys.contains(KeyEvent.VK_RIGHT)) increaseYaw(LOOK_SPEED);
+		// Determine what percentage of a second has passed since last update
+		long curTime = System.currentTimeMillis();
+		if (lastUpdateTime == 0) lastUpdateTime = curTime;
+		float dt = (curTime - lastUpdateTime) / 1_000f;
+		lastUpdateTime = curTime;
 
+		// Update
+		if (pressedKeys.contains(KeyEvent.VK_W)) moveForward(dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_S)) moveForward(-dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_A)) moveSideways(-dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_D)) moveSideways(dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_Q)) moveUp(-dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_E)) moveUp(dt * getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_UP)) increasePitch(dt * LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_DOWN)) increasePitch(-dt * LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_LEFT)) increaseYaw(-dt * LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_RIGHT)) increaseYaw(dt * LOOK_SPEED);
+
+		// Stick walking camera
 		if (walking) {
 			Optional<Float> terrainHeight = chunkManager.getHeight(position.x, position.z);
 			terrainHeight.ifPresent(height -> position.y = height + WALK_HEIGHT);
