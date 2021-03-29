@@ -45,8 +45,7 @@ public class StaticShader extends ShaderProgram {
 		locationTime = super.getUniformLocation("time");
 		locationTextureSampler = super.getUniformLocation("textureSampler");
 		locationTextureAvailable = super.getUniformLocation("textureAvailable");
-		locationBorder = super.getUniformLocation("locationBorder");
-		super.loadFloat(locationBorder, Settings.CHUNK_TILE_BORDER);
+		locationBorder = super.getUniformLocation("border");
 	}
 
 	public void loadTransformationMatrix(Matrix4f matrix) {
@@ -62,9 +61,12 @@ public class StaticShader extends ShaderProgram {
 		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix(camera));
 	}
 
-
 	public void loadTime(float time) {
 		super.loadFloat(locationTime, time);
+	}
+	
+	public void loadBorder() {
+		super.loadFloat(locationBorder, (float) Settings.CHUNK_TILE_BORDER);
 	}
 
 	public void loadLight(Light light) {

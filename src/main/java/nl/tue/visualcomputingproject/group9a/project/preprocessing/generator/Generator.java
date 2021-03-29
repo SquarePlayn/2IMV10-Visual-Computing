@@ -88,15 +88,12 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 	
 	protected static ChunkPosition refineCrop(
 			ChunkPosition crop,
-			Vector3d offset,
 			ScaleGridTransform transform) {
 		double dx = transform.getScaleX();
 		double dz = transform.getScaleZ();
 		return new ChunkPosition(
-				crop.getX() - offset.x - dx,
-				crop.getY() - offset.z - dz,
-				crop.getWidth() + 2*dx,
-				crop.getHeight() + 2*dz
+				-dx, -dz,
+				crop.getWidth() + 2*dx, crop.getHeight() + 2*dz
 		);
 	}
 	

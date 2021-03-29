@@ -55,12 +55,9 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 	@Override
 	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk, ChunkPosition crop) {
 		ChunkPosition pos = chunk.getPosition();
-		ScaleGridTransform transform = GridTransform.createTransformFor(
-				chunk.getQualityLevel(),
-				0, 0
-		);
-		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
-		crop = refineCrop(crop, offset, transform);
+		ScaleGridTransform transform = GridTransform.createTransformFor(chunk, crop);
+		Vector3d offset = new Vector3d(crop.getX(), 0, crop.getY());
+		crop = refineCrop(crop, transform);
 		Store<PointNormalIndexData> store = new ArrayStore<>(pos, transform);
 		int numLoaded = store.addPoints(
 				offset,
