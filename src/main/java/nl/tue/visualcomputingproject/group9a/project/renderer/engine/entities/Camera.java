@@ -6,11 +6,14 @@ import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
+import org.liquidengine.legui.input.KeyCode;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashSet;
@@ -21,7 +24,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 @Getter
 @Setter
-public class Camera {
+public class Camera implements KeyListener {
 
 	/**
 	 * The logger object of this class.
@@ -30,12 +33,7 @@ public class Camera {
 
 	private static final Vector3f UP = new Vector3f(0, 1, 0);
 	private static final Vector3f FORWARD = new Vector3f(0, 0, -1);
-
-	/**
-	 * The window the camera should render on
-	 */
-	private final Window window;
-
+	
 	/**
 	 * The chunk manager used to fetch terrain heights
 	 */
@@ -59,65 +57,24 @@ public class Camera {
 	private Collection<Integer> pressedKeys = new HashSet<>();
 	private float lastTerrainHeight = 40;
 
-	public Camera(Window window, ChunkManager chunkManager) {
-		this.window = window;
+	public Camera(ChunkManager chunkManager) {
 		this.chunkManager = chunkManager;
-
-		registerInputCallbacks();
-	}
-
-	/**
-	 * Register all callbacks for input w.r.t. camera movement
-	 */
-	private void registerInputCallbacks() {
-		keyboardCallback = new GLFWKeyCallback() {
-			@Override
-			public void invoke(long w, int key, int scancode, int action, int mods) {
-				if (action == GLFW_PRESS) {
-					pressedKeys.add(key);
-
-					if (key == GLFW_KEY_T) {
-						wireframe = !wireframe;
-					} else if (key == GLFW_KEY_R) {
-						lockHeight = !lockHeight;
-					} else if (key == GLFW_KEY_F) {
-						walking = !walking;
-					} else if (key == GLFW_KEY_P) {
-						System.out.println("Camera position: " + position);
-					}
-
-
-					if (key == GLFW_KEY_TAB) {
-						fov = FOV / ZOOM_FACTOR;
-						window.setResized(true);
-					}
-				} else if (action == GLFW_RELEASE) {
-					pressedKeys.remove(key);
-
-					if (key == GLFW_KEY_TAB) {
-						fov = FOV;
-						window.setResized(true);
-					}
-				}
-			}
-		};
-		GLFW.glfwSetKeyCallback(window.getWindow(), keyboardCallback);
 	}
 
 	/**
 	 * Update the camera position, to be called once per frame
 	 */
 	public void updatePosition() {
-		if (pressedKeys.contains(GLFW_KEY_W)) moveForward(getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_S)) moveForward(-getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_A)) moveSideways(-getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_D)) moveSideways(getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_Q)) moveUp(-getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_E)) moveUp(getMoveSpeed());
-		if (pressedKeys.contains(GLFW_KEY_UP)) increasePitch(LOOK_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_DOWN)) increasePitch(-LOOK_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_LEFT)) increaseYaw(-LOOK_SPEED);
-		if (pressedKeys.contains(GLFW_KEY_RIGHT)) increaseYaw(LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_W)) moveForward(getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_S)) moveForward(-getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_A)) moveSideways(-getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_D)) moveSideways(getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_Q)) moveUp(-getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_E)) moveUp(getMoveSpeed());
+		if (pressedKeys.contains(KeyEvent.VK_UP)) increasePitch(LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_DOWN)) increasePitch(-LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_LEFT)) increaseYaw(-LOOK_SPEED);
+		if (pressedKeys.contains(KeyEvent.VK_RIGHT)) increaseYaw(LOOK_SPEED);
 
 		if (walking) {
 			Optional<Float> terrainHeight = chunkManager.getHeight(position.x, position.z);
@@ -256,5 +213,43 @@ public class Camera {
 	public void cleanup() {
 		keyboardCallback.free();
 		// TODO Listen to mouse events, move if moved
+	}
+	
+	@Override
+	public void keyTyped(KeyEvent keyEvent) {
+	
+	}
+	
+	@Override
+	public void keyPressed(KeyEvent keyEvent) {
+		int key = keyEvent.getKeyCode();
+		pressedKeys.add(key);
+		
+		if (key == KeyEvent.VK_T) {
+			wireframe = !wireframe;
+		} else if (key == KeyEvent.VK_R) {
+			lockHeight = !lockHeight;
+		} else if (key == KeyEvent.VK_F) {
+			walking = !walking;
+		} else if (key == KeyEvent.VK_P) {
+			System.out.println("Camera position: " + position);
+		}
+		
+		
+		if (key == KeyEvent.VK_TAB) {
+			fov = FOV / ZOOM_FACTOR;
+			//window.setResized(true);
+		}
+	}
+	
+	@Override
+	public void keyReleased(KeyEvent keyEvent) {
+		int key = keyEvent.getKeyCode();
+		pressedKeys.remove(key);
+		
+		if (key == KeyEvent.VK_TAB) {
+			fov = FOV;
+			//window.setResized(true);
+		}
 	}
 }

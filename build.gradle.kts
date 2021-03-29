@@ -54,6 +54,7 @@ dependencies {
     implementation("org.geotools:gt-wmts:24.2")
 
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
+    implementation("org.lwjglx:lwjgl3-awt:0.1.8")
 
     implementation("im.bci:pngdecoder:0.13")
 

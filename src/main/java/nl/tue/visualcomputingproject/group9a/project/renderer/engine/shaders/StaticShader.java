@@ -2,6 +2,8 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.shaders;
 
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Light;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.SwingCanvas;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.SwingWindow;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
 import org.joml.Matrix4f;
@@ -54,7 +56,7 @@ public class StaticShader extends ShaderProgram {
 		super.loadVector3f(locationCameraPosition, camera.getPosition());
 	}
 
-	public void loadProjectionMatrix(Window window, Camera camera) {
+	public void loadProjectionMatrix(SwingCanvas window, Camera camera) {
 		super.loadMatrix4f(locationProjectionMatrix, window.getProjectionMatrix(camera));
 	}
 
