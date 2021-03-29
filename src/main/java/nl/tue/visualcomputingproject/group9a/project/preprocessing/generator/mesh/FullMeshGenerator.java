@@ -3,6 +3,7 @@ package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.me
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.Chunk;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkId;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.PointData;
 import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.MeshBufferManager;
@@ -99,6 +100,7 @@ public class FullMeshGenerator {
 	public static <ID extends ChunkId, T extends PointData, Data extends PointIndexData> ByteBuffer generateMesh(
 			Store<Data> store,
 			Chunk<ID, ? extends T> chunk,
+			ChunkPosition crop,
 			boolean preprocess) {
 		if (preprocess) {
 			preprocess(store);
@@ -108,11 +110,15 @@ public class FullMeshGenerator {
 				chunk.getQualityLevel(),
 				Settings.MESH_TYPE,
 				store.getWidth(), store.getHeight(),
-				chunk.getData().size()
+				store.countCropped(crop)
 		);
 		
-		for (int z = 0; z < store.getHeight() - 1; z++) {
-			for (int x = 0; x < store.getWidth() - 1; x++) {
+		int beginX = Math.max(0, store.getTransform().toGridX(crop.getX()));
+		int endX = Math.min(store.getWidth(), store.getTransform().toGridX(crop.getX() + crop.getWidth()));
+		int beginZ = Math.max(0, store.getTransform().toGridZ(crop.getY()));
+		int endZ = Math.min(store.getHeight(), store.getTransform().toGridZ(crop.getY() + crop.getHeight()));
+		for (int z = beginZ; z < endZ - 1; z++) {
+			for (int x = beginX; x < endX - 1; x++) {
 				StoreElement<Data> pi00 = store.get(x    , z    );
 				StoreElement<Data> pi10 = store.get(x + 1, z    );
 				StoreElement<Data> pi01 = store.get(x    , z + 1);

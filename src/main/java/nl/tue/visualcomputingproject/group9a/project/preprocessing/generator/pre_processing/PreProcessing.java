@@ -1,5 +1,6 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing;
 
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.util.Pair;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.NeighborIterator;

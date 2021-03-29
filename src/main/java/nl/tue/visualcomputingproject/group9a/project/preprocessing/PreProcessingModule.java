@@ -146,7 +146,7 @@ public class PreProcessingModule
 				try {
 					for (MeshChunkId id : request) {
 						requesting.put(id.getPosition(), id);
-						req.add(id.asChunkId());
+						req.add(id.asExtraBorderChunkId(Settings.CHUNK_BORDER_SIZE));
 					}
 				} finally {
 					lock.unlock();
@@ -170,23 +170,22 @@ public class PreProcessingModule
 						}
 					}
 					
-					List<ChunkId> req = new ArrayList<>(reqAmt);
-					lock.lock();
-					try {
-						for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
-							MeshChunkId id = pair.getFirst();
-							if (id.getQuality() != QualityLevel.getBest()) {
-								MeshChunkId reqId = id.withQuality(id.getQuality().next());
-								requesting.put(reqId.getPosition(), reqId);
-								req.add(reqId.asChunkId());
+					if (reqAmt > 0) {
+						List<ChunkId> req = new ArrayList<>(reqAmt);
+						lock.lock();
+						try {
+							for (Pair<MeshChunkId, WriteBackReadCacheClaim<MeshChunkData>> pair : claims) {
+								MeshChunkId id = pair.getFirst();
+								if (id.getQuality() != QualityLevel.getBest()) {
+									MeshChunkId reqId = id.withQuality(id.getQuality().next());
+									requesting.put(reqId.getPosition(), reqId);
+									req.add(reqId.asExtraBorderChunkId(Settings.CHUNK_BORDER_SIZE));
+								}
 							}
+							
+						} finally {
+							lock.unlock();
 						}
-						
-					} finally {
-						lock.unlock();
-					}
-
-					if (!req.isEmpty()) {
 						eventBus.post(new ProcessorChunkRequestedEvent(req));
 					}
 				});
@@ -228,7 +227,7 @@ public class PreProcessingModule
 		lock.lock();
 		try {
 			final ChunkId eventId = e.getChunk().getChunkId();
-			MeshChunkId reqId = requesting.get(eventId.transformedPosition());
+			MeshChunkId reqId = requesting.get(eventId.getPosition().transformedAddBorder(-Settings.CHUNK_BORDER_SIZE));
 			if (reqId == null) {
 				// Ignore event since the chunk is not needed anymore.
 				LOGGER.info("Ignoring '" + e.getChunk().getChunkId() + "' since it is not needed anymore.");
@@ -243,8 +242,8 @@ public class PreProcessingModule
 			// Update quality of current ID.
 			id = reqId.withQuality(eventId.getQuality());
 
-			// Remove request if the highest quality level has been received.
 			if (id.getQuality() == QualityLevel.getBest()) {
+				// Remove request if the highest quality level has been received.
 				requesting.remove(id.getPosition());
 
 			} else {
@@ -280,9 +279,13 @@ public class PreProcessingModule
 			// Process the data.
 			MeshChunkData data;
 			try {
+				Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(
+						id.asExtraBorder(Settings.CHUNK_BORDER_SIZE),
+						e.getChunk().getData()
+				);
 				data = Generator
 						.createGeneratorFor(id.getQuality())
-						.generateChunkData(new Chunk<>(id, e.getChunk().getData()));
+						.generateChunkData(chunk, id.getPosition());
 				
 			} catch (Exception ex) {
 				ex.printStackTrace();

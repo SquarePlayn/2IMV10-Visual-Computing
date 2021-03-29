@@ -27,7 +27,7 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 	private static final int DIST = 1;
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk, ChunkPosition crop) {
 		if (!chunk.getQualityLevel().isInterpolated()) {
 			throw new IllegalArgumentException(
 					"This generator can only be used for interpolated datasets.");
@@ -39,6 +39,7 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 				0, 0
 		);
 		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
+		crop = refineCrop(crop, offset, transform);
 		Store<PointIndexData> store = new ArrayStore<>(pos, transform);
 		store.addPoints(
 				offset,
@@ -47,31 +48,30 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		);
 
 		FullMeshGenerator.preprocess(store);
-		int count = PreProcessing.fillNullPoints(store, PointIndexData::new);
+		PreProcessing.fillNullPoints(store, PointIndexData::new);
 		
 		if (chunk.getQualityLevel().getOrder() >= QualityLevel.HALF_BY_HALF.getOrder()) {
 			Store<PointIndexData> newStore = new ArrayStore<>(pos, transform);
-			count = PreProcessing.treeSmoothing2(store, newStore, PointIndexData::new);
+			PreProcessing.treeSmoothing2(store, newStore, PointIndexData::new);
 			store = newStore;
 		}
 		
 		// Create vertex buffer.
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
-				Settings.VERTEX_TYPE, count
+				Settings.VERTEX_TYPE, store.countCropped(crop)
 		);
-		
-		for (int z = 0; z < store.getHeight(); z++) {
-			for (int x = 0; x < store.getWidth(); x++) {
-				if (!store.hasPoint(x, z)) continue;
-				for (PointIndexData point : store.get(x, z)) {
+		{
+			final Store<PointIndexData> s = store;
+			store.forEachInCrop(crop, (x, z, elem) -> {
+				for (PointIndexData point : elem) {
 					List<Vector3d> neighbors = new ArrayList<>();
 					for (int dz = -DIST; dz <= DIST; dz++) {
 						for (int dx = -DIST; dx <= DIST; dx++) {
 							if (dx == 0 && dz == 0) continue;
 							int x2 = x + dx;
 							int z2 = z + dz;
-							if (!store.hasPoint(x2, z2)) continue;
-							for (PointIndexData point2 : store.get(x2, z2)) {
+							if (!s.hasPoint(x2, z2)) continue;
+							for (PointIndexData point2 : s.get(x2, z2)) {
 								neighbors.add(point2.getVec());
 							}
 						}
@@ -79,12 +79,12 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 					Vector3d normal = generateWLSNormalFor(point.getVec(), neighbors.iterator());
 					point.setIndex(vertexManager.addVertex(point.getVec(), normal));
 				}
-			}
+			});
 		}
 
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),
-				FullMeshGenerator.generateMesh(store, chunk, false),
+				FullMeshGenerator.generateMesh(store, chunk, crop, false),
 				new Vector2f((float) offset.x(), (float) offset.z()));
 	}
 	

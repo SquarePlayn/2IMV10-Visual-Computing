@@ -22,6 +22,7 @@ public final class Settings {
 	
 	public static final int CHUNK_WIDTH = 100;
 	public static final int CHUNK_HEIGHT = 100;
+	public static final int CHUNK_BORDER_SIZE = 10;
 
 	/**
 	 * Number of dedicated threads reserved by various modules in the application.

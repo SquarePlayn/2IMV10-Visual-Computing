@@ -2,6 +2,8 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 
 import lombok.Value;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.joml.Vector2d;
+import org.joml.Vector3d;
 import org.locationtech.jts.geom.*;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -24,10 +26,33 @@ public class ChunkPosition {
 	
 	public ChunkPosition transformed() {
 		return new ChunkPosition(
-			this.getX(),
-			-this.getY() - this.getHeight(),
-			this.getWidth(),
-			this.getHeight()
+			x, -y - height,
+			width, height
 		);
 	}
+	
+	public ChunkPosition transformedAddBorder(double border) {
+		return new ChunkPosition(
+				x - border      , -y - height - border,
+				width + 2*border, height + 2*border
+		);
+	}
+	
+	public ChunkPosition addBorder(double border) {
+		return new ChunkPosition(
+				x - border      , y - border,
+				width + 2*border, height + 2*border
+		);
+	}
+
+	public boolean contains(Vector3d point) {
+		return (x <= point.x && point.x <= x + width &&
+				y <= point.z && point.z <= y + height);
+	}
+	
+	public boolean contains (Vector2d point) {
+		return (x <= point.x && point.x <= x + width &&
+				y <= point.y && point.y <= y + height);
+	}
+	
 }

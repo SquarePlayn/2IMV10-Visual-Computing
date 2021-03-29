@@ -26,7 +26,6 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 	private static final int MAX_ITERATIONS = 10;
 	private static final int MAX_DIFF_ITERATIONS = 10;
 	
-	// TODO: begin
 	static final double SIGMA_R = 2;
 	static final double SIGMA_N = 2;
 	static final double H = 0.25;
@@ -52,42 +51,16 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		val = val * val * val;
 		return px.mul(-8*val / h2, new Vector3d());
 	};
-	// TODO: end
-	
-	private static double calcDist(QualityLevel quality) {
-		switch (quality) {
-			case FIVE_BY_FIVE:
-				return 10.0;
-			case HALF_BY_HALF:
-				return 2.0;
-			case LAS:
-				return 1.0;
-			default:
-				throw new IllegalStateException();
-		}
-	}
-	
-	private static double calcGridDist(QualityLevel quality) {
-		switch (quality) {
-			case FIVE_BY_FIVE:
-				return 5.0;
-			case HALF_BY_HALF:
-				return 0.5;
-			case LAS:
-				return 0.25;
-			default:
-				throw new IllegalStateException();
-		}
-	}
 	
 	@Override
-	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk) {
+	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk, ChunkPosition crop) {
 		ChunkPosition pos = chunk.getPosition();
 		ScaleGridTransform transform = GridTransform.createTransformFor(
 				chunk.getQualityLevel(),
 				0, 0
 		);
 		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
+		crop = refineCrop(crop, offset, transform);
 		Store<PointNormalIndexData> store = new ArrayStore<>(pos, transform);
 		int numLoaded = store.addPoints(
 				offset,
@@ -187,17 +160,17 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		Store.genWLSNormals(store, transform.getScaleX() * 1.5);
 		
 		// Create vertex buffer.
-		int count = FullMeshGenerator.preprocess(store);
+		FullMeshGenerator.preprocess(store);
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
-				Settings.VERTEX_TYPE, count
+				Settings.VERTEX_TYPE, store.countCropped(crop)
 		);
 		
-		Store.addToVertexManager(store, vertexManager);
+		Store.addToVertexManager(store, crop, vertexManager);
 		
 		// Generate mesh and return.
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),
-				FullMeshGenerator.generateMesh(store, chunk, false),
+				FullMeshGenerator.generateMesh(store, chunk, crop, false),
 				new Vector2f((float) offset.x(), (float) offset.z()));
 	}
 	

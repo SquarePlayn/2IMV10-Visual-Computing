@@ -3,10 +3,10 @@ package nl.tue.visualcomputingproject.group9a.project.common.chunk;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileId;
 import nl.tue.visualcomputingproject.group9a.project.common.cache.FileIdFactory;
 
-import java.io.File;
 import java.util.Objects;
 
 @Getter
@@ -42,7 +42,20 @@ public class MeshChunkId
 	}
 	
 	public ChunkId asChunkId() {
-		return new ChunkId(transformedPosition(), getQuality());
+		return new ChunkId(getPosition().transformed(), getQuality());
+	}
+	
+	public ChunkId asExtraBorderChunkId(double border) {
+		return new ChunkId(getPosition().transformedAddBorder(border), getQuality());
+	}
+	
+	public MeshChunkId asExtraBorder(double border) {
+		return new MeshChunkId(
+				getPosition().addBorder(border),
+				getQuality(),
+				vertexType,
+				meshType
+		);
 	}
 	
 	public MeshChunkId withQuality(QualityLevel quality) {

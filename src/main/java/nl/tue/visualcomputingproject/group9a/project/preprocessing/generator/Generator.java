@@ -1,6 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.ScaleGridTransform;
 import org.joml.Vector3d;
 
 import java.util.Iterator;
@@ -21,7 +22,7 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 	 * 
 	 * @return A data chunk containing a vertex buffer and a mesh of the processed data.
 	 */
-	public abstract MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk);
+	public abstract MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk, ChunkPosition crop);
 
 	/**
 	 * Creates a generator based on the quality level.
@@ -83,6 +84,20 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 			normal.normalize();
 		}
 		return normal;
+	}
+	
+	protected static ChunkPosition refineCrop(
+			ChunkPosition crop,
+			Vector3d offset,
+			ScaleGridTransform transform) {
+		double dx = transform.getScaleX();
+		double dz = transform.getScaleZ();
+		return new ChunkPosition(
+				crop.getX() - offset.x - dx,
+				crop.getY() - offset.z - dz,
+				crop.getWidth() + 2*dx,
+				crop.getHeight() + 2*dz
+		);
 	}
 	
 }

@@ -1,5 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store;
 
+import lombok.AllArgsConstructor;
+import nl.tue.visualcomputingproject.group9a.project.common.chunk.ChunkPosition;
 import nl.tue.visualcomputingproject.group9a.project.common.util.FunctionIterator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.VertexBufferManager;
@@ -13,6 +15,12 @@ import java.util.function.Function;
 
 public interface Store<Data extends PointIndexData>
 		extends Iterable<StoreElement<Data>> {
+	
+	@FunctionalInterface
+	interface StoreFunction<Data extends PointIndexData> {
+		void consume(int x, int z, StoreElement<Data> element);
+	}
+	
 	/** The filter used to filter out illegal points. */
 	PointFilter FILTER = new DeleteInvalidPointFilter();
 	
@@ -92,14 +100,64 @@ public interface Store<Data extends PointIndexData>
 		}
 	}
 	
-	static void addToVertexManager(
-			Store<? extends PointNormalIndexData> store,
-			VertexBufferManager vertexManager) {
-		for (StoreElement<? extends PointNormalIndexData> elem : store) {
-			for (PointNormalIndexData data : elem) {
-				data.setIndex(vertexManager.addVertex(data.getVec(), data.getNormal()));
+	default void forEach(StoreFunction<Data> function) {
+		for (int z = 0; z < getHeight(); z++) {
+			for (int x = 0; x < getWidth(); x++) {
+				function.consume(x, z, get(x, z));
 			}
 		}
+	}
+	
+	default void forEachInCrop(
+			ChunkPosition crop,
+			StoreFunction<Data> function) {
+		int beginX = Math.max(0, getTransform().toGridX(crop.getX()));
+		int endX = Math.min(getWidth(), getTransform().toGridX(crop.getX() + crop.getWidth()));
+		int beginZ = Math.max(0, getTransform().toGridZ(crop.getY()));
+		int endZ = Math.min(getHeight(), getTransform().toGridZ(crop.getY() + crop.getHeight()));
+		for (int z = beginZ; z < endZ; z++) {
+			for (int x = beginX; x < endX; x++) {
+				if (!hasPoint(x, z)) continue;
+				function.consume(x, z, get(x, z));
+			}
+		}
+	}
+	
+	static <Data extends PointNormalIndexData> void addToVertexManager(
+			Store<Data> store,
+			ChunkPosition crop,
+			final VertexBufferManager vertexManager) {
+		store.forEachInCrop(crop, (x, z, elem) -> {
+			if (elem == null) return;
+			for (Data data : elem) {
+				data.setIndex(vertexManager.addVertex(data.getVec(), data.getNormal()));
+			}
+		});
+	}
+	
+	
+	default int count() {
+		@AllArgsConstructor
+		class Container {
+			int i;
+		}
+		Container c = new Container(0);
+		forEach((x, z, elem) -> {
+			c.i++;
+		});
+		return c.i;
+	}
+	
+	default int countCropped(ChunkPosition crop) {
+		@AllArgsConstructor
+		class Container {
+			int i;
+		}
+		Container c = new Container(0);
+		forEachInCrop(crop, (x, z, elem) -> {
+			c.i++;
+		});
+		return c.i;
 	}
 	
 }
