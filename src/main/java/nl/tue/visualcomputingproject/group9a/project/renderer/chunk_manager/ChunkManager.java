@@ -199,11 +199,11 @@ public class ChunkManager {
 		toUnload.forEach((cp) -> {
 			RawModel model = positionModel.get(cp);
 			if (unloadSet.add(model)) {
-				unloadQueue.add(model);
 				models.remove(model);
 				positionModel.remove(cp);
 				positionQuality.remove(cp);
 				positionData.remove(cp);
+				unloadQueue.add(model);
 				removed.add(cp);
 			}
 		});

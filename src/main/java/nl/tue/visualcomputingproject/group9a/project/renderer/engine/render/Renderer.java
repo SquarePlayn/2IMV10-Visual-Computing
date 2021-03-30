@@ -10,8 +10,14 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
 
 public class Renderer {
+	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
 	/**
 	 * Render a model to the screen
 	 *
@@ -46,7 +52,11 @@ public class Renderer {
 		}
 
 		// Draw all vertices
-		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
+		if (model.isUnloaded()) {
+			LOGGER.error("Attempted rendering unloaded model.");
+		} else {
+			GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
+		}
 
 		// Deactivate the VAO & VBOs
 		GL20.glDisableVertexAttribArray(0);
