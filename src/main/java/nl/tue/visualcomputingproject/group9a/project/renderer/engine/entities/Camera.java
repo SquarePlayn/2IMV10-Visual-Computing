@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.Window;
 import org.joml.Vector3f;
-import org.liquidengine.legui.input.KeyCode;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +71,7 @@ public class Camera implements KeyListener {
 		lockHeight = copy.lockHeight;
 		walking = copy.walking;
 		fov = copy.fov;
+		lastUpdateTime = copy.lastUpdateTime;
 		keyboardCallback = copy.keyboardCallback;
 		pressedKeys = new HashSet<>(copy.pressedKeys);
 		lastTerrainHeight = copy.lastTerrainHeight;
