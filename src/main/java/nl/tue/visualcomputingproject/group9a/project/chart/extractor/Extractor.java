@@ -48,13 +48,7 @@ public class Extractor {
 		logger.info("Extractor is ready!");
 	}
 	
-	public List<Chunk<ChunkId, PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
-		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
-		
-		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData()));
-		}
-		
+	public void handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
 		try (InputStream inputStream = event.getClaim().getInputStream()) {
 			ZipInputStream zipInputStream = new ZipInputStream(inputStream);
 			ZipEntry entry = zipInputStream.getNextEntry();
@@ -73,7 +67,8 @@ public class Extractor {
 			double[] coord = new double[coverage.getGridGeometry().getGridToCRS2D().getSourceDimensions()];
 			double[] p = new double[coverage.getGridGeometry().getGridToCRS2D().getTargetDimensions()];
 			GridCoordinates2D c = new GridCoordinates2D();
-			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
+			for (ChunkPosition pos : event.getPositions()) {
+				Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData());
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
@@ -104,11 +99,11 @@ public class Extractor {
 				}
 				
 				chunk.getData().setInterleavedPoints(points);
+				
+				eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
 			}
 			
-			logger.info("Extracted {} points into {} chunks.", count, chunks.size());
-			
-			return chunks;
+			logger.info("Extracted {} points.", count);
 		}
 	}
 	
@@ -118,25 +113,19 @@ public class Extractor {
 			try {
 				logger.info("Extracting {}...", event);
 
-				List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 				switch (event.getLevel()) {
 					case FIVE_BY_FIVE:
 					case HALF_BY_HALF:
-						chunks = handleGeotiffFile(event);
+						handleGeotiffFile(event);
 						break;
 					case LAS:
 						throw new UnsupportedOperationException("Unimplemented: LAZ");
 				}
 
-				for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
-					eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
-				}
-
-				cacheManager.releaseClaim(event.getClaim());
-
 			} catch (IOException | TransformException e) {
 				e.printStackTrace();
 			}
+			cacheManager.releaseClaim(event.getClaim());
 		});
 	}
 }
