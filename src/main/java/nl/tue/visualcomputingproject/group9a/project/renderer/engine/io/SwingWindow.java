@@ -30,7 +30,7 @@ public class SwingWindow {
 	private final JFrame frame = new JFrame(Settings.WINDOW_NAME);
 	@Getter
 	private final SwingCanvas canvas;
-	private final JPanel sidebar;
+	private final JPanel sidebar, glPanel;
 	private JMapPane mapPane;
 	private final CoordinateReferenceSystem crs = CRS.decode("EPSG:28992");
 	private MathTransform2D transformFromCRSToPane;
@@ -44,15 +44,21 @@ public class SwingWindow {
 		data.samples = 4;
 		data.swapInterval = 0;
 		
+		glPanel = new JPanel(new BorderLayout());
+		sidebar = new JPanel(new BorderLayout());
+
 		canvas = new SwingCanvas(data, eventBus);
 		canvas.setMinimumSize(new Dimension(100, 100));
-		sidebar = new JPanel(new BorderLayout());
 		canvas.setVisible(true);
+
+		glPanel.add(canvas, BorderLayout.CENTER);
+		glPanel.setVisible(true);
+
 		sidebar.setMinimumSize(new Dimension(100, 100));
 		setupSidebar();
 		sidebar.setVisible(true);
 		
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, canvas, sidebar);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, glPanel, sidebar);
 		splitPane.setVisible(true);
 		splitPane.setContinuousLayout(false);
 		splitPane.setOneTouchExpandable(true);
@@ -74,10 +80,14 @@ public class SwingWindow {
 		SwingUtilities.invokeLater(renderLoop);
 		
 		SwingUtilities.invokeLater(new Runnable() {
-			@SneakyThrows
 			@Override
 			public void run() {
-				centerMapOnCameraPosition(Settings.INITIAL_POSITION);
+				try {
+					centerMapOnCameraPosition(Settings.INITIAL_POSITION);
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
 			}
 		});
 	}
@@ -104,13 +114,17 @@ public class SwingWindow {
 		});
 	}
 	
-	@SneakyThrows
 	public void setCameraPosition(DirectPosition2D position) {
-		MathTransform2D transform = (MathTransform2D) CRS.findMathTransform(position.getCoordinateReferenceSystem(), crs);
-		Point2D p = transform.transform((Point2D) position, null);
-		canvas.getCamera().setPosition(new Vector3f((float) p.getX(),
-			Settings.INITIAL_POSITION.y,
-			(float) p.getY()));
+		try {
+			MathTransform2D transform = (MathTransform2D) CRS.findMathTransform(position.getCoordinateReferenceSystem(), crs);
+			Point2D p = transform.transform((Point2D) position, null);
+			canvas.getCamera().setPosition(new Vector3f((float) p.getX(),
+				Settings.INITIAL_POSITION.y,
+				(float) p.getY()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 	
 	public void centerMapOnCameraPosition(Vector3f position) throws FactoryException, TransformException {
