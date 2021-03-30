@@ -54,9 +54,8 @@ public class ChunkAssemblyJob {
 		int ctr = 0;
 		
 		for (Chunk<ChunkId, PointCloudChunkData> chunk : partialChunks) {
-			for (int i = 0; i < chunk.getData().getInterleavedPoints().length; i++) {
-				newPoints[ctr++] = chunk.getData().getInterleavedPoints()[i];
-			}
+			System.arraycopy(chunk.getData().getInterleavedPoints(), 0, newPoints, ctr, chunk.getData().getInterleavedPoints().length);
+			ctr += chunk.getData().getInterleavedPoints().length;
 		}
 		
 		points.setInterleavedPoints(newPoints);

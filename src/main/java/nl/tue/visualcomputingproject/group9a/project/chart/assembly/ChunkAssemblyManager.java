@@ -74,8 +74,10 @@ public class ChunkAssemblyManager {
 		// Do assembly / posting only if needed.
 		if (!isReadyForAssembly) return;
 		
+		logger.info("Chunk {} is ready for assembly!", job.getChunkId());
+		
 		Settings.executorService.submit(() -> {
-			logger.info("Chunk {} is ready for assembly!", job.getChunkId());
+			logger.info("Chunk {} is being assembled!", job.getChunkId());
 			
 			Chunk<ChunkId, PointCloudChunkData> assembledChunk = event.getChunk();
 			
