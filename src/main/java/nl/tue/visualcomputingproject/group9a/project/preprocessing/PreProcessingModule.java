@@ -309,8 +309,9 @@ public class PreProcessingModule
 			// Put the data in the cache.
 			WriteBackReadWriteCacheClaim<MeshChunkData> claim = cache.requestReadWriteClaim(id);
 			if (claim != null) {
-				claim.set(data);
 				// Cache new data.
+				claim.set(data);
+				if (!claim.isOnDisk()) claim.toDisk();
 				cache.releaseCacheClaim(claim);
 				
 				// Delete old data.

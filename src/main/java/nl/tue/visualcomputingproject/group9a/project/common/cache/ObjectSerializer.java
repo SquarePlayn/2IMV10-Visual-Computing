@@ -132,6 +132,7 @@ public interface ObjectSerializer<T> {
 			os.write(buffer.array(), buffer.position(), size);
 			
 		} else {
+			buffer = buffer.slice();
 			if (size <= BUFFER_SIZE) {
 				byte[] buf = new byte[size];
 				buffer.get(buf);
