@@ -128,6 +128,7 @@ public class SwingCanvas extends AWTGLCanvas {
 		shader.start();
 		shader.loadLight(light);
 		shader.loadTime((float) (System.nanoTime() * 1000_000_000.0));
+		shader.loadBorder();
 		for (RawModel model : models) {
 			Renderer.renderModel(model, shader, camera);
 		}
