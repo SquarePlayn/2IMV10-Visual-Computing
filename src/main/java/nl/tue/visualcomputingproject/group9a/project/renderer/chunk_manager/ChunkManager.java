@@ -38,8 +38,8 @@ public class ChunkManager {
 	/** Event queue received events are temporarily inserted in, to be extracted in this thread. */
 	private final Queue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
 	private final Queue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
-	private final Queue<ChunkPosition> unloadQueue = new ConcurrentLinkedQueue<>();
-	private final Set<ChunkPosition> unloadSet = ConcurrentHashMap.newKeySet();
+	private final Queue<RawModel> unloadQueue = new ConcurrentLinkedQueue<>();
+	private final Set<RawModel> unloadSet = ConcurrentHashMap.newKeySet();
 
 	private final EventBus eventBus;
 
@@ -120,10 +120,10 @@ public class ChunkManager {
 
 		int actionCounter = 10;
 		while (actionCounter-- > 0 && !unloadQueue.isEmpty()) {
-			ChunkPosition pos = unloadQueue.poll();
-			if (pos != null) {
-				unload(pos);
-				unloadSet.remove(pos);
+			RawModel model = unloadQueue.poll();
+			if (model != null) {
+				Loader.unloadModel(model);
+				unloadSet.remove(model);
 			}
 		}
 		
@@ -197,23 +197,16 @@ public class ChunkManager {
 							Math.abs(chunkIY - currentChunkIndex.y) >= chunkUnloadRangeY;
 				}).collect(Collectors.toCollection(ArrayList::new));
 		toUnload.forEach((cp) -> {
-			if (unloadSet.add(cp)) {
-				unloadQueue.add(cp);
+			RawModel model = positionModel.get(cp);
+			if (unloadSet.add(model)) {
+				unloadQueue.add(model);
+				models.remove(model);
+				positionModel.remove(cp);
+				positionQuality.remove(cp);
+				positionData.remove(cp);
+				removed.add(cp);
 			}
 		});
-	}
-
-	/**
-	 * Unload a chunk
-	 */
-	private void unload(ChunkPosition cp) {
-		RawModel model = positionModel.get(cp);
-		models.remove(model);
-		positionModel.remove(cp);
-		positionQuality.remove(cp);
-		positionData.remove(cp);
-		Loader.unloadModel(model);
-		removed.add(cp);
 	}
 
 	/**
