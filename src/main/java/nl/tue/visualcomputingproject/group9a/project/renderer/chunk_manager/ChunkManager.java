@@ -311,7 +311,7 @@ public class ChunkManager {
 				if (positionModel.containsKey(chunkPosition)) {
 					RawModel oldModel = positionModel.get(chunkPosition);
 					texId = oldModel.getTexId();
-					models.remove(positionModel.get(chunkPosition));
+					models.remove(oldModel);
 					Loader.unloadModel(oldModel, false);
 				}
 
