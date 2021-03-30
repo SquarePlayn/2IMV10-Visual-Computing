@@ -37,9 +37,9 @@ public class Renderer {
 
 		// Activate the texture
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		shader.setTextureSampler(0);
 		if (model.getTexId() >= 0) {
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, model.getTexId());
-			shader.setTextureSampler(0);
 			shader.setTextureAvailable(true);
 		} else {
 			shader.setTextureAvailable(false);
@@ -50,6 +50,7 @@ public class Renderer {
 
 		// Deactivate the VAO & VBOs
 		GL20.glDisableVertexAttribArray(0);
+		GL20.glDisableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 	}
 
