@@ -34,7 +34,6 @@ void main(void) {
     // normal
     surfaceNormal = (vec4(normal, 1.0)).xyz; //(transformationMatrix * vec4(normal, 1.0)).xyz;
 
-    // color. TODO, color each vertex differently or use a texture map
-    float height = min(1, max(0, position.y / 40));
-    color = vec3(height, 1 - height, 0);
+    // color
+    color = vec3(1, 1, 1);
 }
