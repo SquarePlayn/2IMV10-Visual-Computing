@@ -22,6 +22,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
@@ -47,13 +48,7 @@ public class Extractor {
 		logger.info("Extractor is ready!");
 	}
 	
-	public List<Chunk<ChunkId, PointCloudChunkData>> handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
-		List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
-		
-		for (ChunkPosition pos : event.getPositions()) {
-			chunks.add(new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData()));
-		}
-		
+	public void handleGeotiffFile(ExtractionRequestEvent event) throws IOException, TransformException {
 		try (InputStream inputStream = event.getClaim().getInputStream()) {
 			ZipInputStream zipInputStream = new ZipInputStream(inputStream);
 			ZipEntry entry = zipInputStream.getNextEntry();
@@ -68,7 +63,12 @@ public class Extractor {
 			logger.info("Sheet info: {}x{} - {}x{}", coverage.getEnvelope2D().getMinX(), coverage.getEnvelope2D().getMinY(), coverage.getEnvelope2D().getMaxX(), coverage.getEnvelope2D().getMaxY());
 			
 			long count = 0;
-			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
+			double[] vals = new double[1];
+			double[] coord = new double[coverage.getGridGeometry().getGridToCRS2D().getSourceDimensions()];
+			double[] p = new double[coverage.getGridGeometry().getGridToCRS2D().getTargetDimensions()];
+			GridCoordinates2D c = new GridCoordinates2D();
+			for (ChunkPosition pos : event.getPositions()) {
+				Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(new ChunkId(pos, event.getLevel()), new PointCloudChunkData());
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
 				GridCoordinates2D blg = coverage.getGridGeometry().worldToGrid(bl);
@@ -76,25 +76,34 @@ public class Extractor {
 				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
 				logger.info("Chunk: {} {} {} {} - {} {} {} {}", bl, tr, blg, trg, range.getLow(0), range.getHigh(0), range.getLow(1), range.getHigh(1));
 				
+				int w = (int) ((Math.min(trg.getX(), range.getHigh(0)) - (int) Math.max(blg.getX(), range.getLow(0))) + 1);
+				int h = (int) (Math.min(blg.getY(), range.getHigh(1)) - Math.max(trg.getY(), range.getLow(1)) + 1);
+				
+				double[] points = new double[w*h*3];
+				int ctr = 0;
+				
 				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i <= Math.min(trg.getX(), range.getHigh(0)); i++) {
 					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j <= Math.min(blg.getY(), range.getHigh(1)); j++) {
-						GridCoordinates2D coord = new GridCoordinates2D(i, j);
-						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
+						coord[0] = i;
+						coord[1] = j;
+						c.setLocation(i, j);
+						coverage.getGridGeometry().getGridToCRS2D().transform(coord, 0, p, 0, 1);
 						
-						double[] vals = new double[1];
-						coverage.evaluate(p, vals);
-						double x = p.getOrdinate(0);
-						double y = p.getOrdinate(1);
+						coverage.evaluate(c, vals);
 						
-						chunk.getData().addPoint(x, y, vals[0]);
+						points[ctr++] = p[0];
+						points[ctr++] = p[1];
+						points[ctr++] = vals[0];
 						count++;
 					}
 				}
+				
+				chunk.getData().setInterleavedPoints(points);
+				
+				eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
 			}
 			
-			logger.info("Extracted {} points into {} chunks.", count, chunks.size());
-			
-			return chunks;
+			logger.info("Extracted {} points.", count);
 		}
 	}
 	
@@ -104,25 +113,19 @@ public class Extractor {
 			try {
 				logger.info("Extracting {}...", event);
 
-				List<Chunk<ChunkId, PointCloudChunkData>> chunks = new ArrayList<>();
 				switch (event.getLevel()) {
 					case FIVE_BY_FIVE:
 					case HALF_BY_HALF:
-						chunks = handleGeotiffFile(event);
+						handleGeotiffFile(event);
 						break;
 					case LAS:
 						throw new UnsupportedOperationException("Unimplemented: LAZ");
 				}
 
-				for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
-					eventBus.post(new PartialChunkAvailableEvent(chunk, event.getSheet()));
-				}
-
-				cacheManager.releaseClaim(event.getClaim());
-
 			} catch (IOException | TransformException e) {
 				e.printStackTrace();
 			}
+			cacheManager.releaseClaim(event.getClaim());
 		});
 	}
 }

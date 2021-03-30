@@ -15,23 +15,11 @@ import java.util.List;
 @Data
 public class PointCloudChunkData
 		implements PointData {
-	List<Double> interleavedPoints = new ArrayList<>();
-	
-	public void addPoint(Point p) {
-		interleavedPoints.add(p.getX());
-		interleavedPoints.add(p.getY());
-		interleavedPoints.add(p.getAlt());
-	}
-	
-	public void addPoint(double x, double y, double alt) {
-		interleavedPoints.add(x);
-		interleavedPoints.add(y);
-		interleavedPoints.add(alt);
-	}
+	double[] interleavedPoints;
 
 	@Override
 	public int size() {
-		return interleavedPoints.size()/3;
+		return interleavedPoints.length/3;
 	}
 	
 	@Override
@@ -46,15 +34,15 @@ public class PointCloudChunkData
 			
 			@Override
 			public boolean hasNext() {
-				return counter < interleavedPoints.size();
+				return counter < interleavedPoints.length;
 			}
 			
 			@Override
 			public Point next() {
 				Point p = new Point(
-						interleavedPoints.get(counter),
-						interleavedPoints.get(counter + 1),
-						interleavedPoints.get(counter + 2));
+						interleavedPoints[(counter)],
+						interleavedPoints[(counter + 1)],
+						interleavedPoints[(counter + 2)]);
 				counter += 3;
 				return p;
 			}
@@ -68,15 +56,15 @@ public class PointCloudChunkData
 			
 			@Override
 			public boolean hasNext() {
-				return counter < interleavedPoints.size();
+				return counter < interleavedPoints.length;
 			}
 			
 			@Override
 			public Vector3d next() {
 				Vector3d p = new Vector3d(
-						interleavedPoints.get(counter),
-						interleavedPoints.get(counter + 2),
-						-interleavedPoints.get(counter + 1));
+						interleavedPoints[(counter)],
+						interleavedPoints[(counter + 2)],
+						-interleavedPoints[(counter + 1)]);
 				counter += 3;
 				return p;
 			}
@@ -90,14 +78,14 @@ public class PointCloudChunkData
 			
 			@Override
 			public boolean hasNext() {
-				return counter < interleavedPoints.size();
+				return counter < interleavedPoints.length;
 			}
 			
 			@Override
 			public Vector2d next() {
 				Vector2d p = new Vector2d(
-						interleavedPoints.get(counter),
-						-interleavedPoints.get(counter + 1));
+						interleavedPoints[(counter)],
+						-interleavedPoints[(counter + 1)]);
 				counter += 3;
 				return p;
 			}
