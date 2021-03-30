@@ -253,35 +253,34 @@ public class ChunkManager {
 	 * Get the height at some position on the map, or null if unknown
 	 */
 	public Optional<Float> getHeight(float x, float z) {
+		// Find the chunk this position is in
 		ChunkPosition chunk = getChunkPosition(x, z);
 
+		// If we have no data for this chunk, we can't return a height
 		if (!positionData.containsKey(chunk)) {
 			return Optional.empty();
 		}
 
-		FloatBuffer data = positionData.get(chunk).getVertexBuffer();
-
+		// Determine the spacing of the grid of the model
 		double space = positionQuality.get(chunk) == QualityLevel.FIVE_BY_FIVE ? 5 : 0.5;
-		int numX = (int) (Math.ceil(CHUNK_WIDTH / space) + 1);
-		int numZ = (int) (Math.ceil(CHUNK_HEIGHT / space) + 1);
-		float[][] heights = new float[numX][numZ];
+
+		// Determine chunk indices for the requested position
+		Vector2f offset = positionData.get(chunk).getOffset();
+		int pix = (int) Math.floor((x - offset.x) / space);
+		int piz = (int) Math.floor((z - offset.y) / space);
+
+		// Find data point for the requested position
+		FloatBuffer data = positionData.get(chunk).getVertexBuffer();
 		for (int i = 0; i + 2 < data.remaining(); i += 6) {
 			int ix = (int) Math.floor(data.get(i) / space);
 			int iz = (int) Math.floor(data.get(i + 2) / space);
-			if (ix > 0 && ix < numX && iz >= 0 && iz < numZ) {
-				heights[ix][iz] = data.get(i + 1);
+			if (ix == pix && iz == piz) {
+				return Optional.of(data.get(i + 1));
 			}
 		}
 
-		Vector2f offset = positionData.get(chunk).getOffset();
-		int ix = (int) Math.floor((x - offset.x) / space);
-		int iz = (int) Math.floor((z - offset.y) / space);
-
-		if (ix >= 0 && ix < numX && iz >= 0 && iz < numZ) {
-			return Optional.of(heights[ix][iz]);
-		} else {
-			return Optional.empty();
-		}
+		// No point could be found
+		return Optional.empty();
 	}
 
 	/**
