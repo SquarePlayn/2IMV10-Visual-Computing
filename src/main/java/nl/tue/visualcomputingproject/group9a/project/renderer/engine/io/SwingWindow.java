@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.lang.invoke.MethodHandles;
 
+@SuppressWarnings("UnstableApiUsage")
 public class SwingWindow {
 	@Getter
 	private final JFrame frame = new JFrame(Settings.WINDOW_NAME);
@@ -27,7 +28,7 @@ public class SwingWindow {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	public SwingWindow(EventBus eventBus) throws FactoryException {
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(new BorderLayout());
 		frame.setPreferredSize(new Dimension(Settings.INITIAL_WINDOW_SIZE.x, Settings.INITIAL_WINDOW_SIZE.y));
 

@@ -12,9 +12,8 @@ import java.util.Collection;
  */
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class RendererChunkStatusEvent extends AbstractEvent {
-	Collection<ChunkId> loadedChunks;
-	Collection<ChunkPosition> pendingChunks;
+public class RendererChunkStatusEvent
+		extends AbstractEvent {
 	Collection<ChunkPosition> newChunks;
 	Collection<ChunkPosition> unloadedChunks;
 }

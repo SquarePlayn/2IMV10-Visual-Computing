@@ -21,7 +21,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 @Getter
 @Setter
-public class Camera implements KeyListener {
+public class Camera
+		implements KeyListener {
 
 	/**
 	 * The logger object of this class.
@@ -36,7 +37,7 @@ public class Camera implements KeyListener {
 	 */
 	private final ChunkManager chunkManager;
 
-	Vector3f position = Settings.INITIAL_POSITION;
+	private Vector3f position = Settings.INITIAL_POSITION;
 
 	// Rotational variables
 	private float pitch = 0;
@@ -73,7 +74,7 @@ public class Camera implements KeyListener {
 		fov = copy.fov;
 		lastUpdateTime = copy.lastUpdateTime;
 		keyboardCallback = copy.keyboardCallback;
-		pressedKeys = new HashSet<>(copy.pressedKeys);
+		pressedKeys = copy.pressedKeys;
 		lastTerrainHeight = copy.lastTerrainHeight;
 	}
 

@@ -42,6 +42,10 @@ public class RendererModule
 	private EventBus eventBus;
 	private SwingWindow window;
 	
+	public RendererModule() {
+		super("render-thread");
+	}
+	
 	@SneakyThrows
 	@Override
 	public void startup(EventBus eventBus, CachePolicy diskPolicy, CachePolicy memoryPolicy) {

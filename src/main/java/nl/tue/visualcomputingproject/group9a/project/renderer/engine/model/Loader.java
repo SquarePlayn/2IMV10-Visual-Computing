@@ -45,6 +45,27 @@ public class Loader {
 		return loadToVAO(positionsBuffer, indicesBuffer, offset, texId);
 	}
 
+
+	private static final float[] PLANE_VERTICES = {
+			0  , 0, 0  , 0, 1, 0,
+			0  , 0, 100, 0, 1, 0,
+			100, 0, 100, 0, 1, 0,
+			100, 0, 0  , 0, 1, 0
+	};
+	
+	private static final int[] PLANE_MESH = {
+			0, 1, 2,
+			0, 2, 3
+	};
+
+	public static FloatBuffer createPlaneVertices() {
+		return storeDataInFloatBuffer(PLANE_VERTICES);
+	}
+	
+	public static IntBuffer createPlaneMesh() {
+		return storeDataInIntBuffer(PLANE_MESH);
+	}
+
 	public static RawModel loadToVAO(
 			FloatBuffer vertices,
 			IntBuffer indices,
@@ -100,7 +121,13 @@ public class Loader {
 		model.getVboIds().forEach(GL15::glDeleteBuffers);
 		vaos.remove(model.getVaoId());
 		GL30.glDeleteVertexArrays(model.getVaoId());
-		if (model.getTexId() >= 0 && unloadTexture) {
+		if (unloadTexture) {
+			unloadTexture(model);
+		}
+	}
+	
+	public static void unloadTexture(RawModel model) {
+		if (model.getTexId() >= 0) {
 			textures.remove(model.getTexId());
 			GL11.glDeleteTextures(model.getTexId());
 		}

@@ -23,21 +23,17 @@ import org.lwjgl.opengl.awt.GLData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class SwingCanvas extends AWTGLCanvas {
 	
 	/** The logger object of this class. */
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-	
-	private final EventBus eventBus;
 	
 	private StaticShader shader;
 	private SkyboxShader skyboxShader;
@@ -52,14 +48,10 @@ public class SwingCanvas extends AWTGLCanvas {
 	private Vector3f backgroundColor = new Vector3f(1.0f, 0.0f, 0.0f);
 	
 	
-	/** Models other than chunks that are to be rendered. */
-	private final Collection<RawModel> models = new ArrayList<>();
-	
 	public SwingCanvas(GLData data, EventBus eventBus) {
 		super(data);
 		LOGGER.info("Working directory: " + System.getProperty("user.dir"));
 		
-		this.eventBus = eventBus;
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent componentEvent) {
@@ -129,9 +121,6 @@ public class SwingCanvas extends AWTGLCanvas {
 		shader.loadLight(light);
 		shader.loadTime((float) (System.nanoTime() * 1000_000_000.0));
 		shader.loadBorder();
-		for (RawModel model : models) {
-			Renderer.renderModel(model, shader, camera);
-		}
 		for (RawModel chunk : chunkManager.getModels()) {
 			Renderer.renderModel(chunk, shader, camera);
 		}

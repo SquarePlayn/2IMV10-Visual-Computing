@@ -46,13 +46,15 @@ public class ChunkPosition {
 	}
 
 	public boolean contains(Vector3d point) {
-		return (x <= point.x && point.x <= x + width &&
-				y <= point.z && point.z <= y + height);
+		return contains(point.x, point.z);
 	}
 	
 	public boolean contains (Vector2d point) {
-		return (x <= point.x && point.x <= x + width &&
-				y <= point.y && point.y <= y + height);
+		return contains(point.x, point.y);
+	}
+	
+	public boolean contains(double x, double z) {
+		return (x <= x && x <= x + width && y <= z && z <= y + height);
 	}
 	
 }

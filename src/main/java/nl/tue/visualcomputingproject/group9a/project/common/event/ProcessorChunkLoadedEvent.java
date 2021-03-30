@@ -11,6 +11,7 @@ import nl.tue.visualcomputingproject.group9a.project.common.chunk.MeshChunkId;
  */
 @EqualsAndHashCode(callSuper = true)
 @Value
-public class ProcessorChunkLoadedEvent extends AbstractEvent {
+public class ProcessorChunkLoadedEvent
+		extends AbstractEvent {
 	Chunk<MeshChunkId, MeshChunkData> chunk;
 }

@@ -5,6 +5,8 @@ import lombok.Data;
 import org.joml.Matrix4f;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 @Data
 @AllArgsConstructor
@@ -15,6 +17,10 @@ public class RawModel {
 	private final int indicesCount;
 	private final Matrix4f modelMatrix;
 	private final Collection<Integer> vboIds;
-	private int texId = -1;
+	private int texId;
+	
+	public boolean hasModel() {
+		return vaoId < 0;
+	}
 
 }

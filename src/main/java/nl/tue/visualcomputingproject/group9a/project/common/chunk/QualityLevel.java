@@ -12,7 +12,7 @@ public enum QualityLevel {
 	FLAT(-1, true),
 	FIVE_BY_FIVE(0, true),
 	HALF_BY_HALF(1, true),
-	LAS(2, false);
+	LAS(5, false);
 	
 	final private int order;
 	final private boolean interpolated;
