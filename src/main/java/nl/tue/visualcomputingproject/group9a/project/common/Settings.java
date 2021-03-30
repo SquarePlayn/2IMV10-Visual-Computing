@@ -22,7 +22,8 @@ public final class Settings {
 	
 	public static final int CHUNK_WIDTH = 100;
 	public static final int CHUNK_HEIGHT = 100;
-	public static final int CHUNK_BORDER_SIZE = 10;
+	public static final int CHUNK_VERTEX_BORDER = 10;
+	public static final int CHUNK_TILE_BORDER = 5;
 
 	/**
 	 * Number of dedicated threads reserved by various modules in the application.
@@ -76,7 +77,7 @@ public final class Settings {
 	public static final float FAR_PLANE = 40_000;
 	public static final float MOVE_SPEED = 100;
 	public static final float GROUND_MOVE_SPEED_PERCENTAGE = 0.2f;
-	public static final float LOOK_SPEED = 30;
+	public static final float LOOK_SPEED = 30f;
 	public static final float WALK_HEIGHT = 5;
 
 	/**

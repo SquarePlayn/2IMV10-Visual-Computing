@@ -13,15 +13,18 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loade
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import org.joml.Vector3f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.image.BufferedImage;
 import java.lang.invoke.MethodHandles;
 import java.nio.FloatBuffer;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
@@ -33,22 +36,31 @@ public class ChunkManager {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	/** Event queue received events are temporarily inserted in, to be extracted in this thread. */
-	final ConcurrentLinkedQueue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
-	final ConcurrentLinkedQueue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<ProcessorChunkLoadedEvent> eventQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<ChartTextureAvailableEvent> textureEventQueue = new ConcurrentLinkedQueue<>();
+	private final Queue<ChunkPosition> unloadQueue = new ConcurrentLinkedQueue<>();
+	private final Set<ChunkPosition> unloadSet = ConcurrentHashMap.newKeySet();
 
 	private final EventBus eventBus;
 
-	private final Set<ChunkId> loaded = new HashSet<>();
-	private final Set<ChunkPosition> pending = new HashSet<>();
-	private final Set<ChunkPosition> request = new HashSet<>();
-	private final Set<ChunkPosition> removed = new HashSet<>();
+	private final Set<ChunkId> loaded = ConcurrentHashMap.newKeySet();
+	private final Set<ChunkPosition> pending = ConcurrentHashMap.newKeySet();
+	private final Set<ChunkPosition> request = ConcurrentHashMap.newKeySet();
+	private final Set<ChunkPosition> removed = ConcurrentHashMap.newKeySet();
 
-	private final Set<RawModel> models = new HashSet<>();
+	private final Set<RawModel> models = ConcurrentHashMap.newKeySet();
 
-	private final HashMap<ChunkPosition, RawModel> positionModel = new HashMap<>();
-	private final HashMap<ChunkPosition, QualityLevel> positionQuality = new HashMap<>();
-	private final HashMap<ChunkPosition, BufferedImage> pendingTextures = new HashMap<>();
-	private final HashMap<ChunkPosition, MeshChunkData> positionData = new HashMap<>();
+	private final Map<ChunkPosition, RawModel> positionModel = new ConcurrentHashMap<>();
+	private final Map<ChunkPosition, QualityLevel> positionQuality = new ConcurrentHashMap<>();
+	private final Map<ChunkPosition, ChartTextureAvailableEvent> pendingTextures = new ConcurrentHashMap<>();
+	private final Map<ChunkPosition, MeshChunkData> positionData = new ConcurrentHashMap<>();
+	
+	private final Lock lock = new ReentrantLock();
+	private final Condition waitForUpdate = lock.newCondition();
+	private final AtomicBoolean doUpdate = new AtomicBoolean(false);
+	private final AtomicBoolean sendUpdate = new AtomicBoolean(false);
+
+	private volatile Camera camera;
 
 	/**
 	 * The last time in seconds at which a chunk update was sent.
@@ -58,6 +70,44 @@ public class ChunkManager {
 	public ChunkManager(EventBus eventBus) {
 		this.eventBus = eventBus;
 		eventBus.register(this);
+		Thread updateThread = new Thread(() -> {
+			lock.lock();
+			try {
+				while (true) {
+					lock.lock();
+					try {
+						updateCycle();
+
+					} catch (Exception e) {
+						LOGGER.error("Caught exception in update thread:");
+						LOGGER.error(Arrays.toString(e.getStackTrace()));
+						e.printStackTrace();
+					}
+				}
+
+			} finally {
+				lock.unlock();
+			}
+		}, "Render-update-thread");
+		updateThread.setDaemon(true);
+		updateThread.start();
+	}
+	
+	private void updateCycle()
+			throws InterruptedException {
+		final Camera camera = this.camera;
+		boolean updated = false;
+		if (doUpdate.getAndSet(false)) {
+			updateStatus(camera);
+			updated = true;
+		}
+		if (sendUpdate.getAndSet(false)) {
+			sendUpdate();
+			updated = true;
+		}
+		if (!updated) {
+			waitForUpdate.await();
+		}
 	}
 
 
@@ -68,13 +118,30 @@ public class ChunkManager {
 		// Fetch time in seconds
 		double time = System.currentTimeMillis() / 1_000.0;
 
+		int actionCounter = 10;
+		while (actionCounter-- > 0 && !unloadQueue.isEmpty()) {
+			ChunkPosition pos = unloadQueue.poll();
+			if (pos != null) {
+				unload(pos);
+				unloadSet.remove(pos);
+			}
+		}
+		
+		this.camera = new Camera(camera);
+		doUpdate.set(true);
+
 		handleEvents();
 
-		updateStatus(camera, time);
-
 		if (time - prevUpdateTime >= Settings.CHUNK_UPDATE_INTERVAL) {
-			sendUpdate();
+			sendUpdate.set(true);
 			prevUpdateTime = time;
+		}
+		if (lock.tryLock()) {
+			try {
+				waitForUpdate.signal();
+			} finally {
+				lock.unlock();
+			}
 		}
 	}
 
@@ -109,7 +176,7 @@ public class ChunkManager {
 	/**
 	 * Update which chunks should be (un)loaded
 	 */
-	private void updateStatus(Camera camera, double time) {
+	private void updateStatus(Camera camera) {
 		// Check for chunks to load
 		Collection<ChunkPosition> loadChunks = getChunksInRadius(camera, Settings.CHUNK_LOAD_DISTANCE);
 		Collection<ChunkPosition> toLoad = loadChunks.stream().filter(cp -> !(
@@ -125,12 +192,15 @@ public class ChunkManager {
 		Collection<ChunkPosition> toUnload = positionModel.keySet().stream()
 				.filter(cp -> {
 					int chunkIX = (int) Math.floor(cp.getX() / CHUNK_WIDTH);
-					int chunkIY = (int) Math.floor(cp.getY() / CHUNK_WIDTH);
+					int chunkIY = (int) Math.floor(cp.getY() / CHUNK_HEIGHT);
 					return Math.abs(chunkIX - currentChunkIndex.x) >= chunkUnloadRangeX ||
 							Math.abs(chunkIY - currentChunkIndex.y) >= chunkUnloadRangeY;
 				}).collect(Collectors.toCollection(ArrayList::new));
-		toUnload.forEach(cp -> LOGGER.info("Leaving chunk " + cp));
-		toUnload.forEach(this::unload);
+		toUnload.forEach((cp) -> {
+			if (unloadSet.add(cp)) {
+				unloadQueue.add(cp);
+			}
+		});
 	}
 
 	/**
@@ -219,14 +289,14 @@ public class ChunkManager {
 		} else {
 			return Optional.empty();
 		}
-
 	}
 
 	/**
 	 * Process chunk loaded events
 	 */
 	private void handleEvents() {
-		while (!eventQueue.isEmpty()) {
+		int actionCounter = 20;
+		while (actionCounter-- > 0 && !eventQueue.isEmpty()) {
 			// Extract event
 			ProcessorChunkLoadedEvent event = eventQueue.poll();
 			Chunk<MeshChunkId, MeshChunkData> chunk = event.getChunk();
@@ -253,7 +323,8 @@ public class ChunkManager {
 				}
 
 				if (texId < 0 && pendingTextures.containsKey(chunkPosition)) {
-					texId = Loader.loadTexture(pendingTextures.remove(chunkPosition));
+					ChartTextureAvailableEvent e = pendingTextures.remove(chunkPosition);
+					texId = Loader.loadTexture(e.getImage(), e.getWidth(), e.getHeight());
 				}
 
 				// Create the model
@@ -264,7 +335,6 @@ public class ChunkManager {
 						texId
 				);
 
-
 				// Add the new model
 				models.add(newModel);
 				positionModel.put(chunkPosition, newModel);
@@ -273,14 +343,14 @@ public class ChunkManager {
 			}
 		}
 
-		while (!textureEventQueue.isEmpty()) {
+		while (actionCounter-- > 0 && !textureEventQueue.isEmpty()) {
 			ChartTextureAvailableEvent event = textureEventQueue.poll();
 			if (event.getType() == TextureType.Aerial) {
 				if (positionModel.containsKey(event.getPosition())) {
-					int texId = Loader.loadTexture(event.getImage());
+					int texId = Loader.loadTexture(event.getImage(), event.getWidth(), event.getHeight());
 					positionModel.get(event.getPosition()).setTexId(texId);
 				} else {
-					pendingTextures.put(event.getPosition(), event.getImage());
+					pendingTextures.put(event.getPosition(), event);
 				}
 			}
 		}

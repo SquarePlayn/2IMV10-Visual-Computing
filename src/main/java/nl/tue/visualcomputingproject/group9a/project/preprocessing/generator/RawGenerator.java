@@ -34,12 +34,9 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		}
 		
 		ChunkPosition pos = chunk.getPosition();
-		ScaleGridTransform transform = GridTransform.createTransformFor(
-				chunk.getQualityLevel(),
-				0, 0
-		);
-		Vector3d offset = new Vector3d(pos.getX(), 0, pos.getY());
-		crop = refineCrop(crop, offset, transform);
+		ScaleGridTransform transform = GridTransform.createTransformFor(chunk, crop);
+		Vector3d offset = new Vector3d(crop.getX(), 0, crop.getY());
+		crop = refineCrop(crop, transform);
 		Store<PointIndexData> store = new ArrayStore<>(pos, transform);
 		store.addPoints(
 				offset,
@@ -60,27 +57,26 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
 				Settings.VERTEX_TYPE, store.countCropped(crop)
 		);
-		{
-			final Store<PointIndexData> s = store;
-			store.forEachInCrop(crop, (x, z, elem) -> {
-				for (PointIndexData point : elem) {
-					List<Vector3d> neighbors = new ArrayList<>();
-					for (int dz = -DIST; dz <= DIST; dz++) {
-						for (int dx = -DIST; dx <= DIST; dx++) {
-							if (dx == 0 && dz == 0) continue;
-							int x2 = x + dx;
-							int z2 = z + dz;
-							if (!s.hasPoint(x2, z2)) continue;
-							for (PointIndexData point2 : s.get(x2, z2)) {
-								neighbors.add(point2.getVec());
-							}
+		
+		final Store<PointIndexData> s = store;
+		store.forEachInCrop(crop, (x, z, elem) -> {
+			for (PointIndexData point : elem) {
+				List<Vector3d> neighbors = new ArrayList<>();
+				for (int dz = -DIST; dz <= DIST; dz++) {
+					for (int dx = -DIST; dx <= DIST; dx++) {
+						if (dx == 0 && dz == 0) continue;
+						int x2 = x + dx;
+						int z2 = z + dz;
+						if (!s.hasPoint(x2, z2)) continue;
+						for (PointIndexData point2 : s.get(x2, z2)) {
+							neighbors.add(point2.getVec());
 						}
 					}
-					Vector3d normal = generateWLSNormalFor(point.getVec(), neighbors.iterator());
-					point.setIndex(vertexManager.addVertex(point.getVec(), normal));
 				}
-			});
-		}
+				Vector3d normal = generateWLSNormalFor(point.getVec(), neighbors.iterator());
+				point.setIndex(vertexManager.addVertex(point.getVec(), normal));
+			}
+		});
 
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),

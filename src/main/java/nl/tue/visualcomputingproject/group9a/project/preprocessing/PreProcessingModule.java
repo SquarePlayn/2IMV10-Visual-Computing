@@ -146,7 +146,7 @@ public class PreProcessingModule
 				try {
 					for (MeshChunkId id : request) {
 						requesting.put(id.getPosition(), id);
-						req.add(id.asExtraBorderChunkId(Settings.CHUNK_BORDER_SIZE));
+						req.add(id.asExtraBorderChunkId(Settings.CHUNK_VERTEX_BORDER));
 					}
 				} finally {
 					lock.unlock();
@@ -179,7 +179,7 @@ public class PreProcessingModule
 								if (id.getQuality() != QualityLevel.getBest()) {
 									MeshChunkId reqId = id.withQuality(id.getQuality().next());
 									requesting.put(reqId.getPosition(), reqId);
-									req.add(reqId.asExtraBorderChunkId(Settings.CHUNK_BORDER_SIZE));
+									req.add(reqId.asExtraBorderChunkId(Settings.CHUNK_VERTEX_BORDER));
 								}
 							}
 							
@@ -227,7 +227,7 @@ public class PreProcessingModule
 		lock.lock();
 		try {
 			final ChunkId eventId = e.getChunk().getChunkId();
-			MeshChunkId reqId = requesting.get(eventId.getPosition().transformedAddBorder(-Settings.CHUNK_BORDER_SIZE));
+			MeshChunkId reqId = requesting.get(eventId.getPosition().transformedAddBorder(-Settings.CHUNK_VERTEX_BORDER));
 			if (reqId == null) {
 				// Ignore event since the chunk is not needed anymore.
 				LOGGER.info("Ignoring '" + e.getChunk().getChunkId() + "' since it is not needed anymore.");
@@ -280,7 +280,7 @@ public class PreProcessingModule
 			MeshChunkData data;
 			try {
 				Chunk<ChunkId, PointCloudChunkData> chunk = new Chunk<>(
-						id.asExtraBorder(Settings.CHUNK_BORDER_SIZE),
+						id.asExtraBorder(Settings.CHUNK_VERTEX_BORDER),
 						e.getChunk().getData()
 				);
 				data = Generator

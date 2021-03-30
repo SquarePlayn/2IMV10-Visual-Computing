@@ -26,15 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.image.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+@SuppressWarnings("UnstableApiUsage")
 public class TileManager {
 	private static final Logger logger = LoggerFactory.getLogger(TileManager.class);
 	private final EventBus eventBus;
@@ -52,9 +57,9 @@ public class TileManager {
 		eventBus.register(this);
 		
 		rendererMap = new HashMap<>();
-		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL), "World_Imagery")));
-		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25")));
-		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS),"Actueel_ortho25")));
+		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL), "World_Imagery")));
+//		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25")));
+//		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS),"Actueel_ortho25")));
 		rendererMap.put(TextureType.OpenStreetMap, new TileRenderer(new OSMTileProvider()));
 		cacheManager = new FileCacheManager(policy, Settings.CACHE_DIR, "textures");
 		cacheManager.indexCache(TextureFileId.createFactory());
@@ -69,7 +74,7 @@ public class TileManager {
 	}
 	
 	@Subscribe
-	public void onRequest(TextureRequestEvent event) throws TransformException, FactoryException, IOException {
+	public void onRequest(TextureRequestEvent event) {
 		Settings.executorService.submit(() -> {
 			try {
 				logger.info("Loading texture of type {} for chunk {}...", event.getType(), event.getPosition());
@@ -80,21 +85,40 @@ public class TileManager {
 					//File available for reading!
 					try (InputStream stream = readClaim.getInputStream()) {
 						BufferedImage image = ImageIO.read(stream);
-						eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
+						ByteBuffer buffer = convertImageData(image);
+						eventBus.post(new ChartTextureAvailableEvent(
+								event.getPosition(),
+								event.getType(),
+								buffer,
+								image.getWidth(),
+								image.getHeight())
+						);
 					}
 					cacheManager.releaseCacheClaim(readClaim);
+					
 				} else {
 					logger.info("Downloading...");
 					FileReadWriteCacheClaim writeClaim = cacheManager.requestReadWriteClaim(id);
 					if (writeClaim != null) {
-						ReferencedEnvelope envelope = event.getPosition().transformed().getReferencedEnvelope(crs);
+						ReferencedEnvelope envelope = event.getPosition()
+								.transformedAddBorder(Settings.CHUNK_TILE_BORDER)
+								.getReferencedEnvelope(crs);
 						int image_width = (int) envelope.getWidth() * 2;
 						int image_height = (int) envelope.getHeight() * 2;
-						BufferedImage image = rendererMap.get(event.getType()).render(envelope, image_width, image_height);
+						BufferedImage image = rendererMap
+								.get(event.getType())
+								.render(envelope, image_width, image_height);
 						try (OutputStream stream = writeClaim.getOutputStream()) {
 							ImageIO.write(image, "png", stream);
 						}
-						eventBus.post(new ChartTextureAvailableEvent(event.getPosition(), event.getType(), image));
+						ByteBuffer buffer = convertImageData(image);
+						eventBus.post(new ChartTextureAvailableEvent(
+								event.getPosition(),
+								event.getType(),
+								buffer,
+								image.getWidth(),
+								image.getHeight())
+						);
 					} else {
 						throw new RuntimeException("Unable to get cache worked out for texture event!");
 					}
@@ -142,4 +166,46 @@ public class TileManager {
 			};
 		}
 	}
+
+	/**
+	 * Convert the buffered image to a texture
+	 */
+	private static ByteBuffer convertImageData(BufferedImage bufferedImage) {
+		ByteBuffer imageBuffer;
+		WritableRaster raster;
+		BufferedImage texImage;
+
+		ColorModel glAlphaColorModel = new ComponentColorModel(
+				ColorSpace.getInstance(ColorSpace.CS_sRGB), new int[] {8, 8, 8, 8},
+				true, false,
+				Transparency.TRANSLUCENT,
+				DataBuffer.TYPE_BYTE);
+
+		raster = Raster.createInterleavedRaster(
+				DataBuffer.TYPE_BYTE,
+				bufferedImage.getWidth(),
+				bufferedImage.getHeight(),
+				4,
+				null
+		);
+		texImage = new BufferedImage(glAlphaColorModel, raster, true, null);
+
+		// copy the source image into the produced image
+		Graphics g = texImage.getGraphics();
+		Color color = new Color(0f, 1f, 0f, 0f);
+		g.setColor(color);
+		g.fillRect(0, 0, 256, 256);
+		g.drawImage(bufferedImage, 0, 0, null);
+
+		// build a byte buffer from the temporary image that be used by OpenGL to produce a texture.
+		byte[] data = ((DataBufferByte) texImage.getRaster().getDataBuffer()).getData();
+
+		imageBuffer = ByteBuffer.allocateDirect(data.length);
+		imageBuffer.order(ByteOrder.nativeOrder());
+		imageBuffer.put(data, 0, data.length);
+		imageBuffer.flip();
+
+		return imageBuffer;
+	}
+	
 }

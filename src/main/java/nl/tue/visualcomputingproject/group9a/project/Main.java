@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.Executors;
 
 /**
  * The main class and start point of the application.
@@ -49,7 +50,7 @@ public class Main {
 			CachePolicy diskPolicy = new LRUCachePolicy(5 * CachePolicy.SIZE_GiB);
 			CachePolicy memoryPolicy = new LRUCachePolicy(2 * CachePolicy.SIZE_GiB);
 			logger.info("Starting up modules...");
-			EventBus bus = new EventBus();
+			EventBus bus = new AsyncEventBus(Executors.newFixedThreadPool(1));
 //			EventBus bus = new AsyncEventBus(Settings.executorService);
 			for (Module mod : modules) {
 				mod.startup(bus, diskPolicy, memoryPolicy);

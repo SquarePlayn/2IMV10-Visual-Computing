@@ -63,6 +63,21 @@ public class Camera implements KeyListener {
 	public Camera(ChunkManager chunkManager) {
 		this.chunkManager = chunkManager;
 	}
+	
+	public Camera(Camera copy) {
+		chunkManager = copy.chunkManager;
+		position = copy.position;
+		pitch = copy.pitch;
+		yaw = copy.yaw;
+		roll = copy.roll;
+		wireframe = copy.wireframe;
+		lockHeight = copy.lockHeight;
+		walking = copy.walking;
+		fov = copy.fov;
+		keyboardCallback = copy.keyboardCallback;
+		pressedKeys = new HashSet<>(copy.pressedKeys);
+		lastTerrainHeight = copy.lastTerrainHeight;
+	}
 
 	/**
 	 * Update the camera position, to be called once per frame
