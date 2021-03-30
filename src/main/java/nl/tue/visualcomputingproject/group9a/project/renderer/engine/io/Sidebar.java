@@ -99,7 +99,7 @@ public class Sidebar extends JPanel {
 		camera.setPosition(new Vector3f(
 				(float) p.getX(),
 				Settings.INITIAL_POSITION.y,
-				(float) p.getY())
+				-(float) p.getY())
 		);
 	}
 
