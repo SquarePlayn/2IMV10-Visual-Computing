@@ -76,6 +76,12 @@ public class Extractor {
 				GridEnvelope2D range = coverage.getGridGeometry().getGridRange2D();
 				logger.info("Chunk: {} {} {} {} - {} {} {} {}", bl, tr, blg, trg, range.getLow(0), range.getHigh(0), range.getLow(1), range.getHigh(1));
 				
+				int w = (int) ((Math.min(trg.getX(), range.getHigh(0)) - (int) Math.max(blg.getX(), range.getLow(0))) + 1);
+				int h = (int) (Math.min(blg.getY(), range.getHigh(1)) - Math.max(trg.getY(), range.getLow(1)) + 1);
+				
+				double[] points = new double[w*h*3];
+				int ctr = 0;
+				
 				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i <= Math.min(trg.getX(), range.getHigh(0)); i++) {
 					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j <= Math.min(blg.getY(), range.getHigh(1)); j++) {
 						GridCoordinates2D coord = new GridCoordinates2D(i, j);
@@ -86,10 +92,14 @@ public class Extractor {
 						double x = p.getOrdinate(0);
 						double y = p.getOrdinate(1);
 						
-						chunk.getData().addPoint(x, y, vals[0]);
+						points[ctr++] = x;
+						points[ctr++] = y;
+						points[ctr++] = vals[0];
 						count++;
 					}
 				}
+				
+				chunk.getData().setInterleavedPoints(points);
 			}
 			
 			logger.info("Extracted {} points into {} chunks.", count, chunks.size());

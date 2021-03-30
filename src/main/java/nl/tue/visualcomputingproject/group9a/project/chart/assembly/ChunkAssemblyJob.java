@@ -45,10 +45,21 @@ public class ChunkAssemblyJob {
 	
 	public Chunk<ChunkId, PointCloudChunkData> assembleChunk() {
 		PointCloudChunkData points = new PointCloudChunkData();
+		int numData = 0;
+		for (Chunk<ChunkId, PointCloudChunkData> chunk : partialChunks) {
+			numData += chunk.getData().getInterleavedPoints().length;
+		}
+		
+		double[] newPoints = new double[numData];
+		int ctr = 0;
 		
 		for (Chunk<ChunkId, PointCloudChunkData> chunk : partialChunks) {
-			points.getInterleavedPoints().addAll(chunk.getData().getInterleavedPoints());
+			for (int i = 0; i < chunk.getData().getInterleavedPoints().length; i++) {
+				newPoints[ctr++] = chunk.getData().getInterleavedPoints()[i];
+			}
 		}
+		
+		points.setInterleavedPoints(newPoints);
 		
 		return new Chunk<>(chunkId, points);
 	}
