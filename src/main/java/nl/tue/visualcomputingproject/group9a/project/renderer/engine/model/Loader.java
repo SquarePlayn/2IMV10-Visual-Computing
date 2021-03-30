@@ -49,8 +49,7 @@ public class Loader {
 			FloatBuffer vertices,
 			IntBuffer indices,
 			Vector2f offset,
-			int texId
-	) {
+			int texId) {
 		// Determine how many indices there are
 		int indicesCount = indices.remaining();
 
@@ -369,7 +368,6 @@ public class Loader {
 		int texID = GL11.glGenTextures(); // Generate empty texture
 		GL13.glActiveTexture(GL13.GL_TEXTURE1); // Activate texture unit 1
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, texID);
-//		ByteBuffer buffer = convertImageData(image);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL13.GL_CLAMP_TO_EDGE);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL13.GL_CLAMP_TO_EDGE);
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0,

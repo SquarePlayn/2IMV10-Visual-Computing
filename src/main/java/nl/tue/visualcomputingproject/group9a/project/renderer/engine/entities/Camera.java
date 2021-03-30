@@ -65,6 +65,22 @@ public class Camera {
 
 		registerInputCallbacks();
 	}
+	
+	public Camera(Camera copy) {
+		window = copy.window;
+		chunkManager = copy.chunkManager;
+		position = copy.position;
+		pitch = copy.pitch;
+		yaw = copy.yaw;
+		roll = copy.roll;
+		wireframe = copy.wireframe;
+		lockHeight = copy.lockHeight;
+		walking = copy.walking;
+		fov = copy.fov;
+		keyboardCallback = copy.keyboardCallback;
+		pressedKeys = new HashSet<>(copy.pressedKeys);
+		lastTerrainHeight = copy.lastTerrainHeight;
+	}
 
 	/**
 	 * Register all callbacks for input w.r.t. camera movement
@@ -257,4 +273,5 @@ public class Camera {
 		keyboardCallback.free();
 		// TODO Listen to mouse events, move if moved
 	}
+	
 }
