@@ -66,6 +66,10 @@ public class SwingCanvas extends AWTGLCanvas {
 				SwingCanvas.this.render();
 			}
 		});
+
+		// Create non-GL-related instances
+		chunkManager = new ChunkManager(eventBus);
+		camera = new Camera(chunkManager);
 	}
 	
 	@Override
@@ -79,11 +83,9 @@ public class SwingCanvas extends AWTGLCanvas {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glDepthFunc(GL11.GL_LESS);
 		
-		// Create instances
-		chunkManager = new ChunkManager(eventBus);
+		// Create GL-related instances
 		shader = new StaticShader();
 		skyboxShader = new SkyboxShader();
-		camera = new Camera(chunkManager);
 		light = new Light(new Vector3f(), LIGHT_COLOR);
 		skybox = new Skybox(Settings.SKYBOX_TEXTURE_FILES);
 		
