@@ -22,6 +22,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
@@ -68,6 +69,10 @@ public class Extractor {
 			logger.info("Sheet info: {}x{} - {}x{}", coverage.getEnvelope2D().getMinX(), coverage.getEnvelope2D().getMinY(), coverage.getEnvelope2D().getMaxX(), coverage.getEnvelope2D().getMaxY());
 			
 			long count = 0;
+			double[] vals = new double[1];
+			double[] coord = new double[coverage.getGridGeometry().getGridToCRS2D().getSourceDimensions()];
+			double[] p = new double[coverage.getGridGeometry().getGridToCRS2D().getTargetDimensions()];
+			GridCoordinates2D c = new GridCoordinates2D();
 			for (Chunk<ChunkId, PointCloudChunkData> chunk : chunks) {
 				DirectPosition2D bl = new DirectPosition2D(chunk.getPosition().getX(), chunk.getPosition().getY());
 				DirectPosition2D tr = new DirectPosition2D(chunk.getPosition().getX() + chunk.getPosition().getWidth(), chunk.getPosition().getY() + chunk.getPosition().getHeight());
@@ -84,16 +89,15 @@ public class Extractor {
 				
 				for (int i = (int) Math.max(blg.getX(), range.getLow(0)); i <= Math.min(trg.getX(), range.getHigh(0)); i++) {
 					for (int j = (int) Math.max(trg.getY(), range.getLow(1)); j <= Math.min(blg.getY(), range.getHigh(1)); j++) {
-						GridCoordinates2D coord = new GridCoordinates2D(i, j);
-						DirectPosition p = coverage.getGridGeometry().gridToWorld(coord);
+						coord[0] = i;
+						coord[1] = j;
+						c.setLocation(i, j);
+						coverage.getGridGeometry().getGridToCRS2D().transform(coord, 0, p, 0, 1);
 						
-						double[] vals = new double[1];
-						coverage.evaluate(p, vals);
-						double x = p.getOrdinate(0);
-						double y = p.getOrdinate(1);
+						coverage.evaluate(c, vals);
 						
-						points[ctr++] = x;
-						points[ctr++] = y;
+						points[ctr++] = p[0];
+						points[ctr++] = p[1];
 						points[ctr++] = vals[0];
 						count++;
 					}
