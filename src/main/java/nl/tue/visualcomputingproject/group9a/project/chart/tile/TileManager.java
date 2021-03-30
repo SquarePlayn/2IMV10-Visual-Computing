@@ -57,9 +57,9 @@ public class TileManager {
 		eventBus.register(this);
 		
 		rendererMap = new HashMap<>();
-		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL), "World_Imagery")));
-		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25")));
-		//rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS),"Actueel_ortho25")));
+		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(AERIALURL), "World_Imagery")));
+//		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMSTileProvider(new URL(PDOKWMS), "Actueel_ortho25")));
+//		rendererMap.put(TextureType.Aerial, new TileRenderer(new WMTSTileProvider(new URL(PDOKWMTS),"Actueel_ortho25")));
 		rendererMap.put(TextureType.OpenStreetMap, new TileRenderer(new OSMTileProvider()));
 		cacheManager = new FileCacheManager(policy, Settings.CACHE_DIR, "textures");
 		cacheManager.indexCache(TextureFileId.createFactory());
