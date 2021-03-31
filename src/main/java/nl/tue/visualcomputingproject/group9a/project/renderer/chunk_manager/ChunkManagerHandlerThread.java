@@ -178,23 +178,40 @@ public class ChunkManagerHandlerThread
 			private final int chunkRangeX = (int) Math.ceil(radius / CHUNK_WIDTH);
 			private final int chunkRangeY = (int) Math.ceil(radius / CHUNK_HEIGHT);
 			
-			private int cdx = -chunkRangeX;
-			private int cdy = -chunkRangeY;
+			private int cdx = 0;
+			private int cdy = 0;
+			private int cr = 0;
+
 			@Override
 			protected ChunkPosition generateNext() {
-				while (cdx <= chunkRangeX) {
-					int cx = curPos.x + cdx;
-					double x = cx * CHUNK_WIDTH;
-					while (cdy <= chunkRangeY) {
-						int cy = curPos.y + cdy++;
-						double y = cy * Settings.CHUNK_HEIGHT;
-						return new ChunkPosition(x, y, CHUNK_WIDTH, CHUNK_HEIGHT);
-					}
-					cdy = -chunkRangeY;
-					cdx++;
+				int maxDx = Math.min(chunkRangeX, cr);
+				int maxDy = Math.min(chunkRangeY, cr);
+
+				if (cdx > -maxDx && cdx < maxDx && cdy > -maxDy && cdy < maxDy) {
+					cdy = maxDy;
 				}
-				done();
-				return null;
+				if (cdy > maxDy) {
+					cdx++;
+					cdy = -maxDy;
+				}
+				if (cdx > maxDx) {
+					cr++;
+					if (cr > Math.max(chunkRangeX, chunkRangeY)) {
+						done();
+						return null;
+					}
+					maxDx = Math.min(chunkRangeX, cr);
+					maxDy = Math.min(chunkRangeY, cr);
+					cdx = -maxDx;
+					cdy = -maxDy;
+				}
+
+				double x = (curPos.x + cdx) * CHUNK_WIDTH;
+				double y = (curPos.y + cdy) * CHUNK_WIDTH;
+
+				cdy++;
+
+				return new ChunkPosition(x, y, CHUNK_WIDTH, CHUNK_HEIGHT);
 			}
 		};
 	}
