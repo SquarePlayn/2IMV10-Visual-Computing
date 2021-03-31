@@ -75,7 +75,7 @@ public class TileManager {
 	
 	@Subscribe
 	public void onRequest(TextureRequestEvent event) {
-		Settings.executorService.submit(() -> {
+		Settings.textureExecutorService.submit(() -> {
 			try {
 				logger.info("Loading texture of type {} for chunk {}...", event.getType(), event.getPosition());
 				TextureFileId id = new TextureFileId(event.getType(), event.getPosition());
