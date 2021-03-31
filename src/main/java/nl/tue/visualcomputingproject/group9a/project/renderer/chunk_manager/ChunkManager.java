@@ -53,7 +53,7 @@ public class ChunkManager {
 	 * Update the managed chunks, called once per frame
 	 */
 	public void update(Camera camera) {
-		handlerThread.setCamera(new Camera(camera));
+		handlerThread.updateCamera(camera);
 		
 		// Unload and remove all unloaded chunks.
 		for (Iterator<Model> it = handlerThread.toUnload(); it.hasNext(); ) {
