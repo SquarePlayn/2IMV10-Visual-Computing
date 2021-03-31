@@ -56,8 +56,7 @@ public class ChunkManagerHandlerThread
 	private Collection<ChunkPosition> newLoad = new ArrayList<>();
 	private Collection<ChunkPosition> newUnload = new ArrayList<>();
 	
-	@Setter
-	private volatile Vector2i curPos = null;
+	private Vector2i curPos = null;
 	
 	
 	public ChunkManagerHandlerThread(
@@ -108,17 +107,18 @@ public class ChunkManagerHandlerThread
 		//noinspection InfiniteLoopStatement
 		while (true) {
 			try {
+				Vector2i curPos;
 				lock.lock();
 				try {
 					if (!newEvent) {
-						//noinspection ResultOfMethodCallIgnored
-						waitForEvent.await(Settings.CHUNK_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
+						waitForEvent.await();
 						newEvent = false;
 					}
+					curPos = this.curPos;
 				} finally {
 					lock.unlock();
 				}
-				Vector2i curPos = this.curPos;
+				
 				if (curPos != null) {
 					updateState(curPos);
 					sendUpdate();
