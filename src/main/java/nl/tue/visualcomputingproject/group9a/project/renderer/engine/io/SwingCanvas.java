@@ -23,6 +23,7 @@ import org.lwjgl.opengl.awt.GLData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.lang.invoke.MethodHandles;
@@ -62,6 +63,10 @@ public class SwingCanvas extends AWTGLCanvas {
 		// Create non-GL-related instances
 		chunkManager = new ChunkManager(eventBus);
 		camera = new Camera(chunkManager);
+		
+		MouseCaptureAdapter adapter = new MouseCaptureAdapter(this);
+		adapter.attach();
+		adapter.addListener(camera);
 	}
 	
 	@Override
