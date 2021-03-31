@@ -12,6 +12,7 @@ import nl.tue.visualcomputingproject.group9a.project.renderer.RendererModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
 import java.io.File;
 import java.util.concurrent.Executors;
 
@@ -22,6 +23,11 @@ import java.util.concurrent.Executors;
 public class Main {
 	/** The logger of this class. */
 	static final Logger logger = LoggerFactory.getLogger(Main.class);
+	
+	static {
+		// Initialize imageio.
+		ImageIO.scanForPlugins();
+	}
 	
 	/** The modules of this application. */
 	static final Module[] modules = {
