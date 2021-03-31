@@ -94,23 +94,23 @@ public class ChunkManager {
 					texId
 			);
 			
-		} else if (model.hasNewImage()) {
-			if (raw == null) {
-				ChunkPosition cp = model.getPosition();
-				Vector2f offset = new Vector2f((float) cp.getX(), (float) cp.getY());
-				posData = Loader.createPlaneVertices();
-				raw = Loader.loadToVAO(
-						posData,
-						Loader.createPlaneMesh(),
-						offset,
-						texId
-				);
-				
-			} else {
-				raw.setTexId(texId);
-			}
+		} else if (raw == null) {
+			ChunkPosition cp = model.getPosition();
+			Vector2f offset = new Vector2f((float) cp.getX(), (float) cp.getY());
+			posData = Loader.createPlaneVertices();
+			raw = Loader.loadToVAO(
+				posData,
+				Loader.createPlaneMesh(),
+				offset,
+				texId
+			);
 			
-		} else {
+		}
+		if (model.hasNewImage()) {
+				raw.setTexId(texId);
+		}
+		
+		if (posData == null) {
 			return raw;
 		}
 		
