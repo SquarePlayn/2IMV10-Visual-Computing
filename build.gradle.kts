@@ -1,11 +1,11 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
     java
     id("java-library")
-    id("application")
-    id("maven-publish")
     id("io.freefair.lombok") version "5.3.0"
+    id("com.github.johnrengelman.shadow") version "4.0.4"
 }
 
 val lwjglVersion = "3.2.3"
@@ -17,8 +17,8 @@ java {
 }
 
 val lwjglNatives = when (OperatingSystem.current()) {
-    OperatingSystem.LINUX   -> "natives-linux"
-    OperatingSystem.MAC_OS  -> "natives-macos"
+    OperatingSystem.LINUX -> "natives-linux"
+    OperatingSystem.MAC_OS -> "natives-macos"
     OperatingSystem.WINDOWS -> if (System.getProperty("os.arch").contains("64")) "natives-windows" else "natives-windows-x86"
     else -> throw Error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
 }
@@ -43,8 +43,6 @@ dependencies {
     implementation("org.slf4j:slf4j-api:1.7.30")
     implementation("org.slf4j:slf4j-simple:1.7.30")
     implementation("org.slf4j:jcl-over-slf4j:1.7.30")
-
-    implementation("org.liquidengine:legui:3.2.3")
 
     implementation("org.geotools:geotools:24.2")
     implementation("org.geotools:gt-wfs-ng:24.2")
@@ -90,5 +88,29 @@ dependencies {
 
     testCompileOnly("org.projectlombok:lombok:1.18.16")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.16")
-    testCompile("junit", "junit", "4.12")
 }
+
+tasks {
+    named<ShadowJar>("shadowJar") {
+        archiveBaseName.set("project-full-jar")
+        mergeServiceFiles()
+        manifest {
+            attributes(mapOf(
+                    "Main-Class" to "nl.tue.visualcomputingproject.group9a.project.Main",
+                    "Specification-Title" to "3D terrain reconstruction and navigation",
+                    "Specification-Version" to "1.0",
+                    "Specification-Vendor" to "Group 9a",
+                    "Implementation-Title" to "nl.tue.visualcomputingproject.group9a.project",
+                    "Implementation-Version" to "1.0",
+                    "Implementation-Vendor" to "Group 9a"
+            ))
+        }
+    }
+}
+
+tasks {
+    build {
+        dependsOn(shadowJar)
+    }
+}
+

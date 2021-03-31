@@ -53,7 +53,7 @@ public class ChunkManagerHandlerThread
 	private final Condition waitForEvent = lock.newCondition();
 	private boolean newEvent;
 
-	private Collection<ChunkPosition> newLoad = new ArrayList<>();
+	private Collection<Model> newLoad = new ArrayList<>();
 	private Collection<ChunkPosition> newUnload = new ArrayList<>();
 	
 	private Vector2i curPos = null;
@@ -148,12 +148,15 @@ public class ChunkManagerHandlerThread
 				if (model.getQuality().getOrder() < QualityLevel.HALF_BY_HALF.getOrder() ||
 						model.hasImage()) {
 					// Request might have been canceled along the way, so request them if needed.
-					newLoad.add(cp);
+					newLoad.add(model);
 				}
 				
 			} else {
 				// Not loaded, so request.
-				newLoad.add(cp);
+				Model newModel = new Model(cp);
+				toLoad.put(newModel.getPosition(), newModel);
+				toLoadQueue.add(newModel.getPosition());
+				newLoad.add(newModel);
 			}
 		});
 
@@ -197,8 +200,8 @@ public class ChunkManagerHandlerThread
 	}
 
 	private void sendUpdate() {
-		for (ChunkPosition cp : newLoad) {
-			loaded.put(cp, new Model(cp));
+		for (Model cp : newLoad) {
+			loaded.put(cp.getPosition(), cp);
 		}
 		for (ChunkPosition cp : newUnload) {
 			Model model = loaded.remove(cp);
@@ -214,7 +217,7 @@ public class ChunkManagerHandlerThread
 		}
 		if (!newLoad.isEmpty() || !newUnload.isEmpty()) {
 			eventBus.post(new RendererChunkStatusEvent(
-					newLoad,
+					newLoad.stream().map(Model::getPosition).collect(Collectors.toList()),
 					newUnload
 			));
 			newLoad = new ArrayList<>();

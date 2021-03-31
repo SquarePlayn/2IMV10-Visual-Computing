@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager.ChunkManager;
+import nl.tue.visualcomputingproject.group9a.project.renderer.engine.io.MouseCaptureAdapter;
 import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWKeyCallback;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,7 +24,7 @@ import static org.lwjgl.glfw.GLFW.*;
 @Getter
 @Setter
 public class Camera
-		implements KeyListener {
+		implements KeyListener, MouseCaptureAdapter.Listener {
 
 	/**
 	 * The logger object of this class.
@@ -263,5 +265,11 @@ public class Camera
 			fov = FOV;
 			//window.setResized(true);
 		}
+	}
+	
+	@Override
+	public void capturedMouseMoved(MouseEvent event) {
+		increasePitch(-event.getY());
+		increaseYaw(event.getX());
 	}
 }

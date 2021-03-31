@@ -31,7 +31,7 @@ public final class Settings {
 	 * - Rendering: 1
 	 * - Chart: 1
 	 */
-	public static final int NUM_DEDICATED_THREADS = 2;
+	public static final int NUM_DEDICATED_THREADS = 3;
 	
 	/** The service used for scheduling tasks. */
 	public static final ExecutorService executorService = Executors.newFixedThreadPool(
@@ -44,6 +44,19 @@ public final class Settings {
 				});
 				return t;
 			});
+	
+	/** The service used for scheduling texture tasks. */
+	public static final ExecutorService textureExecutorService = Executors.newFixedThreadPool(
+		Math.max(1, Runtime.getRuntime().availableProcessors() - Settings.NUM_DEDICATED_THREADS),
+		r -> {
+			Thread t = Executors.defaultThreadFactory().newThread(r);
+			t.setDaemon(true);
+			t.setUncaughtExceptionHandler((Thread thread, Throwable e) -> {
+				e.printStackTrace();
+			});
+			return t;
+		});
+	
 	
 	/** The directory used for caching. */
 	public static File CACHE_DIR = new File("cache");
