@@ -57,6 +57,7 @@ public class ChunkManagerHandlerThread
 	private Collection<ChunkPosition> newUnload = new ArrayList<>();
 	
 	private Vector2i curPos = null;
+	private boolean posUpdate = false;
 	
 	
 	public ChunkManagerHandlerThread(
@@ -108,6 +109,7 @@ public class ChunkManagerHandlerThread
 		while (true) {
 			try {
 				Vector2i curPos;
+				boolean posUpdate;
 				lock.lock();
 				try {
 					if (!newEvent) {
@@ -115,13 +117,16 @@ public class ChunkManagerHandlerThread
 						newEvent = false;
 					}
 					curPos = this.curPos;
+					posUpdate = this.posUpdate;
 				} finally {
 					lock.unlock();
 				}
 				
 				if (curPos != null) {
-					updateState(curPos);
-					sendUpdate();
+					if (posUpdate) {
+						updateState(curPos);
+						sendUpdate();
+					}
 					receiveEvents();
 				}
 
@@ -302,6 +307,7 @@ public class ChunkManagerHandlerThread
 		);
 		if (!Objects.equals(curPos, newCurPos)) {
 			curPos = newCurPos;
+			posUpdate = true;
 			signalEvent();
 		}
 	}
