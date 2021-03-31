@@ -2,7 +2,6 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
 import com.google.common.eventbus.EventBus;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import org.lwjgl.opengl.awt.GLData;
 import org.opengis.referencing.FactoryException;
@@ -21,6 +20,7 @@ public class SwingWindow {
 	private final SwingCanvas canvas;
 	private final JPanel glPanel;
 	private final Sidebar sidebar;
+	private final MiniMap miniMap;
 
 	/**
 	 * The logger object of this class.
@@ -44,13 +44,25 @@ public class SwingWindow {
 		
 		glPanel.add(canvas, BorderLayout.CENTER);
 		glPanel.setVisible(true);
+		
+		miniMap = new MiniMap(canvas.getCamera());
+		miniMap.setMinimumSize(new Dimension(100, 100));
+		miniMap.setVisible(true);
 
-		sidebar = new Sidebar(canvas.getCamera());
+		sidebar = new Sidebar(canvas.getCamera(), miniMap);
 
 		sidebar.setMinimumSize(new Dimension(100, 100));
 		sidebar.setVisible(true);
-
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, glPanel, sidebar);
+		
+		JScrollPane scrollPane = new JScrollPane(sidebar);
+		scrollPane.setVisible(true);
+		
+		JSplitPane sidePane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollPane, miniMap);
+		sidePane.setVisible(true);
+		sidePane.setContinuousLayout(true);
+		sidePane.setOneTouchExpandable(true);
+		sidePane.setResizeWeight(0.75);
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, glPanel, sidePane);
 		splitPane.setVisible(true);
 		splitPane.setContinuousLayout(false);
 		splitPane.setOneTouchExpandable(true);
@@ -65,21 +77,19 @@ public class SwingWindow {
 			public void run() {
 				if (!canvas.isValid())
 					return;
+				miniMap.update();
 				canvas.render();
 				SwingUtilities.invokeLater(this);
 			}
 		};
 		SwingUtilities.invokeLater(renderLoop);
 
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					sidebar.centerMapOnCameraPosition(Settings.INITIAL_POSITION);
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
+		SwingUtilities.invokeLater(() -> {
+			try {
+				miniMap.centerMapOnCameraPosition(Settings.INITIAL_POSITION, true);
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
 			}
 		});
 	}
