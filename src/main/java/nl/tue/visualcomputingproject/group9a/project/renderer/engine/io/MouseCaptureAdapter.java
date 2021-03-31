@@ -87,9 +87,9 @@ public class MouseCaptureAdapter implements MouseMotionListener, FocusListener, 
 	}
 	
 	@Override
+	@SneakyThrows
 	public void focusLost(FocusEvent focusEvent) {
-		//Intentionally not de-capturing to handle *extreme* mouse movements.
-		//setCaptured(false);
+		setCaptured(false);
 	}
 	
 	@Override
