@@ -56,8 +56,8 @@ public class ChunkManagerHandlerThread
 	private Collection<Model> newLoad = new ArrayList<>();
 	private Collection<ChunkPosition> newUnload = new ArrayList<>();
 	
-	@Setter
-	private volatile Camera camera = null;
+	private Vector2i curPos = null;
+	private boolean posUpdate = false;
 	
 	
 	public ChunkManagerHandlerThread(
@@ -108,20 +108,25 @@ public class ChunkManagerHandlerThread
 		//noinspection InfiniteLoopStatement
 		while (true) {
 			try {
+				Vector2i curPos;
+				boolean posUpdate;
 				lock.lock();
 				try {
 					if (!newEvent) {
-						//noinspection ResultOfMethodCallIgnored
-						waitForEvent.await(Settings.CHUNK_UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
+						waitForEvent.await();
 						newEvent = false;
 					}
+					curPos = this.curPos;
+					posUpdate = this.posUpdate;
 				} finally {
 					lock.unlock();
 				}
-				Camera camera = this.camera;
-				if (camera != null) {
-					updateState(camera);
-					sendUpdate();
+				
+				if (curPos != null) {
+					if (posUpdate) {
+						updateState(curPos);
+						sendUpdate();
+					}
 					receiveEvents();
 				}
 
@@ -131,9 +136,9 @@ public class ChunkManagerHandlerThread
 		}
 	}
 
-	private void updateState(Camera camera) {
+	private void updateState(Vector2i curPos) {
 		// Check for chunks to load.
-		getChunksInRadius(camera, Settings.CHUNK_LOAD_DISTANCE).forEachRemaining((cp) -> {
+		getChunksInRadius(curPos, Settings.CHUNK_LOAD_DISTANCE).forEachRemaining((cp) -> {
 			if (loaded.containsKey(cp)) return; // Already loaded, ignore.
 			Model model = toUnload.remove(cp);
 			if (model != null) {
@@ -155,29 +160,21 @@ public class ChunkManagerHandlerThread
 			}
 		});
 
-		final Vector2i currentChunkIndex = ChunkManager.getChunkIndices(
-				camera.getPosition().x,
-				camera.getPosition().z
-		);
 		final int chunkUnloadRangeX = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_WIDTH);
 		final int chunkUnloadRangeY = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_HEIGHT);
 		newUnload = loaded.keySet().stream().filter((cp) -> {
 			int chunkIX = (int) Math.floor(cp.getX() / CHUNK_WIDTH);
 			int chunkIY = (int) Math.floor(cp.getY() / CHUNK_HEIGHT);
-			return Math.abs(chunkIX - currentChunkIndex.x) >= chunkUnloadRangeX ||
-					Math.abs(chunkIY - currentChunkIndex.y) >= chunkUnloadRangeY;
+			return Math.abs(chunkIX - curPos.x) >= chunkUnloadRangeX ||
+					Math.abs(chunkIY - curPos.y) >= chunkUnloadRangeY;
 		}).collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	/**
 	 * Find all chunk positions in a certain radius around the camera.
 	 */
-	private Iterator<ChunkPosition> getChunksInRadius(final Camera camera,  final double radius) {
+	private Iterator<ChunkPosition> getChunksInRadius(final Vector2i curPos,  final double radius) {
 		return new GeneratorIterator<ChunkPosition>() {
-			private final Vector2i currentChunkIndex = ChunkManager.getChunkIndices(
-					camera.getPosition().x,
-					camera.getPosition().z
-			);
 			private final int chunkRangeX = (int) Math.ceil(radius / CHUNK_WIDTH);
 			private final int chunkRangeY = (int) Math.ceil(radius / CHUNK_HEIGHT);
 			
@@ -186,10 +183,10 @@ public class ChunkManagerHandlerThread
 			@Override
 			protected ChunkPosition generateNext() {
 				while (cdx <= chunkRangeX) {
-					int cx = currentChunkIndex.x + cdx;
+					int cx = curPos.x + cdx;
 					double x = cx * CHUNK_WIDTH;
 					while (cdy <= chunkRangeY) {
-						int cy = currentChunkIndex.y + cdy++;
+						int cy = curPos.y + cdy++;
 						double y = cy * Settings.CHUNK_HEIGHT;
 						return new ChunkPosition(x, y, CHUNK_WIDTH, CHUNK_HEIGHT);
 					}
@@ -303,6 +300,18 @@ public class ChunkManagerHandlerThread
 			waitForEvent.signal();
 		} finally {
 			lock.unlock();
+		}
+	}
+
+	public void updateCamera(Camera camera) {
+		Vector2i newCurPos = ChunkManager.getChunkIndices(
+				camera.getPosition().x,
+				camera.getPosition().z
+		);
+		if (!Objects.equals(curPos, newCurPos)) {
+			curPos = newCurPos;
+			posUpdate = true;
+			signalEvent();
 		}
 	}
 
