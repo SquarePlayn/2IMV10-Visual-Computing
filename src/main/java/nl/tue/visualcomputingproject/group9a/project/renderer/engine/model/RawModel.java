@@ -5,8 +5,6 @@ import lombok.Data;
 import org.joml.Matrix4f;
 
 import java.util.Collection;
-import java.util.Optional;
-import java.util.function.BiFunction;
 
 @Data
 @AllArgsConstructor

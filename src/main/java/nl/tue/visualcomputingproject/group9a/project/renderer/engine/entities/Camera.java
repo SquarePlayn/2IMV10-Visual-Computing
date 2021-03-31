@@ -61,22 +61,6 @@ public class Camera
 	public Camera(ChunkManager chunkManager) {
 		this.chunkManager = chunkManager;
 	}
-	
-	public Camera(Camera copy) {
-		chunkManager = copy.chunkManager;
-		position = copy.position;
-		pitch = copy.pitch;
-		yaw = copy.yaw;
-		roll = copy.roll;
-		wireframe = copy.wireframe;
-		lockHeight = copy.lockHeight;
-		walking = copy.walking;
-		fov = copy.fov;
-		lastUpdateTime = copy.lastUpdateTime;
-		keyboardCallback = copy.keyboardCallback;
-		pressedKeys = copy.pressedKeys;
-		lastTerrainHeight = copy.lastTerrainHeight;
-	}
 
 	/**
 	 * Update the camera position, to be called once per frame

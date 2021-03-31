@@ -49,7 +49,7 @@ public class ChunkPosition {
 		return contains(point.x, point.z);
 	}
 	
-	public boolean contains (Vector2d point) {
+	public boolean contains(Vector2d point) {
 		return contains(point.x, point.y);
 	}
 	
