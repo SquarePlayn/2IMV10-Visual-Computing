@@ -52,11 +52,7 @@ public class Renderer {
 		}
 
 		// Draw all vertices
-		if (model.isUnloaded()) {
-			LOGGER.error("Attempted rendering unloaded model.");
-		} else {
-			GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
-		}
+		GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndicesCount(), GL11.GL_UNSIGNED_INT, 0);
 
 		// Deactivate the VAO & VBOs
 		GL20.glDisableVertexAttribArray(0);

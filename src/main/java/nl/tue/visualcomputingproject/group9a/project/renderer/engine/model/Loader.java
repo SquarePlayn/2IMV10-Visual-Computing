@@ -100,7 +100,6 @@ public class Loader {
 		unbindVAO();
 
 		return new RawModel(
-				false,
 				vaoID,
 				indicesCount,
 				Maths.createTransformationMatrix(new Vector3f(offset.x, 0, offset.y), 0, 0, 0, 1),
@@ -116,7 +115,6 @@ public class Loader {
 	 * @param unloadTexture Whether to unload the texture
 	 */
 	public static void unloadModel(RawModel model, boolean unloadTexture) {
-		model.setUnloaded(true);
 		vbos.removeAll(model.getVboIds());
 		model.getVboIds().forEach(GL15::glDeleteBuffers);
 		vaos.remove(model.getVaoId());
@@ -309,7 +307,6 @@ public class Loader {
 		setAttributePointer(vbo, 0, 3, 3, 0);
 		unbindVAO();
 		return new RawModel(
-				false,
 				vao,
 				vertices.length / 3,
 				Maths.createTransformationMatrix(new Vector3f(), 0, 0, 0, 1),

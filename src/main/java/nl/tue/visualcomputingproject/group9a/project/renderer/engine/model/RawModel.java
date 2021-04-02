@@ -10,7 +10,6 @@ import java.util.Collection;
 @AllArgsConstructor
 public class RawModel {
 
-	private boolean unloaded;
 	private final int vaoId;
 	private final int indicesCount;
 	private final Matrix4f modelMatrix;
