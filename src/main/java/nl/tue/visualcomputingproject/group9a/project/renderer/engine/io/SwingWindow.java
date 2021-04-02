@@ -10,10 +10,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.lang.invoke.MethodHandles;
 
 @SuppressWarnings("UnstableApiUsage")
-public class SwingWindow {
+public class SwingWindow implements ActionListener {
 	@Getter
 	private final JFrame frame = new JFrame(Settings.WINDOW_NAME);
 	@Getter
@@ -21,6 +23,7 @@ public class SwingWindow {
 	private final JPanel glPanel;
 	private final Sidebar sidebar;
 	private final MiniMap miniMap;
+	private final Timer timer;
 
 	/**
 	 * The logger object of this class.
@@ -73,16 +76,9 @@ public class SwingWindow {
 		frame.setVisible(true);
 		frame.transferFocus();
 
-		Runnable renderLoop = new Runnable() {
-			public void run() {
-				if (!canvas.isValid())
-					return;
-				miniMap.update();
-				canvas.render();
-				SwingUtilities.invokeLater(this);
-			}
-		};
-		SwingUtilities.invokeLater(renderLoop);
+		timer = new Timer(1000/30, this);
+		timer.setRepeats(true);
+		timer.start();
 
 		SwingUtilities.invokeLater(() -> {
 			try {
@@ -92,5 +88,13 @@ public class SwingWindow {
 				System.exit(1);
 			}
 		});
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent actionEvent) {
+		if (canvas.isValid()) {
+			canvas.render();
+			miniMap.update();
+		}
 	}
 }
