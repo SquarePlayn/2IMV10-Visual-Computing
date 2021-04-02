@@ -14,6 +14,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -50,6 +51,11 @@ public class Camera
 	private boolean lockHeight = true;
 	private boolean walking = false;
 	private float fov = FOV;
+	@Getter
+	@Setter
+	private float sensitivity = 1.0f;
+	@Getter
+	private final Collection<Listener> listeners = new ArrayList<>();
 
 	// Last time at which the position was updated (ms)
 	long lastUpdateTime = 0;
@@ -241,10 +247,19 @@ public class Camera
 		
 		if (key == KeyEvent.VK_T) {
 			wireframe = !wireframe;
+			doSettingChange();
 		} else if (key == KeyEvent.VK_R) {
 			lockHeight = !lockHeight;
+			if (lockHeight) {
+				walking = false;
+			}
+			doSettingChange();
 		} else if (key == KeyEvent.VK_F) {
 			walking = !walking;
+			if (walking) {
+				lockHeight = false;
+			}
+			doSettingChange();
 		} else if (key == KeyEvent.VK_P) {
 			System.out.println("Camera position: " + position);
 		}
@@ -253,6 +268,7 @@ public class Camera
 		if (key == KeyEvent.VK_TAB) {
 			fov = FOV / ZOOM_FACTOR;
 			//window.setResized(true);
+			doSettingChange();
 		}
 	}
 	
@@ -264,12 +280,23 @@ public class Camera
 		if (key == KeyEvent.VK_TAB) {
 			fov = FOV;
 			//window.setResized(true);
+			doSettingChange();
 		}
 	}
 	
 	@Override
 	public void capturedMouseMoved(MouseEvent event) {
-		increasePitch(-event.getY());
-		increaseYaw(event.getX());
+		increasePitch(sensitivity * -event.getY());
+		increaseYaw(sensitivity * event.getX());
+	}
+	
+	public interface Listener {
+		void onCameraSettingChange();
+	}
+	
+	private void doSettingChange() {
+		for (Listener listener : listeners) {
+			listener.onCameraSettingChange();
+		}
 	}
 }
