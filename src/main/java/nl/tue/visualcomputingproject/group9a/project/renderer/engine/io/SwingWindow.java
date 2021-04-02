@@ -14,6 +14,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.invoke.MethodHandles;
 
+import static nl.tue.visualcomputingproject.group9a.project.common.Settings.FPS;
+
 @SuppressWarnings("UnstableApiUsage")
 public class SwingWindow implements ActionListener {
 	@Getter
@@ -76,7 +78,7 @@ public class SwingWindow implements ActionListener {
 		frame.setVisible(true);
 		frame.transferFocus();
 
-		timer = new Timer(1000/30, this);
+		timer = new Timer(1000/FPS, this);
 		timer.setRepeats(true);
 		timer.start();
 
