@@ -125,7 +125,7 @@ public class ChunkManager {
 			float x1 = (float) cp.getX() - pos.x;
 			float x2 = x1 + (float) cp.getWidth();
 			float y1 = -((float) cp.getY() - pos.z);
-			float y2 = y1 + (float) cp.getHeight();
+			float y2 = y1 - (float) cp.getHeight();
 
 			return isLeftOf(-forwardZ, forwardX, x1, y1) ||
 					isLeftOf(-forwardZ, forwardX, x1, y2) ||
