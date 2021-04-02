@@ -83,6 +83,7 @@ public class SwingWindow implements ActionListener {
 		timer.start();
 
 		SwingUtilities.invokeLater(() -> {
+			Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 			try {
 				miniMap.centerMapOnCameraPosition(Settings.INITIAL_POSITION, true);
 			} catch (Exception e) {
