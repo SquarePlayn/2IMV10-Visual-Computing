@@ -15,9 +15,5 @@ public class RawModel {
 	private final Matrix4f modelMatrix;
 	private final Collection<Integer> vboIds;
 	private int texId;
-	
-	public boolean hasModel() {
-		return vaoId < 0;
-	}
 
 }
