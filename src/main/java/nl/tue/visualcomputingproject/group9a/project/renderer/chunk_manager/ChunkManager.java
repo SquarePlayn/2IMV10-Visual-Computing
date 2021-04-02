@@ -1,20 +1,10 @@
 package nl.tue.visualcomputingproject.group9a.project.renderer.chunk_manager;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
-import nl.tue.visualcomputingproject.group9a.project.common.Settings;
-import nl.tue.visualcomputingproject.group9a.project.common.TextureType;
-import nl.tue.visualcomputingproject.group9a.project.common.cache.MemoryStore;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
-import nl.tue.visualcomputingproject.group9a.project.common.event.AbstractEvent;
-import nl.tue.visualcomputingproject.group9a.project.common.event.ChartTextureAvailableEvent;
-import nl.tue.visualcomputingproject.group9a.project.common.event.ProcessorChunkLoadedEvent;
-import nl.tue.visualcomputingproject.group9a.project.common.event.RendererChunkStatusEvent;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.Loader;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.model.RawModel;
-import nl.tue.visualcomputingproject.group9a.project.renderer.engine.utils.Maths;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -24,13 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.nio.FloatBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
@@ -131,8 +114,10 @@ public class ChunkManager {
 	
 	public Iterable<RawModel> getVisibleModels(Camera camera) {
 		if (camera.getPitch() < -55) return getModels();
-		final Vector3f forward = camera.getForward();
-		if (forward.x == 0 && forward.z == 0) return getModels();
+		float rad = (float) Math.toRadians(camera.getYaw());
+		float forwardX = (float) Math.sin(rad);
+		float forwardZ = org.joml.Math.cosFromSin(forwardX, rad);
+		
 		final Vector3f pos = camera.getPosition();
 
 		return models.entrySet().stream().filter((entry) -> {
@@ -142,10 +127,10 @@ public class ChunkManager {
 			float y1 = -((float) cp.getY() - pos.z);
 			float y2 = y1 + (float) cp.getHeight();
 
-			return isLeftOf(forward.z, forward.x, x1, y1) ||
-					isLeftOf(forward.z, forward.x, x1, y2) ||
-					isLeftOf(forward.z, forward.x, x2, y1) ||
-					isLeftOf(forward.z, forward.x, x2, y2);
+			return isLeftOf(-forwardZ, forwardX, x1, y1) ||
+					isLeftOf(-forwardZ, forwardX, x1, y2) ||
+					isLeftOf(-forwardZ, forwardX, x2, y1) ||
+					isLeftOf(-forwardZ, forwardX, x2, y2);
 		}).map(Map.Entry::getValue)
 				.collect(Collectors.toList());
 	}

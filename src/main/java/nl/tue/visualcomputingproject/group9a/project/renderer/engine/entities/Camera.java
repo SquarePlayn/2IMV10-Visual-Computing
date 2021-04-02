@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Optional;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
-import static org.lwjgl.glfw.GLFW.*;
 
 @Getter
 @Setter
@@ -231,8 +230,9 @@ public class Camera
 	 * Prepare the camera for deletion
 	 */
 	public void cleanup() {
-		keyboardCallback.free();
-		// TODO Listen to mouse events, move if moved
+		if (keyboardCallback != null) {
+			keyboardCallback.free();
+		}
 	}
 	
 	@Override

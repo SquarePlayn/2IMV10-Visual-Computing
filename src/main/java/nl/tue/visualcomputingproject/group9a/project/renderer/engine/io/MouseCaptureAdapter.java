@@ -45,7 +45,8 @@ public class MouseCaptureAdapter implements MouseMotionListener, FocusListener, 
 		return captured;
 	}
 	
-	public void setCaptured(boolean captured) throws AWTException {
+	public void setCaptured(boolean captured)
+			throws AWTException {
 		if (captured && !this.captured) {
 			targetPoint = new Point((int)component.getBounds().getCenterX(), (int)component.getBounds().getCenterY());
 			SwingUtilities.convertPointToScreen(targetPoint, component);
@@ -85,8 +86,8 @@ public class MouseCaptureAdapter implements MouseMotionListener, FocusListener, 
 	
 	}
 	
-	@SneakyThrows
 	@Override
+	@SneakyThrows
 	public void focusLost(FocusEvent focusEvent) {
 		setCaptured(false);
 	}
@@ -96,8 +97,8 @@ public class MouseCaptureAdapter implements MouseMotionListener, FocusListener, 
 	
 	}
 	
-	@SneakyThrows
 	@Override
+	@SneakyThrows
 	public void keyPressed(KeyEvent keyEvent) {
 		if (keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE) {
 			setCaptured(false);
@@ -135,7 +136,6 @@ public class MouseCaptureAdapter implements MouseMotionListener, FocusListener, 
 	
 	}
 	
-	@SneakyThrows
 	@Override
 	public void mouseExited(MouseEvent mouseEvent) {
 		//Intentionally not de-capturing to handle *extreme* mouse movements.
