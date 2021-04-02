@@ -22,7 +22,8 @@ public class FullMeshGenerator {
 			MeshBufferManager meshManager,
 			StoreElement<Data> pi1,
 			StoreElement<Data> pi2) {
-		if (pi1.size() <= 1 && pi2.size() <= 1) return;
+		if (pi1 == null || pi2 == null ||
+				pi1.size() <= 1 && pi2.size() <= 1) return;
 		
 		switch (Settings.MESH_TYPE) {
 			case TRIANGLES_CLOCKWISE_3_INT:
@@ -132,26 +133,49 @@ public class FullMeshGenerator {
 				switch (Settings.MESH_TYPE) {
 					case TRIANGLES_CLOCKWISE_3_INT:
 					case TRIANGLES_COUNTER_CLOCKWISE_3_INT:
-						meshManager.add(
-								pi00.back().getIndex(),
-								pi01.back().getIndex(),
-								pi11.back().getIndex()
-						);
-						meshManager.add(
-								pi00.back().getIndex(),
-								pi11.back().getIndex(),
-								pi10.back().getIndex()
-						);
+						if (pi00 != null && pi11 != null) {
+							if (pi01 != null) {
+								meshManager.add(
+										pi00.back().getIndex(),
+										pi01.back().getIndex(),
+										pi11.back().getIndex()
+								);
+							}
+							
+							if (pi10 != null) {
+								meshManager.add(
+										pi00.back().getIndex(),
+										pi11.back().getIndex(),
+										pi10.back().getIndex()
+								);
+							}
+						} else if (pi01 != null && pi10 != null) {
+							if (pi00 != null) {
+								meshManager.add(
+										pi00.back().getIndex(),
+										pi01.back().getIndex(),
+										pi10.back().getIndex()
+								);
+							} else if (pi11 != null) {
+								meshManager.add(
+										pi01.back().getIndex(),
+										pi11.back().getIndex(),
+										pi10.back().getIndex()
+								);
+							}
+						}
 						break;
 						
 					case QUADS_CLOCKWISE_4_INT:
 					case QUADS_COUNTER_CLOCKWISE_4_INT:
-						meshManager.add(
-								pi00.back().getIndex(),
-								pi01.back().getIndex(),
-								pi11.back().getIndex(),
-								pi10.back().getIndex()
-						);
+						if (pi00 != null && pi10 != null && pi01 != null && pi11 != null) {
+							meshManager.add(
+									pi00.back().getIndex(),
+									pi01.back().getIndex(),
+									pi11.back().getIndex(),
+									pi10.back().getIndex()
+							);
+						}
 						break;
 					default:
 						throw new IllegalStateException();
