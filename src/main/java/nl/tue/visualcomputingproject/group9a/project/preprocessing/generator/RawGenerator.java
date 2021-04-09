@@ -1,8 +1,7 @@
-package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing;
+package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
-import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.Generator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.buffer_manager.VertexBufferManager;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.mesh.FullMeshGenerator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.point_store.ArrayStore;
