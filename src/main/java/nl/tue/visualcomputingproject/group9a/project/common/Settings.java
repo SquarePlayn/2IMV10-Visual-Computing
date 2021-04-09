@@ -60,6 +60,7 @@ public final class Settings {
 	
 	/** The directory used for caching. */
 	public static File CACHE_DIR = new File("cache");
+	public static File SETTINGS_FILE = new File("settings.properties");
 	/** The file extension of the cache files. */
 	public static final String CACHE_EXT = ".cache";
 	/** The file extension of the temporary cache files. */
@@ -96,8 +97,8 @@ public final class Settings {
 	/**
 	 * Chunk update settings
 	 */
-	public static final double CHUNK_LOAD_DISTANCE = 1000;
-	public static final double CHUNK_UNLOAD_DISTANCE = 1500;
+	public static double CHUNK_LOAD_DISTANCE = 1000;
+	public static double CHUNK_UNLOAD_DISTANCE = 1500;
 
 	/**
 	 * Shader settings

@@ -115,3 +115,4 @@ gradle-app.setting
 /lombok.config
 /cache
 hs_err_pid*.log
+settings.properties

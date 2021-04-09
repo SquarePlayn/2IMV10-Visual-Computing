@@ -19,7 +19,7 @@ import static nl.tue.visualcomputingproject.group9a.project.common.Settings.FPS;
 @SuppressWarnings("UnstableApiUsage")
 public class SwingWindow implements ActionListener {
 	@Getter
-	private final JFrame frame = new JFrame(Settings.WINDOW_NAME);
+	private final JFrame frame;
 	@Getter
 	private final SwingCanvas canvas;
 	private final JPanel glPanel;
@@ -33,6 +33,11 @@ public class SwingWindow implements ActionListener {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
 	public SwingWindow(EventBus eventBus) throws FactoryException {
+		UIManager.getLookAndFeelDefaults().put("Slider.paintValue", true);
+		UIManager.put("Slider.paintValue", true);
+		UIManager.getLookAndFeel().getDefaults().put("Slider.paintValue", true);
+		frame = new JFrame(Settings.WINDOW_NAME);
+		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(new BorderLayout());
 		frame.setPreferredSize(new Dimension(Settings.INITIAL_WINDOW_SIZE.x, Settings.INITIAL_WINDOW_SIZE.y));
