@@ -64,10 +64,10 @@ public final class Settings {
 	/** Chunk update settings. */
 	public static final SettingsFile SETTINGS = new SettingsFile(SETTINGS_FILE);
 	public static final String SETTINGS_CHUNK_LOAD = "chunk.loaddistance";
-	public static final double CHUNK_LOAD_DISTANCE_MIN = 500.0;
-	public static final double CHUNK_LOAD_DISTANCE_MAX = 1000.0;
+	public static final double CHUNK_LOAD_DISTANCE_MIN = 200;
+	public static final double CHUNK_LOAD_DISTANCE_MAX = 5000.0;
 	private static double chunkLoadDistance;
-	
+
 	public static void setChunkLoadDistance(double dist) {
 		chunkLoadDistance = Math.min(CHUNK_LOAD_DISTANCE_MAX, Math.max(CHUNK_LOAD_DISTANCE_MIN, dist));
 		SETTINGS.updateValue(SETTINGS_CHUNK_LOAD, chunkLoadDistance);

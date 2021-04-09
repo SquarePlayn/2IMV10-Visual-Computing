@@ -110,9 +110,9 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		renderDistanceLabel = new JLabel("");
 		renderDistanceSlider = new JSlider(
 				JSlider.HORIZONTAL,
-				(int) Settings.CHUNK_LOAD_DISTANCE_MIN,
-				(int) Settings.CHUNK_LOAD_DISTANCE_MAX,
-				(int) Settings.getChunkLoadDistance()
+				(int) Math.ceil(10 * Math.log(Settings.CHUNK_LOAD_DISTANCE_MIN) / Math.log(RENDER_DISTANCE_EXPONENT_BASE)),
+				(int) Math.floor(10 * Math.log(Settings.CHUNK_LOAD_DISTANCE_MAX) / Math.log(RENDER_DISTANCE_EXPONENT_BASE)),
+				(int) Math.round(10 * Math.log(Settings.getChunkLoadDistance()) / Math.log(RENDER_DISTANCE_EXPONENT_BASE))
 		);
 		renderDistanceLabel.setText(String.format("%d m", (int) Settings.getChunkLoadDistance()));
 		renderDistanceSlider.addChangeListener(e -> {
