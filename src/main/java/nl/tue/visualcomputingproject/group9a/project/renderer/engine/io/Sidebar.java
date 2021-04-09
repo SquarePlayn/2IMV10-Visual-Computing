@@ -121,7 +121,7 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		renderDistanceLabel.setText(String.format("%d m", (int)Settings.CHUNK_LOAD_DISTANCE));
 		renderDistanceSlider.addChangeListener(e -> {
 			Settings.CHUNK_LOAD_DISTANCE = Math.pow(RENDER_DISTANCE_EXPONENT_BASE, renderDistanceSlider.getValue() / 10.);
-			Settings.CHUNK_UNLOAD_DISTANCE = Settings.CHUNK_LOAD_DISTANCE + 250;
+			Settings.CHUNK_UNLOAD_DISTANCE = Settings.CHUNK_LOAD_DISTANCE + Math.max(250, Settings.CHUNK_LOAD_DISTANCE / 10.);
 			renderDistanceLabel.setText(String.format("%d m", (int)Settings.CHUNK_LOAD_DISTANCE));
 			settingsFile.loadCurrentValues();
 			settingsFile.writeFile();
