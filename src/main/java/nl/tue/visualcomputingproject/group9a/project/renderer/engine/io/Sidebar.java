@@ -23,6 +23,7 @@ public class Sidebar extends JPanel implements Camera.Listener {
 	private JComboBox<String> dropdownCameraType;
 	private JSlider sensitivitySlider, renderDistanceSlider;
 	private static final String WALKING = "Walking", FLYING = "Flying", HOVERING = "Hovering";
+	private static final double RENDER_DISTANCE_EXPONENT_BASE = 1.09;
 	private final SettingsFile settingsFile;
 	
 	@SneakyThrows
@@ -116,10 +117,10 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		c.gridx = 0;
 		add(new JLabel("Render distance:"), c);
 		JLabel renderDistanceLabel = new JLabel("");
-		renderDistanceSlider = new JSlider(JSlider.HORIZONTAL, 100, 1000, (int)Settings.CHUNK_LOAD_DISTANCE);
+		renderDistanceSlider = new JSlider(JSlider.HORIZONTAL, 500, 1000, (int)Settings.CHUNK_LOAD_DISTANCE);
 		renderDistanceLabel.setText(String.format("%d m", (int)Settings.CHUNK_LOAD_DISTANCE));
 		renderDistanceSlider.addChangeListener(e -> {
-			Settings.CHUNK_LOAD_DISTANCE = renderDistanceSlider.getValue();
+			Settings.CHUNK_LOAD_DISTANCE = Math.pow(RENDER_DISTANCE_EXPONENT_BASE, renderDistanceSlider.getValue() / 10.);
 			Settings.CHUNK_UNLOAD_DISTANCE = Settings.CHUNK_LOAD_DISTANCE + 250;
 			renderDistanceLabel.setText(String.format("%d m", (int)Settings.CHUNK_LOAD_DISTANCE));
 			settingsFile.loadCurrentValues();
@@ -171,7 +172,8 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		buttonWireframe.setSelected(camera.isWireframe());
 		buttonMinimap.setSelected(miniMap.isFollowCamera());
 		sensitivitySlider.setValue((int) (camera.getSensitivity()*10.0f));
-		renderDistanceSlider.setValue((int) Settings.CHUNK_LOAD_DISTANCE);
+		renderDistanceSlider.setValue(
+				(int) (10 * Math.log(Settings.CHUNK_LOAD_DISTANCE) / Math.log(RENDER_DISTANCE_EXPONENT_BASE)));
 		settingsFile.loadCurrentValues();
 		settingsFile.writeFile();
 	}
