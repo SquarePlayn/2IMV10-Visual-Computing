@@ -2,8 +2,8 @@ package nl.tue.visualcomputingproject.group9a.project.renderer.engine.io;
 
 import lombok.SneakyThrows;
 import nl.tue.visualcomputingproject.group9a.project.common.Settings;
+import nl.tue.visualcomputingproject.group9a.project.common.SettingsFile;
 import nl.tue.visualcomputingproject.group9a.project.renderer.engine.entities.Camera;
-import org.opengis.referencing.FactoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +23,12 @@ public class Sidebar extends JPanel implements Camera.Listener {
 	private JComboBox<String> dropdownCameraType;
 	private JSlider sensitivitySlider, renderDistanceSlider;
 	private static final String WALKING = "Walking", FLYING = "Flying", HOVERING = "Hovering";
-	private final SettingsFile settingsFile;
 	
 	@SneakyThrows
 	public Sidebar(Camera camera, MiniMap miniMap) {
 		super(new BorderLayout());
 		this.camera = camera;
 		this.miniMap = miniMap;
-		settingsFile = new SettingsFile(Settings.SETTINGS_FILE, camera, miniMap);
 		initialize();
 	}
 
@@ -48,8 +46,6 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		buttonWireframe = new JCheckBox();
 		buttonWireframe.addItemListener(e -> {
 			camera.setWireframe(e.getStateChange() == ItemEvent.SELECTED);
-			settingsFile.loadCurrentValues();
-			settingsFile.writeFile();
 		});
 		c.gridx = 1;
 		add(buttonWireframe, c);
@@ -63,8 +59,6 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		buttonMinimap = new JCheckBox();
 		buttonMinimap.addItemListener(e -> {
 			miniMap.setFollowCamera(e.getStateChange() == ItemEvent.SELECTED);
-			settingsFile.loadCurrentValues();
-			settingsFile.writeFile();
 		});
 		c.gridx = 1;
 		add(buttonMinimap, c);
@@ -88,8 +82,6 @@ public class Sidebar extends JPanel implements Camera.Listener {
 				camera.setWalking(false);
 				camera.setLockHeight(true);
 			}
-			settingsFile.loadCurrentValues();
-			settingsFile.writeFile();
 		});
 		c.gridx = 1;
 		add(dropdownCameraType, c);
@@ -104,8 +96,6 @@ public class Sidebar extends JPanel implements Camera.Listener {
 			JSlider source = (JSlider) e.getSource();
 			float value = source.getValue();
 			camera.setSensitivity(value / 10.0f);
-			settingsFile.loadCurrentValues();
-			settingsFile.writeFile();
 		});
 		c.gridx = 1;
 		add(sensitivitySlider, c);
@@ -121,9 +111,8 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		renderDistanceSlider.addChangeListener(e -> {
 			Settings.CHUNK_LOAD_DISTANCE = renderDistanceSlider.getValue();
 			Settings.CHUNK_UNLOAD_DISTANCE = Settings.CHUNK_LOAD_DISTANCE + 250;
+			Settings.saveChunkDistances();
 			renderDistanceLabel.setText(String.format("%d m", (int)Settings.CHUNK_LOAD_DISTANCE));
-			settingsFile.loadCurrentValues();
-			settingsFile.writeFile();
 		});
 		c.gridx = 1;
 		add(renderDistanceSlider, c);
@@ -136,10 +125,10 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		Consumer<String> addInstructionLine = (t) -> {
 			JLabel instructions = new JLabel(t);
 			c.gridx = 0;
-			int oldwidth = c.gridwidth;
-			c.gridwidth = 2 * oldwidth;
+			int oldWidth = c.gridwidth;
+			c.gridwidth = 2 * oldWidth;
 			add(instructions, c);
-			c.gridwidth = oldwidth;
+			c.gridwidth = oldWidth;
 			c.gridy++;
 		};
 		
@@ -152,10 +141,6 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		
 		camera.getListeners().add(this);
 		
-		//Apply settingsfile
-		settingsFile.loadCurrentValues();
-		settingsFile.readFile();
-		settingsFile.applyValues();
 		updateFromCamera();
 	}
 	
@@ -172,12 +157,11 @@ public class Sidebar extends JPanel implements Camera.Listener {
 		buttonMinimap.setSelected(miniMap.isFollowCamera());
 		sensitivitySlider.setValue((int) (camera.getSensitivity()*10.0f));
 		renderDistanceSlider.setValue((int) Settings.CHUNK_LOAD_DISTANCE);
-		settingsFile.loadCurrentValues();
-		settingsFile.writeFile();
 	}
 	
 	@Override
 	public void onCameraSettingChange() {
 		updateFromCamera();
 	}
+	
 }

@@ -12,6 +12,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.invoke.MethodHandles;
 
 import static nl.tue.visualcomputingproject.group9a.project.common.Settings.FPS;
@@ -96,6 +98,13 @@ public class SwingWindow implements ActionListener {
 				System.exit(1);
 			}
 		});
+		
+		frame.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				Settings.SETTINGS.writeFile();
+			}
+		});
 	}
 	
 	@Override
@@ -105,4 +114,5 @@ public class SwingWindow implements ActionListener {
 			miniMap.update();
 		}
 	}
+	
 }

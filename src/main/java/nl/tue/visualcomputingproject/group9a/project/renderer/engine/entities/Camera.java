@@ -25,6 +25,11 @@ import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
 @Setter
 public class Camera
 		implements KeyListener, MouseCaptureAdapter.Listener {
+	
+	private static final String SETTINGS_WIREFRAME = "camera.wireframe";
+	private static final String SETTINGS_LOCK_HEIGHT = "camera.lockheight";
+	private static final String SETTINGS_WALKING = "camera.walking";
+	private static final String SETTINGS_SENSITIVITY = "camera.sensitivity";
 
 	/**
 	 * The logger object of this class.
@@ -47,13 +52,14 @@ public class Camera
 	private float roll = 0;
 
 	// Other settings
-	private boolean wireframe = false;
-	private boolean lockHeight = true;
-	private boolean walking = false;
+	private boolean wireframe = Settings.SETTINGS.getValue(SETTINGS_WIREFRAME, false);
+	private boolean lockHeight = Settings.SETTINGS.getValue(SETTINGS_LOCK_HEIGHT, true);
+	private boolean walking = Settings.SETTINGS.getValue(SETTINGS_WALKING, false);
 	private float fov = FOV;
+	
 	@Getter
-	@Setter
-	private float sensitivity = 1.0f;
+	private float sensitivity = Settings.SETTINGS.getValue(SETTINGS_SENSITIVITY, 1.0f);
+	
 	@Getter
 	private final Collection<Listener> listeners = new ArrayList<>();
 
@@ -97,6 +103,34 @@ public class Camera
 		// Stick walking camera
 		if (walking) {
 			position.y = getTerrainHeight() + WALK_HEIGHT;
+		}
+	}
+	
+	public void setLockHeight(boolean lockHeight) {
+		if (this.lockHeight != lockHeight) {
+			this.lockHeight = lockHeight;
+			Settings.SETTINGS.updateValue(SETTINGS_LOCK_HEIGHT, lockHeight);
+		}
+	}
+	
+	public void setWalking(boolean walking) {
+		if (this.walking != walking) {
+			this.walking = walking;
+			Settings.SETTINGS.updateValue(SETTINGS_WALKING, walking);
+		}
+	}
+
+	public void setWireframe(boolean wireframe) {
+		if (this.wireframe != wireframe) {
+			this.wireframe = wireframe;
+			Settings.SETTINGS.updateValue(SETTINGS_WIREFRAME, wireframe);
+		}
+	}
+	
+	public void setSensitivity(float sensitivity) {
+		if (this.sensitivity != sensitivity) {
+			this.sensitivity = sensitivity;
+			Settings.SETTINGS.updateValue(SETTINGS_SENSITIVITY, sensitivity);
 		}
 	}
 

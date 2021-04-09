@@ -9,7 +9,6 @@ import org.joml.Vector3f;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * Global project settings class.
@@ -61,6 +60,19 @@ public final class Settings {
 	/** The directory used for caching. */
 	public static File CACHE_DIR = new File("cache");
 	public static File SETTINGS_FILE = new File("settings.properties");
+
+	/** Chunk update settings. */
+	public static final SettingsFile SETTINGS = new SettingsFile(SETTINGS_FILE);
+	public static String SETTINGS_CHUNK_LOAD = "chunk.loaddistance";
+	public static String SETTINGS_CHUNK_UNLOAD = "chunk.unloaddistance";
+	public static double CHUNK_LOAD_DISTANCE = SETTINGS.getValue(SETTINGS_CHUNK_LOAD, 1000.0d);
+	public static double CHUNK_UNLOAD_DISTANCE = SETTINGS.getValue(SETTINGS_CHUNK_UNLOAD, 1500.0d);
+
+	public static void saveChunkDistances() {
+		SETTINGS.updateValue(SETTINGS_CHUNK_LOAD, CHUNK_LOAD_DISTANCE);
+		SETTINGS.updateValue(SETTINGS_CHUNK_UNLOAD, CHUNK_UNLOAD_DISTANCE);
+	}
+	
 	/** The file extension of the cache files. */
 	public static final String CACHE_EXT = ".cache";
 	/** The file extension of the temporary cache files. */
@@ -93,12 +105,6 @@ public final class Settings {
 	public static final float GROUND_MOVE_SPEED_PERCENTAGE = 0.2f;
 	public static final float LOOK_SPEED = 30f;
 	public static final float WALK_HEIGHT = 5;
-
-	/**
-	 * Chunk update settings
-	 */
-	public static double CHUNK_LOAD_DISTANCE = 1000;
-	public static double CHUNK_UNLOAD_DISTANCE = 1500;
 
 	/**
 	 * Shader settings

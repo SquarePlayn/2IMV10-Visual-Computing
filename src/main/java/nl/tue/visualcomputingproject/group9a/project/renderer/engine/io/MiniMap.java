@@ -30,14 +30,15 @@ import java.lang.invoke.MethodHandles;
 
 public class MiniMap extends JPanel {
 	static private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+	private static final String SETTINGS_FOLLOW = "minimap.follow";
 	
 	private final JMapPane mapPane;
 	private final CoordinateReferenceSystem crs = CRS.decode("EPSG:28992");
 	private final MathTransform2D transformFromCRSToPane;
 	private final Camera camera;
+	
 	@Getter
-	@Setter
-	private boolean followCamera = false;
+	private boolean followCamera = Settings.SETTINGS.getValue(SETTINGS_FOLLOW, false);
 	
 	public MiniMap(Camera camera) throws FactoryException {
 		super(new BorderLayout());
@@ -91,7 +92,7 @@ public class MiniMap extends JPanel {
 		
 		Point2D mapPos2 = transformFromCRSToPane.transform((Point2D) mapPos, null);
 		
-		Rectangle paneArea = ((JComponent) mapPane).getVisibleRect();
+		Rectangle paneArea = mapPane.getVisibleRect();
 
 		Point2D corner =
 			new DirectPosition2D(
@@ -108,4 +109,12 @@ public class MiniMap extends JPanel {
 			mapPane.setDisplayArea(newMapArea);
 		}
 	}
+
+	public void setFollowCamera(boolean followCamera) {
+		if (this.followCamera != followCamera) {
+			this.followCamera = followCamera;
+			Settings.SETTINGS.updateValue("minimap.follow", followCamera);
+		}
+	}
+	
 }
