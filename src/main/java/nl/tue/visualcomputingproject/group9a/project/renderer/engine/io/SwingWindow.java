@@ -102,7 +102,9 @@ public class SwingWindow implements ActionListener {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				Settings.SETTINGS.writeFile();
+				if (Settings.SETTINGS.isModified()) {
+					Settings.SETTINGS.writeFile();
+				}
 			}
 		});
 	}

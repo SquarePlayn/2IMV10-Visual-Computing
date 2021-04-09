@@ -24,8 +24,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import static nl.tue.visualcomputingproject.group9a.project.common.Settings.*;
-import static nl.tue.visualcomputingproject.group9a.project.common.Settings.CHUNK_UNLOAD_DISTANCE;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ChunkManagerHandlerThread
@@ -138,7 +136,7 @@ public class ChunkManagerHandlerThread
 
 	private void updateState(Vector2i curPos) {
 		// Check for chunks to load.
-		getChunksInRadius(curPos, Settings.CHUNK_LOAD_DISTANCE).forEachRemaining((cp) -> {
+		getChunksInRadius(curPos, Settings.getChunkLoadDistance()).forEachRemaining((cp) -> {
 			if (loaded.containsKey(cp)) return; // Already loaded, ignore.
 			Model model = toUnload.remove(cp);
 			if (model != null) {
@@ -160,11 +158,11 @@ public class ChunkManagerHandlerThread
 			}
 		});
 
-		final int chunkUnloadRangeX = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_WIDTH);
-		final int chunkUnloadRangeY = (int) Math.ceil(CHUNK_UNLOAD_DISTANCE / CHUNK_HEIGHT);
+		final int chunkUnloadRangeX = (int) Math.ceil(Settings.getChunkUnloadDistance() / Settings.CHUNK_WIDTH);
+		final int chunkUnloadRangeY = (int) Math.ceil(Settings.getChunkUnloadDistance() / Settings.CHUNK_HEIGHT);
 		newUnload = loaded.keySet().stream().filter((cp) -> {
-			int chunkIX = (int) Math.floor(cp.getX() / CHUNK_WIDTH);
-			int chunkIY = (int) Math.floor(cp.getY() / CHUNK_HEIGHT);
+			int chunkIX = (int) Math.floor(cp.getX() / Settings.CHUNK_WIDTH);
+			int chunkIY = (int) Math.floor(cp.getY() / Settings.CHUNK_HEIGHT);
 			return Math.abs(chunkIX - curPos.x) >= chunkUnloadRangeX ||
 					Math.abs(chunkIY - curPos.y) >= chunkUnloadRangeY;
 		}).collect(Collectors.toCollection(ArrayList::new));
@@ -175,8 +173,8 @@ public class ChunkManagerHandlerThread
 	 */
 	private Iterator<ChunkPosition> getChunksInRadius(final Vector2i curPos,  final double radius) {
 		return new GeneratorIterator<ChunkPosition>() {
-			private final int chunkRangeX = (int) Math.ceil(radius / CHUNK_WIDTH);
-			private final int chunkRangeY = (int) Math.ceil(radius / CHUNK_HEIGHT);
+			private final int chunkRangeX = (int) Math.ceil(radius / Settings.CHUNK_WIDTH);
+			private final int chunkRangeY = (int) Math.ceil(radius / Settings.CHUNK_HEIGHT);
 			
 			private int cdx = 0;
 			private int cdy = 0;
@@ -206,12 +204,12 @@ public class ChunkManagerHandlerThread
 					cdy = -maxDy;
 				}
 
-				double x = (curPos.x + cdx) * CHUNK_WIDTH;
-				double y = (curPos.y + cdy) * CHUNK_WIDTH;
+				double x = (curPos.x + cdx) * Settings.CHUNK_WIDTH;
+				double y = (curPos.y + cdy) * Settings.CHUNK_WIDTH;
 
 				cdy++;
 
-				return new ChunkPosition(x, y, CHUNK_WIDTH, CHUNK_HEIGHT);
+				return new ChunkPosition(x, y, Settings.CHUNK_WIDTH, Settings.CHUNK_HEIGHT);
 			}
 		};
 	}

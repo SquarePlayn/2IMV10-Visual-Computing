@@ -17,7 +17,7 @@ public class SettingsFile {
 	private final File path;
 
 	private final Lock lock = new ReentrantLock();
-	private final Condition mod = lock.newCondition();
+	private final Condition waitForMod = lock.newCondition();
 	private boolean modified = false;
 	
 	
@@ -30,7 +30,7 @@ public class SettingsFile {
 					try {
 						lock.lock();
 						if (!modified) {
-							mod.await();
+							waitForMod.await();
 						}
 						
 					} finally {
@@ -55,7 +55,6 @@ public class SettingsFile {
 		}, "Settings thread");
 		t.setDaemon(false);
 		t.start();
-		// TODO: setup thread stuff.
 	}
 	
 	public void updateValue(String key, boolean value) {
@@ -75,7 +74,7 @@ public class SettingsFile {
 		try {
 			props.setProperty(key, value);
 			modified = true;
-			mod.signal();
+			waitForMod.signal();
 		} finally {
 			lock.unlock();
 		}
@@ -117,26 +116,6 @@ public class SettingsFile {
 		}
 	}
 	
-//	public void loadCurrentValues() {
-//		props.setProperty("camera.wireframe", String.valueOf(camera.isWireframe()));
-//		props.setProperty("camera.lockheight", String.valueOf(camera.isLockHeight()));
-//		props.setProperty("camera.walking", String.valueOf(camera.isWalking()));
-//		props.setProperty("camera.sensitivity", String.valueOf(camera.getSensitivity()));
-//		props.setProperty("chunk.loaddistance", String.valueOf(Settings.CHUNK_LOAD_DISTANCE));
-//		props.setProperty("chunk.unloaddistance", String.valueOf(Settings.CHUNK_UNLOAD_DISTANCE));
-//		props.setProperty("minimap.follow", String.valueOf(miniMap.isFollowCamera()));
-//	}
-	
-//	public void applyValues() {
-//		camera.setWireframe(Boolean.parseBoolean(props.getProperty("camera.wireframe")));
-//		camera.setLockHeight(Boolean.parseBoolean(props.getProperty("camera.lockheight")));
-//		camera.setWalking(Boolean.parseBoolean(props.getProperty("camera.walking")));
-//		camera.setSensitivity(Float.parseFloat(props.getProperty("camera.sensitivity")));
-//		Settings.CHUNK_LOAD_DISTANCE = Double.parseDouble(props.getProperty("chunk.loaddistance"));
-//		Settings.CHUNK_UNLOAD_DISTANCE = Double.parseDouble(props.getProperty("chunk.unloaddistance"));
-//		miniMap.setFollowCamera(Boolean.parseBoolean(props.getProperty("minimap.follow")));
-//	}
-	
 	public void readFile() {
 		try {
 			synchronized(props) {
@@ -160,6 +139,15 @@ public class SettingsFile {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public boolean isModified() {
+		lock.lock();
+		try {
+			return modified;
+		} finally {
+			lock.unlock();
 		}
 	}
 	

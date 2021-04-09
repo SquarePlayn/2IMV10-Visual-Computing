@@ -63,14 +63,26 @@ public final class Settings {
 
 	/** Chunk update settings. */
 	public static final SettingsFile SETTINGS = new SettingsFile(SETTINGS_FILE);
-	public static String SETTINGS_CHUNK_LOAD = "chunk.loaddistance";
-	public static String SETTINGS_CHUNK_UNLOAD = "chunk.unloaddistance";
-	public static double CHUNK_LOAD_DISTANCE = SETTINGS.getValue(SETTINGS_CHUNK_LOAD, 1000.0d);
-	public static double CHUNK_UNLOAD_DISTANCE = SETTINGS.getValue(SETTINGS_CHUNK_UNLOAD, 1500.0d);
+	public static final String SETTINGS_CHUNK_LOAD = "chunk.loaddistance";
+	public static final double CHUNK_LOAD_DISTANCE_MIN = 500.0;
+	public static final double CHUNK_LOAD_DISTANCE_MAX = 1000.0;
+	private static double chunkLoadDistance;
+	
+	public static void setChunkLoadDistance(double dist) {
+		chunkLoadDistance = Math.min(CHUNK_LOAD_DISTANCE_MAX, Math.max(CHUNK_LOAD_DISTANCE_MIN, dist));
+		SETTINGS.updateValue(SETTINGS_CHUNK_LOAD, chunkLoadDistance);
+	}
+	static {
+		setChunkLoadDistance(SETTINGS.getValue(SETTINGS_CHUNK_LOAD, 1000.0));
+	}
 
-	public static void saveChunkDistances() {
-		SETTINGS.updateValue(SETTINGS_CHUNK_LOAD, CHUNK_LOAD_DISTANCE);
-		SETTINGS.updateValue(SETTINGS_CHUNK_UNLOAD, CHUNK_UNLOAD_DISTANCE);
+	public static double getChunkLoadDistance() {
+		return chunkLoadDistance;
+	}
+	
+	public static double getChunkUnloadDistance() {
+		double d = chunkLoadDistance;
+		return d + Math.max(250, d / 10.);
 	}
 	
 	/** The file extension of the cache files. */
