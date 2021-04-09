@@ -96,9 +96,18 @@ public class Camera
 
 		// Stick walking camera
 		if (walking) {
-			Optional<Float> terrainHeight = chunkManager.getHeight(position.x, position.z);
-			terrainHeight.ifPresent(height -> position.y = height + WALK_HEIGHT);
+			position.y = getTerrainHeight() + WALK_HEIGHT;
 		}
+	}
+
+	/**
+	 * Get the height of the terrain under the camera, or the latest seen height if no
+	 * height can currently be fetched.
+	 */
+	private float getTerrainHeight() {
+		Optional<Float> curHeight = chunkManager.getHeight(position.x, position.z);
+		curHeight.ifPresent(height -> lastTerrainHeight = height);
+		return lastTerrainHeight;
 	}
 
 	/**
@@ -192,9 +201,7 @@ public class Camera
 	 * Get the speed the camera should go forwards/sideways at.
 	 */
 	private float getMoveSpeed() {
-		Optional<Float> curHeight = chunkManager.getHeight(position.x, position.z);
-		curHeight.ifPresent(height -> lastTerrainHeight = height);
-		float height = position.y - lastTerrainHeight;
+		float height = position.y - getTerrainHeight();
 		float gmsp = GROUND_MOVE_SPEED_PERCENTAGE;
 		return (Math.max(0, height / 200) * (1 - gmsp) + gmsp) * MOVE_SPEED;
 	}

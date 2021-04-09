@@ -75,7 +75,7 @@ public class RIMLSGenerator<ID extends ChunkId, T extends PointData>
 		
 		if (chunk.getQualityLevel().getOrder() >= QualityLevel.HALF_BY_HALF.getOrder()) {
 			Store<PointNormalIndexData> newStore = new ArrayStore<>(pos, transform);
-			PreProcessing.treeSmoothing(
+			PreProcessing.treeSmoothing2(
 					store,
 					newStore,
 					PointNormalIndexData::new

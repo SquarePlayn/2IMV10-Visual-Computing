@@ -1,6 +1,7 @@
 package nl.tue.visualcomputingproject.group9a.project.preprocessing.generator;
 
 import nl.tue.visualcomputingproject.group9a.project.common.chunk.*;
+import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre_processing.RawGenerator;
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.ScaleGridTransform;
 import org.joml.Vector3d;
 
@@ -34,8 +35,9 @@ public abstract class Generator<ID extends ChunkId, T extends PointData> {
 	 * @return A generator suitable for the given quality.
 	 */
 	public static <ID extends ChunkId, T extends PointData> Generator<ID, T> createGeneratorFor(QualityLevel quality) {
+		return new TreeMLSGenerator<>();
 //		return new RIMLSGenerator<>();
-		return new RawGenerator<>();
+//		return new RawGenerator<>();
 	}
 
 

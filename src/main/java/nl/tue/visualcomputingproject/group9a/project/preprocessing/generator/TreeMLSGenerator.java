@@ -21,18 +21,11 @@ import java.util.List;
  * 
  * @param <T> The type of point data container.
  */
-public class RawGenerator<ID extends ChunkId, T extends PointData>
+public class TreeMLSGenerator<ID extends ChunkId, T extends PointData>
 		extends Generator<ID, T> {
-	/** The local distance used to approximate the normals with. */
-	private static final int DIST = 1;
 	
 	@Override
 	public MeshChunkData generateChunkData(Chunk<ID, ? extends T> chunk, ChunkPosition crop) {
-		if (!chunk.getQualityLevel().isInterpolated()) {
-			throw new IllegalArgumentException(
-					"This generator can only be used for interpolated datasets.");
-		}
-		
 		ChunkPosition pos = chunk.getPosition();
 		ScaleGridTransform transform = GridTransform.createTransformFor(chunk, crop);
 		Vector3d offset = new Vector3d(crop.getX(), 0, crop.getY());
@@ -57,26 +50,7 @@ public class RawGenerator<ID extends ChunkId, T extends PointData>
 		VertexBufferManager vertexManager = VertexBufferManager.createManagerFor(
 				Settings.VERTEX_TYPE, store.countCropped(crop)
 		);
-		
-		final Store<PointIndexData> s = store;
-		store.forEachInCrop(crop, (x, z, elem) -> {
-			for (PointIndexData point : elem) {
-				List<Vector3d> neighbors = new ArrayList<>();
-				for (int dz = -DIST; dz <= DIST; dz++) {
-					for (int dx = -DIST; dx <= DIST; dx++) {
-						if (dx == 0 && dz == 0) continue;
-						int x2 = x + dx;
-						int z2 = z + dz;
-						if (!s.hasPoint(x2, z2)) continue;
-						for (PointIndexData point2 : s.get(x2, z2)) {
-							neighbors.add(point2.getVec());
-						}
-					}
-				}
-				Vector3d normal = generateWLSNormalFor(point.getVec(), neighbors.iterator());
-				point.setIndex(vertexManager.addVertex(point.getVec(), normal));
-			}
-		});
+		store.addToVertexManagerGenWLSNormals(vertexManager, crop);
 
 		return new MeshChunkData(
 				vertexManager.finalizeBuffer(),

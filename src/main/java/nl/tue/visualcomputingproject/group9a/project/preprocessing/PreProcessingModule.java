@@ -62,7 +62,8 @@ public class PreProcessingModule
 				memoryPolicy,
 				diskPolicy,
 				Settings.CACHE_DIR, "mesh_chunk",
-				new ZipBufferedFileStreamFactory(),MeshChunkData.createSerializer());
+				new ZipBufferedFileStreamFactory(),
+				MeshChunkData.createSerializer());
 		cache.indexCache(MeshChunkId.createMeshChunkIdFactory());
 	}
 

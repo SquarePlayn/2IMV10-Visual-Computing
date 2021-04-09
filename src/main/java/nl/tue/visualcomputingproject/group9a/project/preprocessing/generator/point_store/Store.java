@@ -10,11 +10,15 @@ import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.pre
 import nl.tue.visualcomputingproject.group9a.project.preprocessing.generator.transform.ScaleGridTransform;
 import org.joml.Vector3d;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 public interface Store<Data extends PointIndexData>
 		extends Iterable<StoreElement<Data>> {
+	/** The local distance used to approximate the normals with. */
+	int NORMAL_DIST = 1;
 	
 	@FunctionalInterface
 	interface StoreFunction<Data extends PointIndexData> {
@@ -98,6 +102,29 @@ public interface Store<Data extends PointIndexData>
 				}
 			}
 		}
+	}
+	
+	default void addToVertexManagerGenWLSNormals(
+			final VertexBufferManager vertexManager,
+			ChunkPosition crop) {
+		forEachInCrop(crop, (x, z, elem) -> {
+			for (PointIndexData point : elem) {
+				List<Vector3d> neighbors = new ArrayList<>();
+				for (int dz = -NORMAL_DIST; dz <= NORMAL_DIST; dz++) {
+					for (int dx = -NORMAL_DIST; dx <= NORMAL_DIST; dx++) {
+						if (dx == 0 && dz == 0) continue;
+						int x2 = x + dx;
+						int z2 = z + dz;
+						if (!hasPoint(x2, z2)) continue;
+						for (PointIndexData point2 : get(x2, z2)) {
+							neighbors.add(point2.getVec());
+						}
+					}
+				}
+				Vector3d normal = Generator.generateWLSNormalFor(point.getVec(), neighbors.iterator());
+				point.setIndex(vertexManager.addVertex(point.getVec(), normal));
+			}
+		});
 	}
 	
 	default void forEach(StoreFunction<Data> function) {
