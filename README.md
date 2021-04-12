@@ -12,7 +12,7 @@ The project for the 2IMV10 Visual Computing Project of the Technical University 
 - Java 8+
 
 ### Installing
-To build the software, execute `gradlew build` in the project directory. 
+To build the software, execute `gradlew build` (or `./gradlew build` if you're not on Windows) in the project directory. 
 When this is finished, the `build/libs` folder contains two `jar` files. 
 The `project-full-jar-*` file can be used as a standalone executable.
 
